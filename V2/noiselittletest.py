@@ -44,10 +44,10 @@ for imageindex,name in enumerate(dfc2015test.names):
     
     normalcm = confusion_matrix(z.cpu().numpy().flatten(),y.cpu().numpy().flatten(),list(range(len(dfc2015test.setofcolors))))
     normalaccuracy = np.sum(normalcm.diagonal())/(np.sum(normalcm)+1)
-    cm += normalaccuracy
+    cm += normalcm
     
     xe,_,pred,worsecm,worseaccuracy, d1,d2,mode = mynoisegenerator.worseperturbation(x,y,net,2,len(dfc2015test.setofcolors))
-    stesscm += worseaccuracy
+    stesscm += worsecm
     
     rahh = segsemdata.safeuint8(x[0].cpu().numpy())
     rahh = np.transpose(rahh,axes=(1, 2, 0))

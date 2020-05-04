@@ -47,7 +47,7 @@ def perturbinput(x,y,f,level,mode,nbclasses):
         pepperorsalt = np.random.randint(0,2,size = nbbreak)
         xe = x.clone()
         for i in range(nbbreak):
-            xe[:,:,row[i],col[i]] = torch.ones(1).to(device)*255*pepperorsalt[i]
+            xe[:,:,row[i],col[i]] = torch.ones(1).to(device)*float(255*pepperorsalt[i])
         xe = ensureimage(xe)
             
     if mode=="randomsign":

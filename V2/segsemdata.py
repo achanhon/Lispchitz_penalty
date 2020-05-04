@@ -410,7 +410,7 @@ def ISPRScolor(mode):
     else:#lod0
         return [[255,255,255],[0,0,255]]
 
-def makeISPRStrainVAIHINGEN(resolution=50,datasetpath="/work/OT/ai4geo/DATA/REF/ISPRS_VAIHINGEN",mode="lod0",color = False,normalize = True):
+def makeISPRStrainVAIHINGEN(resolution=50,datasetpath,mode="lod0",color = False,normalize = True):
     names = ["top_mosaic_09cm_area5.tif",
     "top_mosaic_09cm_area17.tif",
     "top_mosaic_09cm_area21.tif",
@@ -428,7 +428,7 @@ def makeISPRStrainVAIHINGEN(resolution=50,datasetpath="/work/OT/ai4geo/DATA/REF/
     
     return resizeDataset(XY,datasetpath,ISPRScolor(mode),9,resolution,color,normalize)
     
-def makeISPRStestVAIHINGEN(resolution=50,datasetpath="/work/OT/ai4geo/DATA/REF/ISPRS_VAIHINGEN",mode="lod0",color = False,normalize = True):
+def makeISPRStestVAIHINGEN(resolution=50,datasetpath,mode="lod0",color = False,normalize = True):
     names = ["top_mosaic_09cm_area1.tif",
     "top_mosaic_09cm_area3.tif",
     "top_mosaic_09cm_area7.tif",
@@ -452,7 +452,7 @@ def makeAIRSdataset(datasetpath,resolution=50,color = False,normalize = True):
     return resizeDataset(XY,datasetpath, [[0,0,0],[255,255,255]],7.5,resolution,color,normalize)
 
 def makeINRIAdataset(mode,resolution=50,color = False,normalize = True):
-    datasetpath = "/work/OT/ai4geo/DATA/REF/INRIA/AerialImageDataset/train"
+    datasetpath = "TODO"
     allfile = os.listdir(datasetpath+"/images")
     allfile = sorted(allfile)
     XY = {}
