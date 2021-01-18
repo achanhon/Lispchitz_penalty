@@ -410,7 +410,7 @@ def ISPRScolor(mode):
     else:#lod0
         return [[255,255,255],[0,0,255]]
 
-def makeISPRStrainVAIHINGEN(resolution=50,datasetpath,mode="lod0",color = False,normalize = True):
+def makeISPRStrainVAIHINGEN(resolution=50,datasetpath="",mode="lod0",color = False,normalize = True):
     names = ["top_mosaic_09cm_area5.tif",
     "top_mosaic_09cm_area17.tif",
     "top_mosaic_09cm_area21.tif",
@@ -428,7 +428,7 @@ def makeISPRStrainVAIHINGEN(resolution=50,datasetpath,mode="lod0",color = False,
     
     return resizeDataset(XY,datasetpath,ISPRScolor(mode),9,resolution,color,normalize)
     
-def makeISPRStestVAIHINGEN(resolution=50,datasetpath,mode="lod0",color = False,normalize = True):
+def makeISPRStestVAIHINGEN(resolution=50,datasetpath="",mode="lod0",color = False,normalize = True):
     names = ["top_mosaic_09cm_area1.tif",
     "top_mosaic_09cm_area3.tif",
     "top_mosaic_09cm_area7.tif",
