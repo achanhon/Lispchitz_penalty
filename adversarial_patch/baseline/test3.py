@@ -67,6 +67,7 @@ def f1(cm):
     )
 
 
+cmforlogging = []
 cm = {}
 with torch.no_grad():
     for town in miniworld.towns:
@@ -112,6 +113,9 @@ with torch.no_grad():
             accu(cm[town]),
             f1(cm[town]),
         )
+        cmforlogging.append(f1(cm[town]))
+        tmp = np.asarray(cmforlogging)
+        np.savetxt("build/logtest.txt", tmp)
 
 print("-------- results ----------")
 for town in miniworld.towns:
