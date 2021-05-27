@@ -16,7 +16,6 @@ if device == "cuda":
 outputname = "model.pth"
 if len(sys.argv) > 1:
     outputname = sys.argv[1]
-os.system("cat train3.py")
 
 whereIam = os.uname()[1]
 
