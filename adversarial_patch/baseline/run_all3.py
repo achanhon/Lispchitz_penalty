@@ -24,9 +24,14 @@ if not os.path.exists(root + "miniworld"):
 if not os.path.exists("build"):
     os.makedirs("build")
 
+today = datetime.date.today()
+tmp = random.randint(0, 1000)
+myhash = str(today) + "_" + str(tmp)
+print(myhash)
+
 if whereIam == "wdtim719z":
-    os.system("/data/anaconda3/envs/pytorch/bin/python train3.py model.pth")
-    os.system("/data/anaconda3/envs/pytorch/bin/python test3.py model.pth")
+    os.system("/data/anaconda3/envs/pytorch/bin/python train3.py " + myhash)
+    os.system("/data/anaconda3/envs/pytorch/bin/python test3.py " + myhash)
 if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
-    os.system("/d/jcastillo/anaconda3/bin/python train3.py model.pth")
-    os.system("/d/jcastillo/anaconda3/bin/python test3.py model.pth")
+    os.system("/d/jcastillo/anaconda3/bin/python train3.py " + myhash)
+    os.system("/d/jcastillo/anaconda3/bin/python test3.py " + myhash)
