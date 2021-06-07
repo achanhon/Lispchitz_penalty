@@ -66,16 +66,20 @@ from skimage import measure
 
 
 def select_rootcentredpatch(image, label):
-    label_noborder = label.copy()
-    label_noborder[0:256, :] = 0
-    label_noborder[-256 : label.shape[0], :] = 0
-    label_noborder[:, 0:256] = 0
-    label_noborder[:, -256 : label.shape[1]] = 0
-
-    blobs_image = measure.label(label_noborder, background=0)
+    blobs_image = measure.label(label, background=0)
 
     blobs = measure.regionprops(blobs_image)
     blobs = [c for c in blobs if 64 <= c.area and c.area <= 256]
+    
+    tmp = []
+    for blob in blobs:
+        r, c = blob.centroid
+        r,c = int(r),int(c)
+        if r<=257 or r+257>=label.shape[0] or c<=257 or c+257>=label.shape[1]:
+            continue
+        else:
+            tmp.append(blob)
+    blobs = tmp
 
     if blobs == []:
         return None
@@ -93,21 +97,6 @@ def select_rootcentredpatch(image, label):
             label[r - 256 : r + 256, c - 256 : c + 256].copy(),
         )
         a = blobs_image[r - 256 : r + 256, c - 256 : c + 256].copy()
-        
-        print(blob.label)
-        wtf = np.uint8(blobs_image == blob.label)
-        im = PIL.Image.fromarray(wtf * 125)
-        im.save("build/titi.png")
-        
-        wtf = wtf[r - 256 : r + 256, c - 256 : c + 256]
-        im = PIL.Image.fromarray(wtf * 125)
-        im.save("build/toto.png")
-        
-        print(a.shape)
-        wtf = np.uint8(a == blob.label)
-        im = PIL.Image.fromarray(wtf * 125)
-        im.save("build/tata.png")
-        quit()
         
         a = np.uint8(a == blob.label)
         XYA.append((x, y, a))
