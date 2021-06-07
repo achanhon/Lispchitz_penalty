@@ -62,7 +62,7 @@ def f1(cm):
     )
 
 
-from skimage import measure, regionprops
+from skimage import measure
 
 
 def select_rootcentredpatch(image, label):
@@ -73,9 +73,16 @@ def select_rootcentredpatch(image, label):
     label_noborder[:, -256 : label.shape[1]] = 0
 
     blobs_image = measure.label(label_noborder, background=0)
+    
+    im = PIL.Image.fromarray(np.uint8(blobs_image))
+    im.save("build/wtf.png")
+    
+    im = PIL.Image.fromarray(np.uint8(blobs_image==236)*255)
+    im.save("build/wtfcaca.png")
+    quit()
 
-    blobs = regionprops(blobs_images)
-    blobs = [c for c in blobs if 16 <= c.area and c.areas <= 64]
+    blobs = measure.regionprops(blobs_image)
+    blobs = [c for c in blobs if 16 <= c.area and c.area <= 64]
 
     if blobs == []:
         return None
@@ -87,13 +94,14 @@ def select_rootcentredpatch(image, label):
     XYA = []
     for blob in blobs:
         r, c = blob.centroid
+        r,c = int(r),int(c)
         x, y = (
             image[r - 256 : r + 257, c - 256 : c + 257, :],
             label[r - 256 : r + 257, c - 256 : c + 257],
         )
         a = blobs_image[r - 256 : r + 257, c - 256 : c + 257]
         a = np.uint8(a == blob.label)
-        XYA = (x, y, a)
+        XYA.append((x, y, a))
 
     return XYA
 
@@ -112,11 +120,11 @@ with torch.no_grad():
             for i in range(len(XYA)):
                 x, y, a = XYA[i]
                 imx = PIL.Image.fromarray(np.uint8(x))
-                imageraw.save("build/" + town[0:-5] + "_" + str(i) + "_x.png")
-                labelim = PIL.Image.fromarray(np.uint8(y) * 125)
-                labelim.save("build/" + town[0:-5] + "_" + str(i) + "_y.png")
-                predim = PIL.Image.fromarray(np.uint8(a) * 125)
-                predim.save("build/" + town[0:-5] + "_" + str(i) + "_a.png")
+                imx.save("build/" + town[0:-5] + "_" + str(i) + "_x.png")
+                imy = PIL.Image.fromarray(np.uint8(y) * 125)
+                imy.save("build/" + town[0:-5] + "_" + str(i) + "_y.png")
+                ima = PIL.Image.fromarray(np.uint8(a) * 125)
+                ima.save("build/" + town[0:-5] + "_" + str(i) + "_a.png")
 
             quit()
 
