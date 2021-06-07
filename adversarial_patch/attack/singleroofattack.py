@@ -35,12 +35,12 @@ if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
     sys.path.append("/d/achanhon/github/pytorch-image-models")
     sys.path.append("/d/achanhon/github/pretrained-models.pytorch")
     sys.path.append("/d/achanhon/github/segmentation_models.pytorch")
-import segmentation_models_pytorch
+#import segmentation_models_pytorch
 
-with torch.no_grad():
-    net = torch.load("build/model.pth")
-    net = net.to(device)
-    net.eval()
+#with torch.no_grad():
+#    net = torch.load("build/model.pth")
+#    net = net.to(device)
+#    net.eval()
 
 
 print("massif benchmark")
