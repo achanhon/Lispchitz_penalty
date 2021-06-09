@@ -64,7 +64,7 @@ def f1(cm):
 
 from skimage import measure
 
-CROPSIZE = 128
+CROPSIZE = 64
 
 
 def select_rootcentredpatch(image, label):
