@@ -49,10 +49,8 @@ with torch.no_grad():
 print("massif benchmark")
 import dataloader
 
-if whereIam == "super":
-    miniworld = dataloader.MiniWorld(
-        flag="custom", custom=["potsdam/test", "bruges/test"]
-    )
+if whereIam == "super" or True:
+    miniworld = dataloader.MiniWorld(flag="custom", custom=["toulouse/test"])
 else:
     miniworld = dataloader.MiniWorld("test")
 
