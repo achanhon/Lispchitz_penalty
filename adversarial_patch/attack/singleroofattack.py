@@ -151,9 +151,9 @@ if True:
 
             ZXaZa.append((preds, adversarial, predsa))
 
-        Z = torch.cat([z.cpu().numpy() for z, _, _ in ZXaZa], dim=0)
+        Z = torch.cat([z for z, _, _ in ZXaZa], dim=0)
         Xa = torch.cat([xa for _, xa, _ in ZXaZa], dim=0)
-        Za = torch.cat([za.cpu().numpy() for _, _, za in ZXaZa], dim=0)
+        Za = torch.cat([za for _, _, za in ZXaZa], dim=0)
 
         cm[town] = np.zeros((3, 3), dtype=int)
         for j in range(X.shape[0]):
@@ -161,16 +161,16 @@ if True:
             im = PIL.Image.fromarray(np.uint8(x * 255))
             im.save("build/" + town[0:-5] + "_" + str(j) + "_x.png")
 
-            im = PIL.Image.fromarray(np.uint8(Y[i] * 125))
+            im = PIL.Image.fromarray(np.uint8(Y[i].cpu().numpy() * 125))
             im.save("build/" + town[0:-5] + "_" + str(j) + "_y.png")
 
-            im = PIL.Image.fromarray(np.uint8(A[i] * 125))
+            im = PIL.Image.fromarray(np.uint8(A[i].cpu().numpy() * 125))
             im.save("build/" + town[0:-5] + "_" + str(j) + "_a.png")
 
-            im = PIL.Image.fromarray(np.uint8(Z[i] * 125))
+            im = PIL.Image.fromarray(np.uint8(Z[i].cpu().numpy() * 125))
             im.save("build/" + town[0:-5] + "_" + str(j) + "_z.png")
 
-            im = PIL.Image.fromarray(np.uint8(Za[i] * 125))
+            im = PIL.Image.fromarray(np.uint8(Za[i].cpu().numpy() * 125))
             im.save("build/" + town[0:-5] + "_" + str(j) + "_p.png")
 
             xa = np.transpose(X[i].cpu().numpy(), axes=(1, 2, 0))
