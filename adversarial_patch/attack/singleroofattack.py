@@ -66,6 +66,7 @@ from skimage import measure
 
 CROPSIZE = 64
 
+
 def select_rootcentredpatch(image, label):
     blobs_image = measure.label(label, background=0)
 
