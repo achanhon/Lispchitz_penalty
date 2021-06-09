@@ -134,7 +134,7 @@ if True:
 
         XYAtensor = torch.utils.data.TensorDataset(X, Y, A)
         dataloader = torch.utils.data.DataLoader(
-            XYAtensor, batch_size=8, shuffle=False, num_workers=2
+            XYAtensor, batch_size=16, shuffle=False, num_workers=2
         )
 
         ZXaZa = []
@@ -142,9 +142,6 @@ if True:
             inputs, targets, masks = inputs.cuda(), targets.cuda(), masks.cuda()
             with torch.no_grad():
                 preds = net(inputs)
-
-                print(preds.shape)
-                quit()
 
             # with grad
             adversarial = do_a_very_good_adversarial_attack(inputs, targets, masks)
@@ -155,6 +152,9 @@ if True:
             ZXaZa.append((preds, adversarial, predsa))
 
         Z = torch.cat([z for z, _, _ in ZXaZa], dim=0)
+        print(Z.shape)
+        quit()
+        
         Xa = torch.cat([xa for _, xa, _ in ZXaZa], dim=0)
         Za = torch.cat([za for _, _, za in ZXaZa], dim=0)
 
