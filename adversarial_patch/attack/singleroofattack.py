@@ -154,7 +154,7 @@ if True:
         Z = torch.cat([z for z, _, _ in ZXaZa], dim=0)
         print(Z.shape)
         quit()
-        
+
         Xa = torch.cat([xa for _, xa, _ in ZXaZa], dim=0)
         Za = torch.cat([za for _, _, za in ZXaZa], dim=0)
 
