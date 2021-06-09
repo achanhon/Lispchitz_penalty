@@ -130,7 +130,10 @@ if True:
 
         # pytorch
         X = torch.stack(
-            [torch.Tensor(np.transpose(x, axes=(2, 0, 1))).cpu() for x, _, _ in XYA]
+            [
+                torch.Tensor(np.transpose(np.uint8(x), axes=(2, 0, 1))).cpu()
+                for x, _, _ in XYA
+            ]
         )
         Y = torch.stack([torch.from_numpy(y).long().cpu() for _, y, _ in XYA])
         Y = dataloader.convertIn3class(Y)
