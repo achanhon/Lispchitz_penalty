@@ -131,9 +131,13 @@ def do_a_very_good_adversarial_attack(x, y, a):
         optimizer.zero_grad()
         loss.backward()
 
-        grad = xaa.grad * a
+        grad = xaa.grad
+
+        print(xaa.shape, grad.shape, a.shape)
+        quit()
+
         grad = torch.round(grad)
-        xaa = xaa + grad
+        xaa = xaa + grad * a
 
         x0 = torch.zeros(xa.shape)
         x255 = torch.ones(xa.shape) * 255
