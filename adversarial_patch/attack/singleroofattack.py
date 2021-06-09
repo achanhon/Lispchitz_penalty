@@ -151,9 +151,9 @@ if True:
 
             ZXaZa.append((preds, adversarial, predsa))
 
-        Z = torch.concat([z for z, _, _ in ZXaZa], dim=0)
-        Xa = torch.concat([xa for _, xa, _ in ZXaZa], dim=0)
-        Za = torch.concat([za for _, _, za in ZXaZa], dim=0)
+        Z = torch.cat([z for z, _, _ in ZXaZa], dim=0)
+        Xa = torch.cat([xa for _, xa, _ in ZXaZa], dim=0)
+        Za = torch.cat([za for _, _, za in ZXaZa], dim=0)
 
         cm[town] = np.zeros((3, 3), dtype=int)
         for j in X.shape[0]:
