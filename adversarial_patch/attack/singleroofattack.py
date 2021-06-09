@@ -149,12 +149,16 @@ cm = {}
 cmattack = {}
 if True:
     for town in miniworld.towns:
-        print(town)
         XYA = []
         for i in range(miniworld.data[town].nbImages):
             imageraw, label = miniworld.data[town].getImageAndLabel(i)
-            XYA += select_rootcentredpatch(imageraw, label)
+            tmp = select_rootcentredpatch(imageraw, label)
+            if tmp is not None:
+                XYA += select_rootcentredpatch(imageraw, label)
 
+        if XYA == []:
+            continue
+        print(town)
         # pytorch
         X = torch.stack(
             [torch.Tensor(np.transpose(x, axes=(2, 0, 1))).cpu() for x, _, _ in XYA]
