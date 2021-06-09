@@ -35,12 +35,12 @@ if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
     sys.path.append("/d/achanhon/github/pytorch-image-models")
     sys.path.append("/d/achanhon/github/pretrained-models.pytorch")
     sys.path.append("/d/achanhon/github/segmentation_models.pytorch")
-#import segmentation_models_pytorch
+import segmentation_models_pytorch
 
-#with torch.no_grad():
-#    net = torch.load("build/model.pth")
-#    net = net.to(device)
-#    net.eval()
+with torch.no_grad():
+    net = torch.load("build/model.pth")
+    net = net.to(device)
+    net.eval()
 
 
 print("massif benchmark")
@@ -70,12 +70,17 @@ def select_rootcentredpatch(image, label):
 
     blobs = measure.regionprops(blobs_image)
     blobs = [c for c in blobs if 64 <= c.area and c.area <= 256]
-    
+
     tmp = []
     for blob in blobs:
         r, c = blob.centroid
-        r,c = int(r),int(c)
-        if r<=257 or r+257>=label.shape[0] or c<=257 or c+257>=label.shape[1]:
+        r, c = int(r), int(c)
+        if (
+            r <= 257
+            or r + 257 >= label.shape[0]
+            or c <= 257
+            or c + 257 >= label.shape[1]
+        ):
             continue
         else:
             tmp.append(blob)
@@ -91,61 +96,86 @@ def select_rootcentredpatch(image, label):
     XYA = []
     for blob in blobs:
         r, c = blob.centroid
-        r,c = int(r),int(c)
+        r, c = int(r), int(c)
         x, y = (
             image[r - 256 : r + 256, c - 256 : c + 256, :].copy(),
             label[r - 256 : r + 256, c - 256 : c + 256].copy(),
         )
         a = blobs_image[r - 256 : r + 256, c - 256 : c + 256].copy()
-        
+
         a = np.uint8(a == blob.label)
         XYA.append((x, y, a))
 
     return XYA
 
 
-cmforlogging = []
 cm = {}
+cmattack = {}
 with torch.no_grad():
     for town in miniworld.towns:
         print(town)
-        cm[town] = np.zeros((3, 3), dtype=int)
+        XYA = []
         for i in range(miniworld.data[town].nbImages):
             imageraw, label = miniworld.data[town].getImageAndLabel(i)
+            XYA += select_rootcentredpatch(imageraw, label)
 
-            XYA = select_rootcentredpatch(imageraw, label)
+        # pytorch
+        X = torch.stack(
+            [torch.Tensor(np.transpose(x, axes=(2, 0, 1))).cpu() for x, _, _ in XYA]
+        )
+        Y = torch.stack([torch.from_numpy(y).long().cpu() for _, y, _ in XYA])
+        A = torch.stack([torch.from_numpy(a).long().cpu() for _, _, a in XYA])
+        del XYA
 
-            for i in range(len(XYA)):
-                x, y, a = XYA[i]
-                imx = PIL.Image.fromarray(np.uint8(x))
-                imx.save("build/" + town[0:-5] + "_" + str(i) + "_x.png")
-                imy = PIL.Image.fromarray(np.uint8(y) * 125)
-                imy.save("build/" + town[0:-5] + "_" + str(i) + "_y.png")
-                ima = PIL.Image.fromarray(np.uint8(a) * 125)
-                ima.save("build/" + town[0:-5] + "_" + str(i) + "_a.png")
+        XYAtensor = torch.utils.data.TensorDataset(X, Y, Z)
+        dataloader = torch.utils.data.DataLoader(
+            XYAtensor, batch_size=8, shuffle=False, num_workers=2
+        )
+        dataloader = dataloader.cuda()
 
-            quit()
+        ZXaZa = []
+        for inputs, targets, masks in dataloader:
+            # pour l'instant que la pred
 
-            pred = dataloader.largeforward(net, image, device)
+            preds = net(inputs)
+            ZXaZa.append(preds, inputs, preds)
 
-            pred = globalresize(pred)
-            _, pred = torch.max(pred[0], 0)
-            pred = pred.cpu().numpy()
+        Z = torch.concat([z for z, _, _ in ZXaZa], dim=0)
+        Xa = torch.concat([xa for _, xa, _ in ZXaZa], dim=0)
+        Za = torch.concat([za for _, _, za in ZXaZa], dim=0)
 
-            label = dataloader.convertIn3classNP(label)
-            assert label.shape == pred.shape
+        cm[town] = np.zeros((3, 3), dtype=int)
+        for j in X.shape[0]:
+            x = np.transpose(X[i].cpu().numpy(), axes=(1, 2, 0))
+            im = PIL.Image.fromarray(np.uint8(x * 255))
+            im.save("build/" + town[0:-5] + "_" + str(j) + "_x.png")
+
+            im = PIL.Image.fromarray(np.uint8(Y[i] * 125))
+            im.save("build/" + town[0:-5] + "_" + str(j) + "_y.png")
+
+            im = PIL.Image.fromarray(np.uint8(A[i] * 125))
+            im.save("build/" + town[0:-5] + "_" + str(j) + "_a.png")
+
+            im = PIL.Image.fromarray(np.uint8(Z[i] * 125))
+            im.save("build/" + town[0:-5] + "_" + str(j) + "_z.png")
+
+            im = PIL.Image.fromarray(np.uint8(Za[i] * 125))
+            im.save("build/" + town[0:-5] + "_" + str(j) + "_p.png")
+
+            xa = np.transpose(X[i].cpu().numpy(), axes=(1, 2, 0))
+            im = PIL.Image.fromarray(np.uint8(xa * 255))
+            im.save("build/" + town[0:-5] + "_" + str(j) + "_q.png")
 
             cm[town] += confusion_matrix(
-                label.flatten(), pred.flatten(), labels=[0, 1, 2]
+                dataloader.convertIn3class(Y[i]).cpu().numpy().flatten(),
+                Z[i].cpu().numpy().flatten(),
+                labels=[0, 1, 2],
             )
-
-            if town in ["austin/test"]:
-                imageraw = PIL.Image.fromarray(np.uint8(imageraw))
-                imageraw.save("build/" + town[0:-5] + "_" + str(i) + "_x.png")
-                labelim = PIL.Image.fromarray(np.uint8(label) * 125)
-                labelim.save("build/" + town[0:-5] + "_" + str(i) + "_y.png")
-                predim = PIL.Image.fromarray(np.uint8(pred) * 125)
-                predim.save("build/" + town[0:-5] + "_" + str(i) + "_z.png")
+            cmattack[town] += confusion_matrix(
+                dataloader.convertIn3class(Y[i]).cpu().numpy().flatten(),
+                Za[i].cpu().numpy().flatten(),
+                labels=[0, 1, 2],
+            )
 
         cm[town] = cm[town][0:2, 0:2]
         print(cm[town][0][0], cm[town][0][1], cm[town][1][0], cm[town][1][1])
@@ -153,15 +183,14 @@ with torch.no_grad():
             accu(cm[town]),
             f1(cm[town]),
         )
-        cmforlogging.append(f1(cm[town]))
-        tmp = np.asarray(cmforlogging)
-        np.savetxt("build/logtest.txt", tmp)
-
-print("-------- results ----------")
-for town in miniworld.towns:
-    print(town, accu(cm[town]), f1(cm[town]))
-
-globalcm = np.zeros((2, 2), dtype=int)
-for town in miniworld.towns:
-    globalcm += cm[town]
-print("miniworld", accu(globalcm), f1(globalcm))
+        cmattack[town] = cmattack[town][0:2, 0:2]
+        print(
+            cmattack[town][0][0],
+            cmattack[town][0][1],
+            cmattack[town][1][0],
+            cmattack[town][1][1],
+        )
+        print(
+            accu(cmattack[town]),
+            f1(cmattack[town]),
+        )
