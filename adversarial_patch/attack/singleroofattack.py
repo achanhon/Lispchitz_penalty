@@ -240,3 +240,11 @@ if True:
             accu(cmattack[town]),
             f1(cmattack[town]),
         )
+        print(
+            "number of modified pixel",
+            torch.sum(A),
+            "/",
+            Y.shape[0] * Y.shape[1] * Y.shape[2],
+            "=",
+            torch.sum(A) / (Y.shape[0] * Y.shape[1] * Y.shape[2]),
+        )
