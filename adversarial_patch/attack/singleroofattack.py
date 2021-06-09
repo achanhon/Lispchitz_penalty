@@ -159,26 +159,26 @@ if True:
         Za = torch.cat([za for _, _, za in ZXaZa], dim=0)
 
         cm[town] = np.zeros((3, 3), dtype=int)
-        for j in range(X.shape[0]):
+        for i in range(X.shape[0]):
             x = np.transpose(X[i].cpu().numpy(), axes=(1, 2, 0))
             im = PIL.Image.fromarray(np.uint8(x * 255))
-            im.save("build/" + town[0:-5] + "_" + str(j) + "_x.png")
+            im.save("build/" + town[0:-5] + "_" + str(i) + "_x.png")
 
             im = PIL.Image.fromarray(np.uint8(Y[i].cpu().numpy() * 125))
-            im.save("build/" + town[0:-5] + "_" + str(j) + "_y.png")
+            im.save("build/" + town[0:-5] + "_" + str(i) + "_y.png")
 
             im = PIL.Image.fromarray(np.uint8(A[i].cpu().numpy() * 125))
-            im.save("build/" + town[0:-5] + "_" + str(j) + "_a.png")
+            im.save("build/" + town[0:-5] + "_" + str(i) + "_a.png")
 
             im = PIL.Image.fromarray(np.uint8(Z[i].cpu().numpy() * 125))
-            im.save("build/" + town[0:-5] + "_" + str(j) + "_z.png")
+            im.save("build/" + town[0:-5] + "_" + str(i) + "_z.png")
 
             im = PIL.Image.fromarray(np.uint8(Za[i].cpu().numpy() * 125))
-            im.save("build/" + town[0:-5] + "_" + str(j) + "_p.png")
+            im.save("build/" + town[0:-5] + "_" + str(i) + "_p.png")
 
             xa = np.transpose(X[i].cpu().numpy(), axes=(1, 2, 0))
             im = PIL.Image.fromarray(np.uint8(xa * 255))
-            im.save("build/" + town[0:-5] + "_" + str(j) + "_q.png")
+            im.save("build/" + town[0:-5] + "_" + str(i) + "_q.png")
 
             cm[town] += confusion_matrix(
                 dataloader.convertIn3class(Y[i]).cpu().numpy().flatten(),
