@@ -136,8 +136,8 @@ def do_a_very_good_adversarial_attack(x, y, a):
         a3 = torch.stack([a, a, a], dim=1)
         xaa = xaa + grad * a3
 
-        x0 = torch.zeros(xa.shape)
-        x255 = torch.ones(xa.shape) * 255
+        x0 = torch.zeros(xa.shape).cuda()
+        x255 = torch.ones(xa.shape).cuda() * 255
         xa = torch.max(x0, torch.min(xaa + grad, x255)).clone()
 
     return xa
