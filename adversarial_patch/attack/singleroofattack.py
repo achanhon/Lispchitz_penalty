@@ -163,6 +163,7 @@ if True:
         Za = torch.cat([za for _, _, za in ZXaZa], dim=0)
 
         cm[town] = np.zeros((3, 3), dtype=int)
+        cmattack[town] = np.zeros((3, 3), dtype=int)
         for i in range(X.shape[0]):
             x = np.transpose(X[i].cpu().numpy(), axes=(1, 2, 0))
             im = PIL.Image.fromarray(np.uint8(x * 255))
