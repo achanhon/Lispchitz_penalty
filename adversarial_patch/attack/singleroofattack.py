@@ -109,9 +109,14 @@ def select_rootcentredpatch(image, label):
     return XYA
 
 
+def do_a_very_good_adversarial_attack(x, y, a):
+    # TODO
+    return x
+
+
 cm = {}
 cmattack = {}
-with torch.no_grad():
+if True:
     for town in miniworld.towns:
         print(town)
         XYA = []
@@ -135,10 +140,16 @@ with torch.no_grad():
 
         ZXaZa = []
         for inputs, targets, masks in dataloader:
-            # pour l'instant que la pred
+            with torch.no_grad():
+                preds = net(inputs)
 
-            preds = net(inputs)
-            ZXaZa.append(preds, inputs, preds)
+            # with grad
+            adversarial = do_a_very_good_adversarial_attack(inputs, targets, masks)
+
+            with torch.no_grad():
+                predsa = net(adversarial)
+
+            ZXaZa.append(preds, adversarial, predsa)
 
         Z = torch.concat([z for z, _, _ in ZXaZa], dim=0)
         Xa = torch.concat([xa for _, xa, _ in ZXaZa], dim=0)
