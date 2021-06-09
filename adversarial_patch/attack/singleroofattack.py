@@ -163,7 +163,7 @@ if True:
         Y = dataloader.convertIn3class(Y)
         A = torch.stack([torch.from_numpy(a).long().cpu() for _, _, a in XYA])
         A = dataloader.convertIn3class(A)  # remove border of the roof
-        A = torch.min(A, torch.ones(A.shape)).long()
+        A = torch.min(A.float(), torch.ones(A.shape).float()).long()
         del XYA
 
         XYAtensor = torch.utils.data.TensorDataset(X, Y, A)
