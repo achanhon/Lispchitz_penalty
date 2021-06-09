@@ -46,7 +46,7 @@ with torch.no_grad():
 print("massif benchmark")
 import dataloader
 
-if True:
+if False:
     miniworld = dataloader.MiniWorld(flag="custom", custom=["toulouse/test"])
 else:
     miniworld = dataloader.MiniWorld("test")
