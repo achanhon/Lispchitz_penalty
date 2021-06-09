@@ -185,12 +185,12 @@ if True:
             im.save("build/" + town[0:-5] + "_" + str(i) + "_q.png")
 
             cm[town] += confusion_matrix(
-                dataloader.convertIn3class(Y[i]).cpu().numpy().flatten(),
+                Y[i].cpu().numpy().flatten(),
                 Z[i].cpu().numpy().flatten(),
                 labels=[0, 1, 2],
             )
             cmattack[town] += confusion_matrix(
-                dataloader.convertIn3class(Y[i]).cpu().numpy().flatten(),
+                Y[i].cpu().numpy().flatten(),
                 Za[i].cpu().numpy().flatten(),
                 labels=[0, 1, 2],
             )
