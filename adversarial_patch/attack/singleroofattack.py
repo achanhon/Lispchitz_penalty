@@ -63,6 +63,8 @@ def f1(cm):
 
 
 from skimage import measure
+import random
+
 
 CROPSIZE = 64
 
@@ -92,7 +94,7 @@ def select_rootcentredpatch(image, label):
         return None
 
     if len(blobs) > 100:
-        random_shuffle(blobs)
+        random.shuffle(blobs)
         blobs = blobs[0:100]
 
     XYA = []
