@@ -141,13 +141,15 @@ if True:
         for inputs, targets, masks in dataloader:
             inputs, targets, masks = inputs.cuda(), targets.cuda(), masks.cuda()
             with torch.no_grad():
-                preds = net(inputs)
+                predsa = net(inputs)
+                _, predsa = torch.max(predsa, 1)
 
             # with grad
             adversarial = do_a_very_good_adversarial_attack(inputs, targets, masks)
 
             with torch.no_grad():
                 predsa = net(adversarial)
+                _, predsa = torch.max(preds, 1)
 
             ZXaZa.append((preds, adversarial, predsa))
 
