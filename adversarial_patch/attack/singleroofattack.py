@@ -143,6 +143,9 @@ if True:
             with torch.no_grad():
                 preds = net(inputs)
 
+                print(preds.shape)
+                quit()
+
             # with grad
             adversarial = do_a_very_good_adversarial_attack(inputs, targets, masks)
 
