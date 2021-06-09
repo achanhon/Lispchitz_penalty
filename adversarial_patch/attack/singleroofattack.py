@@ -138,7 +138,7 @@ def do_a_very_good_adversarial_attack(x, y, a):
 
         x0 = torch.zeros(xa.shape)
         x255 = torch.ones(xa.shape) * 255
-        xa = torch.maximum(x0, torch.minimum(xaa + grad, x255)).clone()
+        xa = torch.max(x0, torch.min(xaa + grad, x255)).clone()
 
     return xa
 
