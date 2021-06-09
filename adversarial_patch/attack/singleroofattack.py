@@ -132,7 +132,7 @@ def do_a_very_good_adversarial_attack(x, y, a):
         loss.backward()
 
         grad = xaa.grad
-        grad = torch.sign(grad)
+        grad = torch.sign(grad * 1000)
         a3 = torch.stack([a, a, a], dim=1)
         xaa = xaa + grad * a3
 
@@ -140,6 +140,8 @@ def do_a_very_good_adversarial_attack(x, y, a):
         x255 = torch.ones(xa.shape).cuda() * 255
         xa = torch.max(x0, torch.min(xaa, x255)).clone()
 
+    tmp = torch.sum((x - xa).abs())
+    print(tmp)
     return xa
 
 
