@@ -132,7 +132,7 @@ if True:
         A = torch.stack([torch.from_numpy(a).long().cpu() for _, _, a in XYA])
         del XYA
 
-        XYAtensor = torch.utils.data.TensorDataset(X, Y, Z)
+        XYAtensor = torch.utils.data.TensorDataset(X, Y, A)
         dataloader = torch.utils.data.DataLoader(
             XYAtensor, batch_size=8, shuffle=False, num_workers=2
         )
