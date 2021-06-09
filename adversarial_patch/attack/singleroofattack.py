@@ -119,7 +119,7 @@ def do_a_very_good_adversarial_attack(x, y, a):
     xa = x.clone()
 
     for i in range(100):
-        xaa = xa.clone()
+        xaa = xa.clone().detach().requires_grad_()
         optimizer = torch.optim.SGD([xaa], lr=1)
         preds = net(xaa)
 
@@ -131,7 +131,7 @@ def do_a_very_good_adversarial_attack(x, y, a):
         optimizer.zero_grad()
         loss.backward()
 
-        grad = xaa.grad
+        grad = xaa.grad * a
         grad = torch.round(grad)
         xaa = xaa + grad
 
