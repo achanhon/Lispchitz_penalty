@@ -208,7 +208,7 @@ if True:
             im = PIL.Image.fromarray(np.uint8(Za[i].cpu().numpy() * 125))
             im.save("build/" + town[0:-5] + "_" + str(i) + "_p.png")
 
-            xa = np.transpose(Xa[i].cpu().numpy(), axes=(1, 2, 0))
+            xa = np.transpose(Xa[i].detach().cpu().numpy(), axes=(1, 2, 0))
             im = PIL.Image.fromarray(np.uint8(xa))
             im.save("build/" + town[0:-5] + "_" + str(i) + "_q.png")
 
