@@ -64,6 +64,8 @@ def f1(cm):
 
 from skimage import measure
 
+CROPSIZE = 128
+
 
 def select_rootcentredpatch(image, label):
     blobs_image = measure.label(label, background=0)
@@ -76,10 +78,10 @@ def select_rootcentredpatch(image, label):
         r, c = blob.centroid
         r, c = int(r), int(c)
         if (
-            r <= 257
-            or r + 257 >= label.shape[0]
-            or c <= 257
-            or c + 257 >= label.shape[1]
+            r <= CROPSIZE + 1
+            or r + CROPSIZE + 1 >= label.shape[0]
+            or c <= CROPSIZE + 1
+            or c + CROPSIZE + 1 >= label.shape[1]
         ):
             continue
         else:
@@ -98,10 +100,10 @@ def select_rootcentredpatch(image, label):
         r, c = blob.centroid
         r, c = int(r), int(c)
         x, y = (
-            image[r - 256 : r + 256, c - 256 : c + 256, :].copy(),
-            label[r - 256 : r + 256, c - 256 : c + 256].copy(),
+            image[r - CROPSIZE : r + CROPSIZE, c - CROPSIZE : c + CROPSIZE, :].copy(),
+            label[r - CROPSIZE : r + CROPSIZE, c - CROPSIZE : c + CROPSIZE].copy(),
         )
-        a = blobs_image[r - 256 : r + 256, c - 256 : c + 256].copy()
+        a = blobs_image[r - CROPSIZE : r + CROPSIZE, c - CROPSIZE : c + CROPSIZE].copy()
 
         a = np.uint8(a == blob.label)
         XYA.append((x, y, a))
@@ -130,10 +132,7 @@ if True:
 
         # pytorch
         X = torch.stack(
-            [
-                torch.Tensor(np.transpose(np.uint8(x), axes=(2, 0, 1))).cpu()
-                for x, _, _ in XYA
-            ]
+            [torch.Tensor(np.transpose(x, axes=(2, 0, 1))).cpu() for x, _, _ in XYA]
         )
         Y = torch.stack([torch.from_numpy(y).long().cpu() for _, y, _ in XYA])
         Y = dataloader.convertIn3class(Y)
