@@ -109,6 +109,10 @@ def select_rootcentredpatch(image, label):
     return XYA
 
 
+weights = torch.Tensor([1, miniworld.balance, 0.00001]).to(device)
+criterion = torch.nn.CrossEntropyLoss(weight=weights)
+
+
 def do_a_very_good_adversarial_attack(x, y, a):
     # TODO
     return x
@@ -129,6 +133,7 @@ if True:
             [torch.Tensor(np.transpose(x, axes=(2, 0, 1))).cpu() for x, _, _ in XYA]
         )
         Y = torch.stack([torch.from_numpy(y).long().cpu() for _, y, _ in XYA])
+        Y = dataloader.convertIn3class(Y)
         A = torch.stack([torch.from_numpy(a).long().cpu() for _, _, a in XYA])
         del XYA
 
