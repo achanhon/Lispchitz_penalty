@@ -98,7 +98,7 @@ with torch.no_grad():
             )
 
             if town in ["toulouse/test"]:
-                image = np.transpose(image.cpu().numpy(), axes=(1, 2, 0))
+                image = np.transpose(image[0].cpu().numpy(), axes=(1, 2, 0))
                 im = PIL.Image.fromarray(np.uint8(image))
                 im.save("build/" + town[0:-5] + "_" + str(i) + "_x.png")
                 labelim = PIL.Image.fromarray(np.uint8(label) * 125)
