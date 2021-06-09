@@ -98,8 +98,9 @@ with torch.no_grad():
             )
 
             if town in ["austin/test"]:
-                imageraw = PIL.Image.fromarray(np.uint8(imageraw))
-                imageraw.save("build/" + town[0:-5] + "_" + str(i) + "_x.png")
+                image = np.transpose(image.cpu().numpy(), axes=(1, 2, 0))
+                im = PIL.Image.fromarray(np.uint8(image))
+                im.save("build/" + town[0:-5] + "_" + str(i) + "_x.png")
                 labelim = PIL.Image.fromarray(np.uint8(label) * 125)
                 labelim.save("build/" + town[0:-5] + "_" + str(i) + "_y.png")
                 predim = PIL.Image.fromarray(np.uint8(pred) * 125)
