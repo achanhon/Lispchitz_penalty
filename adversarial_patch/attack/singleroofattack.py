@@ -136,10 +136,10 @@ if True:
         dataloader = torch.utils.data.DataLoader(
             XYAtensor, batch_size=8, shuffle=False, num_workers=2
         )
-        dataloader = dataloader.cuda()
 
         ZXaZa = []
         for inputs, targets, masks in dataloader:
+            inputs, targets, masks = inputs.cuda(), targets.cuda(), masks.cuda()
             with torch.no_grad():
                 preds = net(inputs)
 
