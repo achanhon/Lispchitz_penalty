@@ -132,12 +132,9 @@ def do_a_very_good_adversarial_attack(x, y, a):
         loss.backward()
 
         grad = xaa.grad
-
-        print(xaa.shape, grad.shape, a.shape)
-        quit()
-
         grad = torch.round(grad)
-        xaa = xaa + grad * a
+        a3 = torch.cat([a, a, a], dim=1)
+        xaa = xaa + grad * a3
 
         x0 = torch.zeros(xa.shape)
         x255 = torch.ones(xa.shape) * 255
