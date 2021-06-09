@@ -140,7 +140,7 @@ def do_a_very_good_adversarial_attack(x, y, a):
         x255 = torch.ones(xa.shape).cuda() * 255
         xa = torch.max(x0, torch.min(xaa, x255)).clone()
 
-    tmp = torch.sum((x - xa).abs())
+    tmp = torch.sum((x - xa).abs()) / x.shape[0]
     print(tmp)
     return xa
 
@@ -208,7 +208,7 @@ if True:
             im = PIL.Image.fromarray(np.uint8(Za[i].cpu().numpy() * 125))
             im.save("build/" + town[0:-5] + "_" + str(i) + "_p.png")
 
-            xa = np.transpose(X[i].cpu().numpy(), axes=(1, 2, 0))
+            xa = np.transpose(Xa[i].cpu().numpy(), axes=(1, 2, 0))
             im = PIL.Image.fromarray(np.uint8(xa))
             im.save("build/" + town[0:-5] + "_" + str(i) + "_q.png")
 
