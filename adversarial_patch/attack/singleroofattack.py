@@ -133,7 +133,7 @@ def do_a_very_good_adversarial_attack(x, y, a):
 
         grad = xaa.grad
         grad = torch.round(grad)
-        a3 = torch.cat([a, a, a], dim=1)
+        a3 = torch.stack([a, a, a], dim=1)
         xaa = xaa + grad * a3
 
         x0 = torch.zeros(xa.shape)
