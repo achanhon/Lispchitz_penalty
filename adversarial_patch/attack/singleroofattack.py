@@ -149,7 +149,7 @@ if True:
             with torch.no_grad():
                 predsa = net(adversarial)
 
-            ZXaZa.append(preds, adversarial, predsa)
+            ZXaZa.append((preds, adversarial, predsa))
 
         Z = torch.concat([z for z, _, _ in ZXaZa], dim=0)
         Xa = torch.concat([xa for _, xa, _ in ZXaZa], dim=0)
