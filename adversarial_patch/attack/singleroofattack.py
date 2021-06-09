@@ -133,12 +133,12 @@ if True:
         del XYA
 
         XYAtensor = torch.utils.data.TensorDataset(X, Y, A)
-        dataloader = torch.utils.data.DataLoader(
+        pytorchloader = torch.utils.data.DataLoader(
             XYAtensor, batch_size=16, shuffle=False, num_workers=2
         )
 
         ZXaZa = []
-        for inputs, targets, masks in dataloader:
+        for inputs, targets, masks in pytorchloader:
             inputs, targets, masks = inputs.cuda(), targets.cuda(), masks.cuda()
             with torch.no_grad():
                 preds = net(inputs)
