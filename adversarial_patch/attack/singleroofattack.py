@@ -149,7 +149,7 @@ if True:
 
             with torch.no_grad():
                 predsa = net(adversarial)
-                _, predsa = torch.max(preds, 1)
+                _, predsa = torch.max(predsa, 1)
 
             ZXaZa.append((preds, adversarial, predsa))
 
