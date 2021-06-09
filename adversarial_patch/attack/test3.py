@@ -74,7 +74,7 @@ with torch.no_grad():
         for i in range(miniworld.data[town].nbImages):
             imageraw, label = miniworld.data[town].getImageAndLabel(i)
 
-            print(imageraw[0:8, 0:8, 0], imageraw.type)
+            print(imageraw[0:8, 0:8, 0], imageraw.dtype)
 
             image = torch.Tensor(np.transpose(imageraw, axes=(2, 0, 1))).unsqueeze(0)
 
