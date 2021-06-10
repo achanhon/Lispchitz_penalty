@@ -120,7 +120,7 @@ criterion = torch.nn.CrossEntropyLoss(weight=weights)
 def do_a_very_good_adversarial_attack(x, y, a):
     xa = x.clone()
 
-    for i in range(200):
+    for i in range(400):
         xaa = xa.clone().detach().requires_grad_()
         optimizer = torch.optim.SGD([xaa], lr=1)
         preds = net(xaa)
