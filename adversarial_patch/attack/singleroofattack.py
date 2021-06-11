@@ -118,10 +118,10 @@ criterion = torch.nn.CrossEntropyLoss(weight=weights)
 
 
 def do_a_very_good_adversarial_attack(x, y, a):
-    xa = x.clone()
+    xa = x.cpu().numpy()
 
     for i in range(400):
-        xaa = xa.clone().detach().requires_grad_()
+        xaa = torch.Tensor(xa).cuda().requires_grad_()
         optimizer = torch.optim.SGD([xaa], lr=1)
         preds = net(xaa)
 
@@ -140,11 +140,11 @@ def do_a_very_good_adversarial_attack(x, y, a):
 
         x0 = torch.zeros(xa.shape).cuda()
         x255 = torch.ones(xa.shape).cuda() * 255
-        xa = torch.max(x0, torch.min(xaa, x255)).clone()
+        xa = torch.max(x0, torch.min(xaa, x255)).cpu().numpy()
 
     # tmp = torch.sum((x - xa).abs()) / x.shape[0]
     # print(tmp)
-    return xa
+    return torch.Tensor(xa).cuda()
 
 
 cm = {}
