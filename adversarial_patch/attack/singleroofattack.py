@@ -199,26 +199,28 @@ if True:
 
         cm[town] = np.zeros((3, 3), dtype=int)
         cmattack[town] = np.zeros((3, 3), dtype=int)
+
         for i in range(X.shape[0]):
-            x = np.transpose(X[i].cpu().numpy(), axes=(1, 2, 0))
-            im = PIL.Image.fromarray(np.uint8(x))
-            im.save("build/" + town[0:-5] + "_" + str(i) + "_x.png")
+            if town in ["christchurch/test"]:
+                x = np.transpose(X[i].cpu().numpy(), axes=(1, 2, 0))
+                im = PIL.Image.fromarray(np.uint8(x))
+                im.save("build/" + town[0:-5] + "_" + str(i) + "_x.png")
 
-            im = PIL.Image.fromarray(np.uint8(Y[i].cpu().numpy() * 125))
-            im.save("build/" + town[0:-5] + "_" + str(i) + "_y.png")
+                im = PIL.Image.fromarray(np.uint8(Y[i].cpu().numpy() * 125))
+                im.save("build/" + town[0:-5] + "_" + str(i) + "_y.png")
 
-            im = PIL.Image.fromarray(np.uint8(A[i].cpu().numpy() * 125))
-            im.save("build/" + town[0:-5] + "_" + str(i) + "_a.png")
+                im = PIL.Image.fromarray(np.uint8(A[i].cpu().numpy() * 125))
+                im.save("build/" + town[0:-5] + "_" + str(i) + "_a.png")
 
-            im = PIL.Image.fromarray(np.uint8(Z[i].cpu().numpy() * 125))
-            im.save("build/" + town[0:-5] + "_" + str(i) + "_z.png")
+                im = PIL.Image.fromarray(np.uint8(Z[i].cpu().numpy() * 125))
+                im.save("build/" + town[0:-5] + "_" + str(i) + "_z.png")
 
-            im = PIL.Image.fromarray(np.uint8(Za[i].cpu().numpy() * 125))
-            im.save("build/" + town[0:-5] + "_" + str(i) + "_p.png")
+                im = PIL.Image.fromarray(np.uint8(Za[i].cpu().numpy() * 125))
+                im.save("build/" + town[0:-5] + "_" + str(i) + "_p.png")
 
-            xa = np.transpose(Xa[i].detach().cpu().numpy(), axes=(1, 2, 0))
-            im = PIL.Image.fromarray(np.uint8(xa))
-            im.save("build/" + town[0:-5] + "_" + str(i) + "_q.png")
+                xa = np.transpose(Xa[i].detach().cpu().numpy(), axes=(1, 2, 0))
+                im = PIL.Image.fromarray(np.uint8(xa))
+                im.save("build/" + town[0:-5] + "_" + str(i) + "_q.png")
 
             cm[town] += confusion_matrix(
                 Y[i].cpu().numpy().flatten(),
