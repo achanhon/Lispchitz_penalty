@@ -140,7 +140,7 @@ def do_a_very_good_adversarial_attack(x, y, a):
 
         x0 = torch.zeros(xa.shape).cuda()
         x255 = torch.ones(xa.shape).cuda() * 255
-        xa = torch.max(x0, torch.min(xaa, x255)).cpu().numpy()
+        xa = torch.max(x0, torch.min(xaa, x255)).detach().cpu().numpy()
 
     # tmp = torch.sum((x - xa).abs()) / x.shape[0]
     # print(tmp)
