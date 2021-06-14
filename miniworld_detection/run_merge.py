@@ -22,7 +22,7 @@ if os.path.exists(root + "CIA"):
     quit()
 os.makedirs(root + "CIA")
 
-os.system("python merge_mini_world.py")
+os.system("python merge_cia.py")
 
 #if whereIam == "super":
 #    os.system("/data/anaconda3/envs/rahh/bin/python merge_mini_world.py ")
