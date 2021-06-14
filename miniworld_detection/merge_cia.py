@@ -1,7 +1,8 @@
 import os
 import numpy as np
 import json
-
+import PIL
+from PIL import Image
 from skimage import measure
 
 
@@ -72,7 +73,7 @@ whereIam = os.uname()[1]
 if whereIam == "super":
     availabledata = ["isprs", "dfc"]
     root = "/data/"
-    rootminiworld = root + "/cia/"
+    rootminiworld = root + "/CIA/"
 
 # if whereIam == "wdtim719z":
 #    availabledata = ["semcity", "isprs", "airs", "dfc"]
