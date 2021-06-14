@@ -24,15 +24,14 @@ os.makedirs(root + "CIA")
 
 os.system("python merge_cia.py")
 
-#if whereIam == "super":
+# if whereIam == "super":
 #    os.system("/data/anaconda3/envs/rahh/bin/python merge_mini_world.py ")
 #
-#if whereIam == "wdtim719z":
+# if whereIam == "wdtim719z":
 #    os.system("/data/anaconda3/bin/python merge_mini_world.py ")
 #
-#if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
+# if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
 #    os.system("/d/jcastillo/anaconda3/bin/python merge_mini_world.py")
 
 
 print("miniworld has been successfully created")
-

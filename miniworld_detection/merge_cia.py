@@ -74,12 +74,12 @@ if whereIam == "super":
     root = "/data/"
     rootminiworld = root + "/cia/"
 
-#if whereIam == "wdtim719z":
+# if whereIam == "wdtim719z":
 #    availabledata = ["semcity", "isprs", "airs", "dfc"]
 #    root = "/data/"
 #    rootminiworld = root + "/miniworld/"
 
-#if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
+# if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
 #    availabledata = [
 #        "semcity",
 #        "dfc",
@@ -206,4 +206,4 @@ if "isprs" in availabledata:
 
         resizeram(XY, rootminiworld + "potsdam/" + flag, 5)
 
-print("todo","saclay ?","vedai","xview","dota")
+print("todo", "saclay ?", "vedai", "xview", "dota")
