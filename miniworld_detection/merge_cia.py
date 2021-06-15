@@ -17,7 +17,7 @@ def getcentroide(label, size=1):
     for blob in blobs:
         r, c = blob.centroid
         r, c = int(r), int(c)
-
+        print(r, c)
         if (
             r <= size + 1
             or r + size + 1 >= label.shape[0]
@@ -47,6 +47,8 @@ def resizefile(root, XY, output, nativeresolution, outputresolution=25.0):
                 PIL.Image.BILINEAR,
             )
             label = label.resize((image.size[0], image.size[1]), PIL.Image.NEAREST)
+
+        label.save(output + "/" + str(i) + "_wtf.png")
 
         tmp = np.asarray(label)
         tmp = getcentroide(tmp)
