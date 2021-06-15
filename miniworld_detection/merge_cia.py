@@ -89,11 +89,11 @@ if whereIam == "ldtis706z":
     availabledata = ["isprs", "dfc"]
     root = "/media/achanhon/bigdata/data/"
 
+if whereIam == "wdtim719z":
+    availabledata = ["isprs", "dfc"]
+    root = "/data/"
+
 rootminiworld = root + "/CIA/"
-# if whereIam == "wdtim719z":
-#    availabledata = ["semcity", "isprs", "airs", "dfc"]
-#    root = "/data/"
-#    rootminiworld = root + "/miniworld/"
 
 # if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
 #    availabledata = [

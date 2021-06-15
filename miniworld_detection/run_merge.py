@@ -31,9 +31,9 @@ if whereIam == "super":
 
 if whereIam == "ldtis706z":
     os.system("python3 merge_cia.py ")
-#
-# if whereIam == "wdtim719z":
-#    os.system("/data/anaconda3/bin/python merge_mini_world.py ")
+
+if whereIam == "wdtim719z":
+    os.system("/data/anaconda3/bin/python merge_cia.py ")
 #
 # if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
 #    os.system("/d/jcastillo/anaconda3/bin/python merge_mini_world.py")
