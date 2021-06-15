@@ -30,35 +30,17 @@ def getindexeddata():
     whereIam = os.uname()[1]
 
     if whereIam in ["super", "wdtim719z"]:
-        root = "/data/miniworld/"
+        root = "/data/CIA/"
+
+    if whereIam in ["ldtis706z"]:
+        root = "/data/CIA/"
 
     if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
-        root = "/scratch_ai4geo/miniworld/"
+        root = "/scratch_ai4geo/CIA/"
 
     availabledata = [
         "potsdam",
-        "christchurch",
-        "toulouse",
-        # "paris",
-        "austin",
-        "chicago",
-        "kitsap",
-        "tyrol-w",
-        "vienna",
-        # "vegas",
-        # "shanghai",
-        # "khartoum",
         "bruges",
-        # "rio",
-        "Arlington",
-        "Austin",
-        "DC",
-        "NewYork",
-        "SanFrancisco",
-        "Atlanta",
-        "NewHaven",
-        "Norfolk",
-        "Seekonk",
     ]
 
     return root, availabledata
@@ -148,7 +130,7 @@ class SegSemDataset:
         return XY
 
 
-class MiniWorld:
+class CIA:
     def __init__(self, flag="train", custom=None, without=None):
         assert flag in ["train", "test", "custom"]
 
@@ -171,7 +153,7 @@ class MiniWorld:
 
         self.balance = self.nbnonbat / self.nbbat
         print(
-            "indexing miniworld (mode",
+            "indexing cia (mode",
             flag,
             "):",
             len(self.towns),
@@ -263,15 +245,12 @@ def largeforwardCPU(net, image, device, tilesize=128, stride=32):
     return pred
 
 
-def convertIn3class(y):
-    yy = 1.0 - y  # inverse background and building
+def convertIn3class(y, size=3):
     yy = torch.nn.functional.max_pool2d(
-        yy, kernel_size=5, stride=1, padding=2
-    )  # expand background
-    yy = 1.0 - yy  # restore 0 - 1
-    yy = yy.long()
-    yy += 2 * (yy != y).long()  # work because we have extended only the background
-    return yy
+        y, kernel_size=size * 2 + 1, stride=1, padding=size
+    )
+    yy = yy * 2 - y
+    return yy.long()
 
 
 def convertIn3classNP(y):

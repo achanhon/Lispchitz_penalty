@@ -37,7 +37,7 @@ import collections
 import random
 
 net = smp.Unet(
-    encoder_name="efficientnet-b7",
+    encoder_name="efficientnet-b0",
     encoder_weights="imagenet",
     in_channels=3,
     classes=2,
@@ -49,10 +49,10 @@ net.train()
 print("load data")
 import dataloader
 
-miniworld = dataloader.MiniWorld()
+cia = dataloader.CIA()
 
-earlystopping = miniworld.getrandomtiles(5000, 128, 32)
-weights = torch.Tensor([1, miniworld.balance, 0.00001]).to(device)
+earlystopping = cia.getrandomtiles(5000, 128, 32)
+weights = torch.Tensor([1, cia.balance, 0.00001]).to(device)
 criterion = torch.nn.CrossEntropyLoss(weight=weights)
 
 criterionbis = smp.losses.dice.DiceLoss(mode="multiclass", ignore_index=[2])
@@ -92,7 +92,7 @@ batchsize = 16
 for epoch in range(nbepoch):
     print("epoch=", epoch, "/", nbepoch)
 
-    XY = miniworld.getrandomtiles(10000, 128, batchsize)
+    XY = cia.getrandomtiles(10000, 128, batchsize)
     for x, y in XY:
         x, y = x.to(device), y.to(device)
 

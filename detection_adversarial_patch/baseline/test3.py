@@ -50,11 +50,11 @@ print("massif benchmark")
 import dataloader
 
 if whereIam == "super":
-    miniworld = dataloader.MiniWorld(
+    cia = dataloader.CIA(
         flag="custom", custom=["potsdam/test", "bruges/test"]
     )
 else:
-    miniworld = dataloader.MiniWorld("test")
+    cia = dataloader.CIA("test")
 
 
 def accu(cm):
@@ -70,11 +70,11 @@ def f1(cm):
 cmforlogging = []
 cm = {}
 with torch.no_grad():
-    for town in miniworld.towns:
+    for town in cia.towns:
         print(town)
         cm[town] = np.zeros((3, 3), dtype=int)
-        for i in range(miniworld.data[town].nbImages):
-            imageraw, label = miniworld.data[town].getImageAndLabel(i)
+        for i in range(cia.data[town].nbImages):
+            imageraw, label = cia.data[town].getImageAndLabel(i)
 
             image = torch.Tensor(np.transpose(imageraw, axes=(2, 0, 1))).unsqueeze(0)
             globalresize = torch.nn.AdaptiveAvgPool2d((image.shape[2], image.shape[3]))
@@ -119,10 +119,10 @@ with torch.no_grad():
         np.savetxt("build/logtest.txt", tmp)
 
 print("-------- results ----------")
-for town in miniworld.towns:
+for town in cia.towns:
     print(town, accu(cm[town]), f1(cm[town]))
 
 globalcm = np.zeros((2, 2), dtype=int)
-for town in miniworld.towns:
+for town in cia.towns:
     globalcm += cm[town]
-print("miniworld", accu(globalcm), f1(globalcm))
+print("cia", accu(globalcm), f1(globalcm))
