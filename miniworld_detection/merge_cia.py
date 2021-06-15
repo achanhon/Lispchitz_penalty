@@ -12,12 +12,9 @@ def getcentroide(label, size=1):
     blobs_image = measure.label(label, background=0)
     blobs = measure.regionprops(blobs_image)
 
-    print(len(blobs))
-
     for blob in blobs:
         r, c = blob.centroid
         r, c = int(r), int(c)
-        print(r, c)
         if (
             r <= size + 1
             or r + size + 1 >= label.shape[0]
@@ -48,8 +45,6 @@ def resizefile(root, XY, output, nativeresolution, outputresolution=25.0):
             )
             label = label.resize((image.size[0], image.size[1]), PIL.Image.NEAREST)
 
-        label.save(output + "/" + str(i) + "_wtf.png")
-
         tmp = np.asarray(label)
         tmp = getcentroide(tmp)
         label = PIL.Image.fromarray(np.uint8(tmp))
@@ -64,7 +59,6 @@ def resizeram(XY, output, nativeresolution, outputresolution=25.0):
     for name in XY:
         x, y = XY[name]
         image = PIL.Image.fromarray(np.uint8(x))
-        y = getcentroide(y)
         label = PIL.Image.fromarray(np.uint8(y))
 
         if nativeresolution != outputresolution:
@@ -77,10 +71,13 @@ def resizeram(XY, output, nativeresolution, outputresolution=25.0):
             )
             label = label.resize((image.size[0], image.size[1]), PIL.Image.NEAREST)
 
+        tmp = np.asarray(label)
+        tmp = getcentroide(tmp)
+        label = PIL.Image.fromarray(np.uint8(tmp))
+
         image.save(output + "/" + str(i) + "_x.png")
         label.save(output + "/" + str(i) + "_y.png")
         i += 1
-        quit()
 
 
 whereIam = os.uname()[1]
