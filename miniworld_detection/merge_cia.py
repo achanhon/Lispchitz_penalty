@@ -6,8 +6,7 @@ from PIL import Image
 from skimage import measure
 
 
-def getcentroide(label):
-    return label
+def getcentroide(label, size=1):
     centerlabel = np.zeros(label.shape)
 
     blobs_image = measure.label(label, background=0)
@@ -16,7 +15,16 @@ def getcentroide(label):
     for blob in blobs:
         r, c = blob.centroid
         r, c = int(r), int(c)
-        centerlabel[r][c] = 255
+
+        if (
+            r <= size + 1
+            or r + size + 1 >= label.shape[0]
+            or c <= size + 1
+            or c + size + 1 >= label.shape[1]
+        ):
+            continue
+
+        centerlabel[r - size : r + size + 1, c - size : c + size + 1] = 255
 
     return centerlabel
 
