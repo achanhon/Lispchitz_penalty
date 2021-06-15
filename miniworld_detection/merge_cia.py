@@ -13,8 +13,7 @@ def getcentroide(label, size=1):
     blobs = measure.regionprops(blobs_image)
 
     print(len(blobs))
-    quit()
-    
+
     for blob in blobs:
         r, c = blob.centroid
         r, c = int(r), int(c)
@@ -79,6 +78,7 @@ def resizeram(XY, output, nativeresolution, outputresolution=25.0):
         image.save(output + "/" + str(i) + "_x.png")
         label.save(output + "/" + str(i) + "_y.png")
         i += 1
+        quit()
 
 
 whereIam = os.uname()[1]
