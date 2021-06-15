@@ -73,8 +73,12 @@ whereIam = os.uname()[1]
 if whereIam == "super":
     availabledata = ["isprs", "dfc"]
     root = "/data/"
-    rootminiworld = root + "/CIA/"
 
+if whereIam == "ldtis706z":
+    availabledata = ["isprs", "dfc"]
+    root = "/media/achanhon/bigdata/data/"
+
+rootminiworld = root + "/CIA/"
 # if whereIam == "wdtim719z":
 #    availabledata = ["semcity", "isprs", "airs", "dfc"]
 #    root = "/data/"
