@@ -7,6 +7,7 @@ from skimage import measure
 
 
 def getcentroide(label):
+    return label
     centerlabel = np.zeros(label.shape)
 
     blobs_image = measure.label(label, background=0)
