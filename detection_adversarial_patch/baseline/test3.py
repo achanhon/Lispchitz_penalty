@@ -50,9 +50,7 @@ print("massif benchmark")
 import dataloader
 
 if whereIam == "super":
-    cia = dataloader.CIA(
-        flag="custom", custom=["potsdam/test", "bruges/test"]
-    )
+    cia = dataloader.CIA(flag="custom", custom=["potsdam/test", "bruges/test"])
 else:
     cia = dataloader.CIA("test")
 

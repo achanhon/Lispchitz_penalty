@@ -247,7 +247,7 @@ def largeforwardCPU(net, image, device, tilesize=128, stride=32):
 
 def convertIn3class(y, size=3):
     yy = torch.nn.functional.max_pool2d(
-        y, kernel_size=size * 2 + 1, stride=1, padding=size
+        y.float(), kernel_size=size * 2 + 1, stride=1, padding=size
     )
     yy = yy * 2 - y
     return yy.long()
