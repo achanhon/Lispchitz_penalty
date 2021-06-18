@@ -51,7 +51,7 @@ import dataloader
 
 cia = dataloader.SegSemDataset("/scratchf/xviewpreprocess/")
 
-earlystopping = cia.getrandomtiles(5000, 128, 32)
+earlystopping = cia.getrawrandomtiles(5000, 128, 32)
 weights = torch.Tensor([1, cia.balance, 0.00001]).to(device)
 criterion = torch.nn.CrossEntropyLoss(weight=weights)
 
@@ -92,7 +92,7 @@ batchsize = 16
 for epoch in range(nbepoch):
     print("epoch=", epoch, "/", nbepoch)
 
-    XY = cia.getrandomtiles(10000, 128, batchsize)
+    XY = cia.getrawrandomtiles(10000, 128, batchsize)
     for x, y in XY:
         x, y = x.to(device), y.to(device)
 
