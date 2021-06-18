@@ -18,7 +18,7 @@ with open("/data/XVIEW1/xView_train.geojson", "r") as infile:
     for token in text:
         tokenid = token["properties"]["image_id"]
         tokenclass = token["properties"]["type_id"]
-        if tokenid in imagesname and int(tokenclass)==18:
+        if tokenid in imagesname and int(tokenclass) == 18:
             rect = token["geometry"]["coordinates"]
             rect = np.asarray(rect)
             rect = rect[0]
@@ -26,14 +26,18 @@ with open("/data/XVIEW1/xView_train.geojson", "r") as infile:
 
             imagesname[tokenid].append(center)
 
+import rasterio
+
+size = 1
+
 for i, name in enumerate(imagesname):
-    with rasterio.open("/data/XView1/train_images/" + name) as src:
+    with rasterio.open("/data/XVIEW1/train_images/" + name) as src:
         affine = src.transform
-        r = np.int16(src.read(1))
+        red = np.int16(src.read(1))
         g = np.int16(src.read(2))
         b = np.int16(src.read(3))
 
-    mask = np.zeros(r.shape[1], r.shape[0])
+    mask = np.zeros((red.shape[1], red.shape[0]))
     centers = imagesname[name]
 
     for center in centers:
@@ -41,16 +45,17 @@ for i, name in enumerate(imagesname):
         r, c = int(r), int(c)
         if (
             r <= size + 1
-            or r + size + 1 >= label.shape[0]
+            or r + size + 1 >= mask.shape[0]
             or c <= size + 1
-            or c + size + 1 >= label.shape[1]
+            or c + size + 1 >= mask.shape[1]
         ):
             continue
 
         mask[r - size : r + size + 1, c - size : c + size + 1] = 255
 
+    mask = PIL.Image.fromarray(np.uint8(mask))
     mask.save(output + str(i) + "_y.png")
 
-    rgb = numpy.stack([r, g, b], axis=-1)
+    rgb = np.stack([red, g, b], axis=-1)
     image = PIL.Image.fromarray(np.uint8(rgb))
     image.save(output + "/" + str(i) + "_x.png")
