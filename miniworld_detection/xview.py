@@ -6,12 +6,12 @@ import numpy as np
 import PIL
 from PIL import Image
 
-imagesname = os.listdir("/data/XView1/train_images")
+imagesname = os.listdir("/data/XVIEW1/train_images")
 imagesname = dict.fromkeys(imagesname, [])
 
 output = "build/"
 
-with open("/data/XView1/xView_train.geojson", "r") as infile:
+with open("/data/XVIEW1/xView_train.geojson", "r") as infile:
     text = json.load(infile)
 
     text = text["features"]
@@ -21,6 +21,8 @@ with open("/data/XView1/xView_train.geojson", "r") as infile:
             rect = token["geometry"]["coordinates"]
             rect = np.asarray(rect)
             rect = rect[0]
+            if rect.shape != (5, 2):
+                print(rect.shape)
             assert rect.shape == (5, 2)
             center = np.mean(rect, axis=0)
 
