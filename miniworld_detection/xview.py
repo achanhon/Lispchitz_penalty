@@ -7,6 +7,7 @@ import PIL
 from PIL import Image
 
 imagesname = os.listdir("/data/XVIEW1/train_images")
+imagesname = [name for name in imagesname if name[0] != "."]
 imagesname = dict.fromkeys(imagesname, [])
 
 output = "build/"
@@ -37,7 +38,7 @@ for i, name in enumerate(imagesname):
         g = np.int16(src.read(2))
         b = np.int16(src.read(3))
 
-    mask = np.zeros((red.shape[1], red.shape[0]))
+    mask = np.zeros((red.shape[0], red.shape[1]))
     centers = imagesname[name]
 
     for center in centers:
