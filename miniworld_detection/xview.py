@@ -17,13 +17,11 @@ with open("/data/XVIEW1/xView_train.geojson", "r") as infile:
     text = text["features"]
     for token in text:
         tokenid = token["properties"]["image_id"]
-        if tokenid in imagesname:
+        tokenclass = token["properties"]["type_id"]
+        if tokenid in imagesname and int(tokenclass)==18:
             rect = token["geometry"]["coordinates"]
             rect = np.asarray(rect)
             rect = rect[0]
-            if rect.shape != (5, 2):
-                print(rect.shape)
-            assert rect.shape == (5, 2)
             center = np.mean(rect, axis=0)
 
             imagesname[tokenid].append(center)
