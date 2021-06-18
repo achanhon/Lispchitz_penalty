@@ -46,12 +46,25 @@ net = net.cuda()
 net.train()
 
 
+def tileTOpytorch(XY, batchsize=32):
+    X = torch.stack(
+        [torch.Tensor(np.transpose(x, axes=(2, 0, 1))).cpu() for x, y in XY]
+    )
+    Y = torch.stack([torch.from_numpy(y).long().cpu() for x, y in XY])
+    dataset = torch.utils.data.TensorDataset(X, Y)
+    dataloader = torch.utils.data.DataLoader(
+        dataset, batch_size=batchsize, shuffle=True, num_workers=2
+    )
+
+    return dataloader
+
+
 print("load data")
 import dataloader
 
 cia = dataloader.SegSemDataset("/scratchf/xviewpreprocess/")
 
-earlystopping = cia.getrawrandomtiles(5000, 128, 32)
+earlystopping = tileTOpytorch(cia.getrawrandomtiles(5000, 128))
 weights = torch.Tensor([1, cia.balance, 0.00001]).to(device)
 criterion = torch.nn.CrossEntropyLoss(weight=weights)
 
@@ -92,7 +105,7 @@ batchsize = 16
 for epoch in range(nbepoch):
     print("epoch=", epoch, "/", nbepoch)
 
-    XY = cia.getrawrandomtiles(10000, 128, batchsize)
+    XY = tileTOpytorch(cia.getrawrandomtiles(10000, 128))
     for x, y in XY:
         x, y = x.to(device), y.to(device)
 
