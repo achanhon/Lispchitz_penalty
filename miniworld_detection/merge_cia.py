@@ -266,6 +266,8 @@ if "vedai" in availabledata:
             image.save(output + "/" + str(i) + "_x.png")
             label.save(output + "/" + str(i) + "_y.png")
 
+quit()
+
 
 import rasterio
 
