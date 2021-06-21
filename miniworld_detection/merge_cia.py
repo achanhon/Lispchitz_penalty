@@ -81,33 +81,15 @@ def resizeram(XY, output, nativeresolution, outputresolution=30.0):
 
 
 whereIam = os.uname()[1]
-if whereIam == "super":
+if whereIam in ["super", "wdtim719z"]:
     availabledata = ["isprs", "dfc"]
     root = "/data/"
 
 if whereIam == "ldtis706z":
-    availabledata = ["isprs", "dfc"]
+    availabledata = ["isprs", "dfc", "xview"]
     root = "/media/achanhon/bigdata/data/"
 
-if whereIam == "wdtim719z":
-    availabledata = ["isprs", "dfc"]
-    root = "/data/"
-
 rootminiworld = root + "/CIA/"
-
-# if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
-#    availabledata = [
-#        "semcity",
-#        "dfc",
-#        "spacenet1",
-#        "spacenet2",
-#        "isprs",
-#        "airs",
-#        "inria",
-#        "bradbery",
-#    ]
-#    root = "/scratch_ai4geo/DATASETS/"
-#    rootminiworld = "/scratch_ai4geo/miniworld/"
 
 
 def makepath(name):
@@ -117,8 +99,8 @@ def makepath(name):
 
 
 if "isprs" in availabledata:
-    print("export isprs potsdam")
-    makepath("potsdam")
+    print("export isprs")
+    makepath("isprs")
 
     names = {}
     names["train"] = [
@@ -181,32 +163,26 @@ if "isprs" in availabledata:
 
             XY[name] = (x, y)
 
-        resizeram(XY, rootminiworld + "potsdam/" + flag, 5)
+        resizeram(XY, rootminiworld + "isprs/" + flag, 5)
 
 if "dfc" in availabledata:
-    print("export dfc 2015 bruges")
-    makepath("bruges")
+    print("export dfc 2015")
+    makepath("dfc")
 
     names = {}
     names["train"] = ["315130_56865", "315130_56870", "315135_56870", "315140_56865"]
     names["test"] = ["315135_56865", "315145_56865"]
 
-    hack = ""
-    if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
-        hack = "../"
-
     for flag in ["train", "test"]:
         XY = {}
         for name in names[flag]:
             x = (
-                PIL.Image.open(
-                    root + hack + "DFC2015/" + "BE_ORTHO_27032011_" + name + ".tif"
-                )
+                PIL.Image.open(root + "DFC2015/" + "BE_ORTHO_27032011_" + name + ".tif")
                 .convert("RGB")
                 .copy()
             )
             y = (
-                PIL.Image.open(root + hack + "DFC2015/" + "label_" + name + ".tif")
+                PIL.Image.open(root + "DFC2015/" + "label_" + name + ".tif")
                 .convert("RGB")
                 .copy()
             )
@@ -220,6 +196,73 @@ if "dfc" in availabledata:
 
             XY[name] = (x, y)
 
-        resizeram(XY, rootminiworld + "bruges/" + flag, 5)
+        resizeram(XY, rootminiworld + "dfc/" + flag, 5)
 
-print("todo", "saclay ?", "vedai", "xview", "dota")
+import rasterio
+
+if "xview" in availabledata:
+    print("export xview")
+    makepath("xview")
+
+    imagesname = os.listdir("/data/XVIEW1/train_images")
+    imagesname = [name for name in imagesname if name[0] != "."]
+    imagesname = sorted(imagename)
+
+    testimage = set(imagesname[len(imagesname) * 2 // 3 : len(imagesname)])
+
+    imagesname = dict.fromkeys(imagesname, [])
+
+    output = rootminiworld + "xview/"
+
+    with open("/data/XVIEW1/xView_train.geojson", "r") as infile:
+        text = json.load(infile)
+
+        text = text["features"]
+        for token in text:
+            tokenid = token["properties"]["image_id"]
+            tokenclass = token["properties"]["type_id"]
+            if tokenid in imagesname and int(tokenclass) == 18:
+                rect = token["geometry"]["coordinates"]
+                rect = np.asarray(rect)
+                rect = rect[0]
+                center = np.mean(rect, axis=0)
+
+                imagesname[tokenid].append(center)
+
+    size = 1
+
+    for i, name in enumerate(imagesname):
+        with rasterio.open("/data/XVIEW1/train_images/" + name) as src:
+            affine = src.transform
+            red = np.int16(src.read(1))
+            g = np.int16(src.read(2))
+            b = np.int16(src.read(3))
+
+        mask = np.zeros((red.shape[0], red.shape[1]))
+        centers = imagesname[name]
+
+        for center in centers:
+            r, c = rasterio.transform.rowcol(affine, center[0], center[1])
+            r, c = int(r), int(c)
+            if (
+                r <= size + 1
+                or r + size + 1 >= mask.shape[0]
+                or c <= size + 1
+                or c + size + 1 >= mask.shape[1]
+            ):
+                continue
+
+            mask[r - size : r + size + 1, c - size : c + size + 1] = 255
+
+        mask = PIL.Image.fromarray(np.uint8(mask))
+        rgb = np.stack([red, g, b], axis=-1)
+        image = PIL.Image.fromarray(np.uint8(rgb))
+
+        if name not in testimage:
+            mask.save(output + "train/" + str(i) + "_y.png")
+            image.save(output + "train/" + str(i) + "_x.png")
+        else:
+            mask.save(output + "test/" + str(i - len(imagesname) * 2 // 3) + "_y.png")
+            image.save(output + "test/" + str(i - len(imagesname) * 2 // 3) + "_x.png")
+
+print("todo", "saclay ?", "vedai", "dota")
