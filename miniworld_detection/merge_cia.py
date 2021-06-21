@@ -216,7 +216,7 @@ if "vedai" in availabledata:
     testingRadix = np.loadtxt(root + "VEDAI/INDEX/fold01test.txt")
 
     todo = [("train", trainingRadix), ("test", testingRadix)]
-    for radix, alldata in todo:
+    for flag, alldata in todo:
         for i in range(alldata.shape[0]):
             x = (
                 PIL.Image.open(
@@ -264,8 +264,8 @@ if "vedai" in availabledata:
 
             image = PIL.Image.fromarray(np.uint8(x))
             label = PIL.Image.fromarray(np.uint8(y))
-            image.save(output + "/" + str(i) + "_x.png")
-            label.save(output + "/" + str(i) + "_y.png")
+            image.save(rootminiworld + "vedai/" + flag + "/" + str(i) + "_x.png")
+            label.save(rootminiworld + "vedai/" + flag + "/" + str(i) + "_y.png")
 
 quit()
 
