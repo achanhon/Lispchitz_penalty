@@ -237,6 +237,7 @@ if "vedai" in availabledata:
                     PIL.Image.BILINEAR,
                 )
 
+            x = np.asarray(x)
             y = np.zeros(x.shape[0], x.shape[1])
 
             annotation = np.loadtxt(
