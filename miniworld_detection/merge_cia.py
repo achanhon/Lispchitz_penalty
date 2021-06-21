@@ -210,6 +210,7 @@ if "vedai" in availabledata:
     print("export vedai")
     nativeresolution = 12.5
     outputresolution = 30.0
+    size = 1
     makepath("vedai")
 
     trainingRadix = np.loadtxt(root + "VEDAI/INDEX/fold01.txt")
