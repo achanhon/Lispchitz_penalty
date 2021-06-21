@@ -277,7 +277,7 @@ if "xview" in availabledata:
 
     imagesname = os.listdir("/data/XVIEW1/train_images")
     imagesname = [name for name in imagesname if name[0] != "."]
-    imagesname = sorted(imagename)
+    imagesname = sorted(imagesname)
 
     testimage = set(imagesname[len(imagesname) * 2 // 3 : len(imagesname)])
 
