@@ -28,7 +28,7 @@ def getcentroide(label, size=1):
     return centerlabel
 
 
-def resizefile(root, XY, output, nativeresolution, outputresolution=25.0):
+def resizefile(root, XY, output, nativeresolution, outputresolution=30.0):
     i = 0
     for name in XY:
         x, y = XY[name]
@@ -54,7 +54,7 @@ def resizefile(root, XY, output, nativeresolution, outputresolution=25.0):
         i += 1
 
 
-def resizeram(XY, output, nativeresolution, outputresolution=25.0):
+def resizeram(XY, output, nativeresolution, outputresolution=30.0):
     i = 0
     for name in XY:
         x, y = XY[name]
