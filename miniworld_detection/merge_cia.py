@@ -238,7 +238,7 @@ if "vedai" in availabledata:
                 )
 
             x = np.asarray(x)
-            y = np.zeros(x.shape[0], x.shape[1])
+            y = np.zeros((x.shape[0], x.shape[1]))
 
             annotation = np.loadtxt(
                 root + "VEDAI/Annotations1024/" + intfixedlength(alldata[i]) + ".txt",
