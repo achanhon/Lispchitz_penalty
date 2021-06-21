@@ -221,7 +221,7 @@ if "vedai" in availabledata:
             x = (
                 PIL.Image.open(
                     root
-                    + "VEDAI/Vehicules1024"
+                    + "VEDAI/Vehicules1024/"
                     + intfixedlength(alldata[i])
                     + "_co.png"
                 )
