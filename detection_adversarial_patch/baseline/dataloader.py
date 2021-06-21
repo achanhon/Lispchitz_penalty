@@ -31,17 +31,19 @@ def getindexeddata():
 
     if whereIam in ["super", "wdtim719z"]:
         root = "/data/CIA/"
+        availabledata = [
+            "isprs",
+        ]
 
     if whereIam in ["ldtis706z"]:
         root = "/data/CIA/"
+        availabledata = [
+            "xview",
+            "dfc",
+        ]
 
-    if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
-        root = "/scratch_ai4geo/CIA/"
-
-    availabledata = [
-        "potsdam",
-        "bruges",
-    ]
+    #    if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
+    #        root = "/scratch_ai4geo/CIA/"
 
     return root, availabledata
 
