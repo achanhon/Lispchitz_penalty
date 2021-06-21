@@ -353,4 +353,4 @@ if "xview" in availabledata:
             image.save(output + "test/" + str(i - len(imagesname) * 2 // 3) + "_x.png")
 
 
-print("todo", "saclay ?", "vedai", "dota")
+print("todo dota")
