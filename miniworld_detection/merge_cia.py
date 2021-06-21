@@ -86,7 +86,7 @@ if whereIam in ["super", "wdtim719z"]:
     root = "/data/"
 
 if whereIam == "ldtis706z":
-    availabledata = ["isprs", "dfc", "vedai", "xview"]
+    availabledata = ["isprs", "dfc", "vedai", "saclay", "xview"]
     root = "/media/achanhon/bigdata/data/"
 
 rootminiworld = root + "/CIA/"
@@ -164,6 +164,20 @@ if "isprs" in availabledata:
             XY[name] = (x, y)
 
         resizeram(XY, rootminiworld + "isprs/" + flag, 5)
+
+if "saclay" in availabledata:
+    print("export saclay")
+    makepath("saclay")
+
+    for flag, number in [("train", 12), ("test", 11)]:
+        XY = {}
+        for i in range(number):
+            x = "/images/" + str(i) + ".png"
+            y = "/masks/" + str(i) + ".png"
+
+            XY[i] = (x, y)
+
+        resizefile(root + "SACLAY/" + flag, XY, rootminiworld + "saclay/" + flag, 30.0)
 
 if "dfc" in availabledata:
     print("export dfc 2015")
