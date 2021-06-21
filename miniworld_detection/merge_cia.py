@@ -198,6 +198,75 @@ if "dfc" in availabledata:
 
         resizeram(XY, rootminiworld + "dfc/" + flag, 5)
 
+
+def intfixedlength(i):
+    j = str(int(i))
+    while len(j) < 8:
+        j = "0" + j
+    return j
+
+
+if "vedai" in availabledata:
+    print("export vedai")
+    nativeresolution = 12.5
+    outputresolution = 30.0
+    makepath("vedai")
+
+    trainingRadix = np.loadtxt(root + "VEDAI/INDEX/fold01.txt")
+    testingRadix = np.loadtxt(root + "VEDAI/INDEX/fold01test.txt")
+
+    todo = [("train", trainingRadix), ("test", testingRadix)]
+    for radix, alldata in todo:
+        for i in range(alldata.shape[0]):
+            x = (
+                PIL.Image.open(
+                    root
+                    + "VEDAI/Vehicules1024"
+                    + intfixedlength(alldata[i])
+                    + "_co.png"
+                )
+                .convert("RGB")
+                .copy()
+            )
+            if nativeresolution != outputresolution:
+                x = x.resize(
+                    (
+                        int(x.size[0] * nativeresolution / outputresolution),
+                        int(x.size[1] * nativeresolution / outputresolution),
+                    ),
+                    PIL.Image.BILINEAR,
+                )
+
+            y = np.zeros(x.shape[0], x.shape[1])
+
+            annotation = np.loadtxt(
+                root + "VEDAI/Annotations1024/" + intfixedlength(alldata[i]) + ".txt",
+                delimiter=" ",
+                ndmin=2,
+            )
+            if annotation.shape[0] > 0 and annotation.shape[1] > 3:
+                for j in range(annotation.shape[0]):
+                    if int(annotation[j][3]) == 1:
+                        r, c = annotation[j, 0:2]
+
+                        r = int(r * nativeresolution / outputresolution)
+                        c = int(c * nativeresolution / outputresolution)
+                        if (
+                            r <= size + 1
+                            or r + size + 1 >= label.shape[0]
+                            or c <= size + 1
+                            or c + size + 1 >= label.shape[1]
+                        ):
+                            continue
+
+                        y[r - size : r + size + 1, c - size : c + size + 1] = 255
+
+            image = PIL.Image.fromarray(np.uint8(x))
+            label = PIL.Image.fromarray(np.uint8(y))
+            image.save(output + "/" + str(i) + "_x.png")
+            label.save(output + "/" + str(i) + "_y.png")
+
+
 import rasterio
 
 if "xview" in availabledata:
@@ -264,5 +333,6 @@ if "xview" in availabledata:
         else:
             mask.save(output + "test/" + str(i - len(imagesname) * 2 // 3) + "_y.png")
             image.save(output + "test/" + str(i - len(imagesname) * 2 // 3) + "_x.png")
+
 
 print("todo", "saclay ?", "vedai", "dota")
