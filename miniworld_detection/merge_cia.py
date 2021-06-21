@@ -249,7 +249,7 @@ if "vedai" in availabledata:
             if annotation.shape[0] > 0 and annotation.shape[1] > 3:
                 for j in range(annotation.shape[0]):
                     if int(annotation[j][3]) == 1:
-                        r, c = annotation[j, 0:2]
+                        c, r = annotation[j, 0:2]
 
                         r = int(r * nativeresolution / outputresolution)
                         c = int(c * nativeresolution / outputresolution)
