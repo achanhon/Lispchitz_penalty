@@ -33,13 +33,13 @@ def getindexeddata():
         root = "/data/CIA/"
         availabledata = [
             "isprs",
-            "dfc",
         ]
 
     if whereIam in ["ldtis706z"]:
         root = "/data/CIA/"
         availabledata = [
             "xview",
+            "dfc",
         ]
 
     #    if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
