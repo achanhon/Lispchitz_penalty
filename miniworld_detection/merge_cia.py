@@ -86,7 +86,7 @@ if whereIam in ["super", "wdtim719z"]:
     root = "/data/"
 
 if whereIam == "ldtis706z":
-    availabledata = ["isprs", "dfc", "xview"]
+    availabledata = ["isprs", "dfc", "vedai", "xview"]
     root = "/media/achanhon/bigdata/data/"
 
 rootminiworld = root + "/CIA/"

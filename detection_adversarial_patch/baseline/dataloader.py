@@ -37,10 +37,7 @@ def getindexeddata():
 
     if whereIam in ["ldtis706z"]:
         root = "/data/CIA/"
-        availabledata = [
-            "xview",
-            "dfc",
-        ]
+        availabledata = ["xview", "dfc", "vedai"]
 
     #    if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
     #        root = "/scratch_ai4geo/CIA/"
