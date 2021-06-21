@@ -255,9 +255,9 @@ if "vedai" in availabledata:
                         c = int(c * nativeresolution / outputresolution)
                         if (
                             r <= size + 1
-                            or r + size + 1 >= label.shape[0]
+                            or r + size + 1 >= y.shape[0]
                             or c <= size + 1
-                            or c + size + 1 >= label.shape[1]
+                            or c + size + 1 >= y.shape[1]
                         ):
                             continue
 
