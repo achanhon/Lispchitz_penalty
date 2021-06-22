@@ -39,11 +39,13 @@ for name in imagesname:
         if vt[i][-2] == "small-vehicle":
             vertices = []
             for j in range(0, len(vt[i]) - 2, 2):
-                vertices.append((float(vt[i][j]), float(vt[i][j + 1])))
+                if vt[i][j] != "null" and vt[i][j + 1] != "null":
+                    vertices.append((float(vt[i][j]), float(vt[i][j + 1])))
 
-            vertices = np.asarray(vertices)
-            center = np.mean(vertices, axis=0)
-            centers.append((center[0], center[1]))
+            if vertices != []:
+                vertices = np.asarray(vertices)
+                center = np.mean(vertices, axis=0)
+                centers.append((center[0], center[1]))
 
     if centers == []:
         continue
@@ -59,7 +61,7 @@ for name in imagesname:
     x = np.asarray(x)
 
     y = np.zeros((x.shape[0], x.shape[1]))
-    for r, c in centers:
+    for c, r in centers:
         r, c = int(r * resolution / outputresolution), int(
             c * resolution / outputresolution
         )
