@@ -1,6 +1,29 @@
 import numpy as np
 
 
+def getcentroide(label, size=70):
+    centerlabel = np.zeros(label.shape)
+
+    blobs_image = measure.label(label, background=0)
+    blobs = measure.regionprops(blobs_image)
+
+    output = []
+    for blob in blobs:
+        r, c = blob.centroid
+        r, c = int(r), int(c)
+        if (
+            r <= size + 1
+            or r + size + 1 >= label.shape[0]
+            or c <= size + 1
+            or c + size + 1 >= label.shape[1]
+        ):
+            continue
+
+        output.append((r, c))
+
+    return output
+
+
 def safeuint8(x):
     x0 = np.zeros(x.shape, dtype=float)
     x255 = np.ones(x.shape, dtype=float) * 255
@@ -37,7 +60,7 @@ def getindexeddata():
 
     if whereIam in ["ldtis706z"]:
         root = "/data/CIA/"
-        availabledata = ["xview", "dfc", "vedai"]
+        availabledata = ["xview", "dfc", "vedai", "saclay"]
 
     #    if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
     #        root = "/scratch_ai4geo/CIA/"
@@ -89,29 +112,40 @@ class SegSemDataset:
     ###
     ### get randomcrops + symetrie
     ### get train usage
-    def getrawrandomtiles(self, nbtiles, tilesize):
+    def getrawrandomtiles(
+        self, nbtilespositifperimage, nbtilesnegatifperimage, tilesize
+    ):
         XY = []
-        nbtilesperimage = int(nbtiles / self.nbImages + 1)
 
         # crop
         for name in range(self.nbImages):
-            # nbtilesperimage*probaOnImage==nbtiles
-            if (
-                nbtiles < self.nbImages
-                and random.randint(0, int(nbtiles + 1)) > nbtilesperimage
-            ):
-                continue
-
             image, label = self.getImageAndLabel(name)
 
+            # positive crop
+            l = getcentroide(label, size=tilesize // 2 + 6)
+            random.shuffle(l)
+            l = l[0 : min(len(l), nbtilespositifperimage)]
+            for r, c in l:
+                im = image[
+                    r - tilesize // 2 : r + tilesize // 2 + 1,
+                    c - tilesize // 2 : c + tilesize // 2 + 1,
+                    :,
+                ].copy()
+                mask = label[
+                    r - tilesize // 2 : r + tilesize // 2 + 1,
+                    c - tilesize // 2 : c + tilesize // 2 + 1,
+                ].copy()
+                XY.append((im, mask))
+
+            # random crop
             row = np.random.randint(
-                0, image.shape[0] - tilesize - 2, size=nbtilesperimage
+                0, image.shape[0] - tilesize - 2, size=nbtilesnegatifperimage
             )
             col = np.random.randint(
-                0, image.shape[1] - tilesize - 2, size=nbtilesperimage
+                0, image.shape[1] - tilesize - 2, size=nbtilesnegatifperimage
             )
 
-            for i in range(nbtilesperimage):
+            for i in range(nbtilesnegatifperimage):
                 im = image[
                     row[i] : row[i] + tilesize, col[i] : col[i] + tilesize, :
                 ].copy()
@@ -130,15 +164,13 @@ class SegSemDataset:
 
 
 class CIA:
-    def __init__(self, flag="train", custom=None, without=None):
+    def __init__(self, flag="train", custom=None):
         assert flag in ["train", "test", "custom"]
 
         self.root, self.towns = getindexeddata()
         if flag == "custom":
             self.towns = custom
         else:
-            if without is not None:
-                self.towns = [town for town in self.towns if town not in without]
             self.towns = [town + "/" + flag for town in self.towns]
 
         self.data = {}
@@ -163,32 +195,18 @@ class CIA:
             "images",
         )
 
-    def getrandomtiles(self, nbtiles, tilesize, batchsize, mode="PerTown"):
-        assert mode in ["PerImage", "PerTown", "PerPixel"]
+    def getrandomtiles(self, tilesize, batchsize):
+        nbtiles = {}
+        nbtiles["vedai"] = (5, 10)
+        nbtiles["dfc"] = (50, 150)
+        nbtiles["saclay"] = (500, 500)
+        nbtiles["xview"] = (100, 200)
 
         XY = []
-        if mode == "PerImage":
-            nbtilesperimage = 1.0 * nbtiles / self.nbImages
-
-            for town in self.towns:
-                XY += self.data[town].getrawrandomtiles(
-                    nbtilesperimage * self.data[town].nbImages, tilesize
-                )
-
-        if mode == "PerTown":
-            nbtilesperTown = 1.0 * nbtiles / len(self.towns)
-
-            for town in self.towns:
-                XY += self.data[town].getrawrandomtiles(nbtilesperTown, tilesize)
-
-        if mode == "PerPixel":
-            nbtilesperPixel = 1.0 * nbtiles / (self.nbnonbat + self.nbbat)
-
-            for town in self.towns:
-                nbpixelintown = self.data[town].nbnonbat + self.data[town].nbbat
-                XY += self.data[town].getrawrandomtiles(
-                    nbpixelintown * nbtilesperPixel, tilesize
-                )
+        for town in self.towns:
+            XY += self.data[town].getrawrandomtiles(
+                nbtiles[town][0], nbtiles[town][1], tilesize
+            )
 
         # pytorch
         X = torch.stack(

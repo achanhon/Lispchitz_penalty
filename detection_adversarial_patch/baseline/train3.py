@@ -88,11 +88,14 @@ optimizer = torch.optim.Adam(net.parameters(), lr=0.0001)
 meanloss = collections.deque(maxlen=200)
 nbepoch = 300
 batchsize = 16
+changecrops = 3
 
 for epoch in range(nbepoch):
     print("epoch=", epoch, "/", nbepoch)
 
-    XY = cia.getrandomtiles(10000, 128, batchsize)
+    if epoch % changecrops == 0:
+        XY = cia.getrandomtiles(128, batchsize)
+
     for x, y in XY:
         x, y = x.to(device), y.to(device)
 
