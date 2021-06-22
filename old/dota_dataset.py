@@ -8,7 +8,7 @@ from PIL import Image
 
 def getcsvlines(path, delimiter=" "):
     text = []
-    with open(path, "rb") as csvfile:
+    with open(path, "r") as csvfile:
         reader = csv.reader(csvfile, delimiter=delimiter)
         for row in reader:
             text.append(row)
@@ -17,6 +17,7 @@ def getcsvlines(path, delimiter=" "):
 
 output = "build/"
 outputresolution = 0.3
+size = 1
 
 imagesname = os.listdir("/data/DOTA/images")
 imagesname = [name[0:-4] for name in imagesname]
@@ -25,23 +26,24 @@ imagesname = sorted(imagesname)
 for name in imagesname:
     vt = getcsvlines("/data/DOTA/labelTxt-v1.0/labelTxt/" + name + ".txt")
 
-    if "gsd" not in vt[1]:
+    if "gsd" not in vt[1][0]:
+        print("no gsd in", name)
         continue
 
-    resolution = float(vt[1][4 : len(vt[1])])
-    if resolution > 0.3:
+    resolution = float(vt[1][0][4 : len(vt[1][0])])
+    if resolution > 0.3 or resolution < 0.01:
         continue
 
     centers = []
     for i in range(2, len(vt)):
         if vt[i][-2] == "small-vehicle":
             vertices = []
-            for j in range(0, len(vt[i] - 2), 2):
-                vertices.append((vt[i][j], vt[i][j + 1]))
+            for j in range(0, len(vt[i]) - 2, 2):
+                vertices.append((float(vt[i][j]), float(vt[i][j + 1])))
 
             vertices = np.asarray(vertices)
-            center = np.mean(rect, axis=0)
-            centers.appends((centre[0], centre[1]))
+            center = np.mean(vertices, axis=0)
+            centers.append((center[0], center[1]))
 
     if centers == []:
         continue
@@ -54,6 +56,7 @@ for name in imagesname:
         ),
         PIL.Image.BILINEAR,
     )
+    x = np.asarray(x)
 
     y = np.zeros((x.shape[0], x.shape[1]))
     for r, c in centers:
