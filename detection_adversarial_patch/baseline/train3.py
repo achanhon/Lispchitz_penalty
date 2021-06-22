@@ -51,8 +51,8 @@ import dataloader
 
 cia = dataloader.CIA()
 
-earlystopping = cia.getrandomtiles(5000, 128, 32)
-weights = torch.Tensor([1, cia.balance, 0.00001]).to(device)
+earlystopping = cia.getrandomtiles(128, 32)
+weights = torch.Tensor([1, 5, 0.000001]).to(device)
 criterion = torch.nn.CrossEntropyLoss(weight=weights)
 
 criterionbis = smp.losses.dice.DiceLoss(mode="multiclass", ignore_index=[2])
