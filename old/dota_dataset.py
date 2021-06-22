@@ -26,7 +26,7 @@ imagesname = sorted(imagesname)
 for name in imagesname:
     vt = getcsvlines("/data/DOTA/labelTxt-v1.0/labelTxt/" + name + ".txt")
 
-    if "gsd" not in vt[1][0]:
+    if ("gsd" not in vt[1][0]) or ("null" in vt[1][0]):
         print("no gsd in", name)
         continue
 
