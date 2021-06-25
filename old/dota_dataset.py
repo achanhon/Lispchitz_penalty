@@ -23,6 +23,7 @@ imagesname = os.listdir("/data/DOTA/images")
 imagesname = [name[0:-4] for name in imagesname]
 imagesname = sorted(imagesname)
 
+RAHHH = 0
 for name in imagesname:
     vt = getcsvlines("/data/DOTA/labelTxt-v1.0/labelTxt/" + name + ".txt")
 
@@ -50,6 +51,7 @@ for name in imagesname:
     if centers == []:
         continue
 
+    print(name, RAHHH)  # to known the correspondance to be able to avoid bad ones
     x = PIL.Image.open("/data/DOTA/images/" + name + ".png").convert("RGB").copy()
     x = x.resize(
         (
@@ -76,7 +78,9 @@ for name in imagesname:
         y[r - size : r + size + 1, c - size : c + size + 1] = 255
 
     mask = PIL.Image.fromarray(np.uint8(y))
-    mask.save(output + str(i) + "_y.png")
+    mask.save(output + str(RAHHH) + "_y.png")
 
     image = PIL.Image.fromarray(np.uint8(x))
-    image.save(output + "/" + str(i) + "_x.png")
+    image.save(output + "/" + str(RAHHH) + "_x.png")
+
+    RAHHH += 1
