@@ -196,6 +196,7 @@ if "dota" in availabledata:
     trainimage, testimage = 0, 0
     for name in imagesname:
         if name in [
+            "P0000",
             "P0039",
             "P0041",
             "P0044",
@@ -290,10 +291,10 @@ if "dota" in availabledata:
             testimage += 1
         else:
             mask = PIL.Image.fromarray(np.uint8(y))
-            mask.save(output + "train/" + str(testimage) + "_y.png")
+            mask.save(output + "train/" + str(trainimage) + "_y.png")
 
             image = PIL.Image.fromarray(np.uint8(x))
-            image.save(output + "train/" + str(testimage) + "_x.png")
+            image.save(output + "train/" + str(trainimage) + "_x.png")
             trainimage += 1
         RAHHH += 1
 
