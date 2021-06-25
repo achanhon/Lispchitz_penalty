@@ -1,9 +1,19 @@
 import os
 import numpy as np
 import json
+import csv
 import PIL
 from PIL import Image
 from skimage import measure
+
+
+def getcsvlines(path, delimiter=" "):
+    text = []
+    with open(path, "r") as csvfile:
+        reader = csv.reader(csvfile, delimiter=delimiter)
+        for row in reader:
+            text.append(row)
+    return text
 
 
 def getcentroide(label, size=1):
@@ -81,7 +91,11 @@ def resizeram(XY, output, nativeresolution, outputresolution=30.0):
 
 
 whereIam = os.uname()[1]
-if whereIam in ["super", "wdtim719z"]:
+if whereIam == "super":
+    availabledata = ["isprs", "dfc", "dota"]
+    root = "/data/"
+
+if whereIam == "wdtim719z":
     availabledata = ["isprs", "dfc"]
     root = "/data/"
 
@@ -164,6 +178,125 @@ if "isprs" in availabledata:
             XY[name] = (x, y)
 
         resizeram(XY, rootminiworld + "isprs/" + flag, 5)
+
+
+if "dota" in availabledata:
+    print("export dota")
+    makepath("dota")
+
+    output = rootminiworld + "dota/"
+    outputresolution = 0.3
+    size = 1
+
+    imagesname = os.listdir("/data/DOTA/images")
+    imagesname = [name[0:-4] for name in imagesname]
+    imagesname = sorted(imagesname)
+
+    RAHHH = 0
+    trainimage, testimage = 0, 0
+    for name in imagesname:
+        if name in [
+            "P0039",
+            "P0041",
+            "P0044",
+            "P0049",
+            "P0052",
+            "P1394",
+            "P2164",
+            "P2232",
+            "P2585",
+            "P2653",
+            "P2674",
+        ]:
+            # too bad vt
+            continue
+
+        vt = getcsvlines("/data/DOTA/labelTxt-v1.0/labelTxt/" + name + ".txt")
+
+        if ("gsd" not in vt[1][0]) or ("null" in vt[1][0]):
+            print("no gsd in", name)
+            continue
+
+        resolution = float(vt[1][0][4 : len(vt[1][0])])
+        if resolution > 0.3 or resolution < 0.01:
+            continue
+
+        centers = []
+        for i in range(2, len(vt)):
+            if vt[i][-2] == "small-vehicle":
+                vertices = []
+                for j in range(0, len(vt[i]) - 2, 2):
+                    if vt[i][j] != "null" and vt[i][j + 1] != "null":
+                        vertices.append((float(vt[i][j]), float(vt[i][j + 1])))
+
+                if vertices != []:
+                    vertices = np.asarray(vertices)
+                    center = np.mean(vertices, axis=0)
+                    centers.append((center[0], center[1]))
+
+        if centers == []:
+            continue
+
+        x = PIL.Image.open("/data/DOTA/images/" + name + ".png").convert("RGB").copy()
+        x = x.resize(
+            (
+                int(x.size[0] * resolution / outputresolution),
+                int(x.size[1] * resolution / outputresolution),
+            ),
+            PIL.Image.BILINEAR,
+        )
+        x = np.asarray(x)
+
+        y = np.zeros((x.shape[0], x.shape[1]))
+        for c, r in centers:
+            r, c = int(r * resolution / outputresolution), int(
+                c * resolution / outputresolution
+            )
+            if (
+                r <= size + 1 + 64
+                or r + size + 1 + 64 >= x.shape[0]
+                or c <= size + 1 + 64
+                or c + size + 1 + 64 >= x.shape[1]
+            ):
+                continue
+
+            y[r - size : r + size + 1, c - size : c + size + 1] = 255
+
+        if np.sum(y) == 0:
+            # remove image with one car at the corner
+            continue
+
+        y = np.zeros((x.shape[0], x.shape[1]))
+        for c, r in centers:
+            r, c = int(r * resolution / outputresolution), int(
+                c * resolution / outputresolution
+            )
+            if (
+                r <= size + 1
+                or r + size + 1 >= x.shape[0]
+                or c <= size + 1
+                or c + size + 1 >= x.shape[1]
+            ):
+                continue
+
+            y[r - size : r + size + 1, c - size : c + size + 1] = 255
+
+        if RAHHH % 3 == 0:
+            mask = PIL.Image.fromarray(np.uint8(y))
+            mask.save(output + "test/" + str(testimage) + "_y.png")
+
+            image = PIL.Image.fromarray(np.uint8(x))
+            image.save(output + "test/" + str(testimage) + "_x.png")
+            testimage += 1
+        else:
+            mask = PIL.Image.fromarray(np.uint8(y))
+            mask.save(output + "train/" + str(testimage) + "_y.png")
+
+            image = PIL.Image.fromarray(np.uint8(x))
+            image.save(output + "train/" + str(testimage) + "_x.png")
+            trainimage += 1
+        RAHHH += 1
+
 
 if "saclay" in availabledata:
     print("export saclay")
@@ -282,12 +415,10 @@ if "vedai" in availabledata:
             image.save(rootminiworld + "vedai/" + flag + "/" + str(i) + "_x.png")
             label.save(rootminiworld + "vedai/" + flag + "/" + str(i) + "_y.png")
 
-quit()
-
-
-import rasterio
 
 if "xview" in availabledata:
+    import rasterio
+
     print("export xview")
     makepath("xview")
 
@@ -351,6 +482,3 @@ if "xview" in availabledata:
         else:
             mask.save(output + "test/" + str(i - len(imagesname) * 2 // 3) + "_y.png")
             image.save(output + "test/" + str(i - len(imagesname) * 2 // 3) + "_x.png")
-
-
-print("todo dota")
