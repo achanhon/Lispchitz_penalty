@@ -436,7 +436,7 @@ if "xview" in availabledata:
             tokenid = token["properties"]["image_id"]
             tokenclass = token["properties"]["type_id"]
             #'Passenger Vehicle', 'Small car', 'Pickup Truck', 'Utility Truck'
-            if tokenid in imagesname and int(tokenclass) in [17, 18, 20, 21]:
+            if (tokenid in imagesname) and (int(tokenclass) in [17, 18, 20, 21]):
                 rect = token["geometry"]["coordinates"]
                 rect = np.asarray(rect)
                 rect = rect[0]
@@ -481,10 +481,7 @@ if "xview" in availabledata:
 
         if np.sum(mask) == 0:
             print("caca ??")
-            for center in centers:
-                r, c = rasterio.transform.rowcol(affine, center[0], center[1])
-                r, c = int(r), int(c)
-                print(r, c, mask.shape[0], mask.shape[1])
+            
 
             # remove image with one car at the corner
             continue
