@@ -100,7 +100,7 @@ if whereIam == "wdtim719z":
     root = "/data/"
 
 if whereIam == "ldtis706z":
-    availabledata = ["isprs", "dfc", "vedai", "saclay", "xview"]
+    availabledata = ["isprs", "xview"]  # ,"dfc", "vedai", "saclay" ]
     root = "/media/achanhon/bigdata/data/"
 
 rootminiworld = root + "/CIA/"
@@ -282,18 +282,14 @@ if "dota" in availabledata:
 
             y[r - size : r + size + 1, c - size : c + size + 1] = 255
 
+        mask = PIL.Image.fromarray(np.uint8(y))
+        image = PIL.Image.fromarray(np.uint8(x))
         if RAHHH % 3 == 0:
-            mask = PIL.Image.fromarray(np.uint8(y))
             mask.save(output + "test/" + str(testimage) + "_y.png")
-
-            image = PIL.Image.fromarray(np.uint8(x))
             image.save(output + "test/" + str(testimage) + "_x.png")
             testimage += 1
         else:
-            mask = PIL.Image.fromarray(np.uint8(y))
             mask.save(output + "train/" + str(trainimage) + "_y.png")
-
-            image = PIL.Image.fromarray(np.uint8(x))
             image.save(output + "train/" + str(trainimage) + "_x.png")
             trainimage += 1
         RAHHH += 1
@@ -432,6 +428,7 @@ if "xview" in availabledata:
     imagesname = dict.fromkeys(imagesname, [])
 
     output = rootminiworld + "xview/"
+    size = 1
 
     with open("/data/XVIEW1/xView_train.geojson", "r") as infile:
         text = json.load(infile)
@@ -440,7 +437,8 @@ if "xview" in availabledata:
         for token in text:
             tokenid = token["properties"]["image_id"]
             tokenclass = token["properties"]["type_id"]
-            if tokenid in imagesname and int(tokenclass) == 18:
+            #'Passenger Vehicle', 'Small car', 'Pickup Truck', 'Utility Truck'
+            if tokenid in imagesname and int(tokenclass) in [17, 18, 20, 21]:
                 rect = token["geometry"]["coordinates"]
                 rect = np.asarray(rect)
                 rect = rect[0]
@@ -448,9 +446,17 @@ if "xview" in availabledata:
 
                 imagesname[tokenid].append(center)
 
-    size = 1
+    RAHHH = 0
+    trainimage, testimage = 0, 0
+    for name in imagesname:
+        if name in ["caca"]:
+            # too bad vt
+            continue
 
-    for i, name in enumerate(imagesname):
+        centers = imagesname[name]
+        if centers == []:
+            continue
+
         with rasterio.open("/data/XVIEW1/train_images/" + name) as src:
             affine = src.transform
             red = np.int16(src.read(1))
@@ -458,9 +464,25 @@ if "xview" in availabledata:
             b = np.int16(src.read(3))
 
         mask = np.zeros((red.shape[0], red.shape[1]))
-        centers = imagesname[name]
+        for c, r in centers:
+            r, c = rasterio.transform.rowcol(affine, center[0], center[1])
+            r, c = int(r), int(c)
+            if (
+                r <= size + 1 + 64
+                or r + size + 1 + 64 >= mask.shape[0]
+                or c <= size + 1 + 64
+                or c + size + 1 + 64 >= mask.shape[1]
+            ):
+                continue
 
-        for center in centers:
+            mask[r - size : r + size + 1, c - size : c + size + 1] = 255
+
+        if np.sum(mask) == 0:
+            # remove image with one car at the corner
+            continue
+
+        mask = np.zeros((red.shape[0], red.shape[1]))
+        for c, r in centers:
             r, c = rasterio.transform.rowcol(affine, center[0], center[1])
             r, c = int(r), int(c)
             if (
@@ -476,10 +498,12 @@ if "xview" in availabledata:
         mask = PIL.Image.fromarray(np.uint8(mask))
         rgb = np.stack([red, g, b], axis=-1)
         image = PIL.Image.fromarray(np.uint8(rgb))
-
-        if name not in testimage:
-            mask.save(output + "train/" + str(i) + "_y.png")
-            image.save(output + "train/" + str(i) + "_x.png")
+        if RAHHH % 3 == 0:
+            mask.save(output + "test/" + str(testimage) + "_y.png")
+            image.save(output + "test/" + str(testimage) + "_x.png")
+            testimage += 1
         else:
-            mask.save(output + "test/" + str(i - len(imagesname) * 2 // 3) + "_y.png")
-            image.save(output + "test/" + str(i - len(imagesname) * 2 // 3) + "_x.png")
+            mask.save(output + "train/" + str(trainimage) + "_y.png")
+            image.save(output + "train/" + str(trainimage) + "_x.png")
+            trainimage += 1
+        RAHHH += 1
