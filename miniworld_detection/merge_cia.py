@@ -422,14 +422,12 @@ if "xview" in availabledata:
     imagesname = os.listdir("/data/XVIEW1/train_images")
     imagesname = [name for name in imagesname if name[0] != "."]
     imagesname = sorted(imagesname)
-
-    testimage = set(imagesname[len(imagesname) * 2 // 3 : len(imagesname)])
-
     imagesname = dict.fromkeys(imagesname, [])
 
     output = rootminiworld + "xview/"
     size = 1
 
+    print("collect vt")
     with open("/data/XVIEW1/xView_train.geojson", "r") as infile:
         text = json.load(infile)
 
@@ -446,6 +444,7 @@ if "xview" in availabledata:
 
                 imagesname[tokenid].append(center)
 
+    print("export image")
     RAHHH = 0
     trainimage, testimage = 0, 0
     for name in imagesname:
@@ -453,7 +452,8 @@ if "xview" in availabledata:
             # too bad vt
             continue
 
-        centers = imagesname[name]
+        centers = imagesname[name].copy()
+        print(name, len(centers))
         if centers == []:
             continue
 
@@ -462,6 +462,8 @@ if "xview" in availabledata:
             red = np.int16(src.read(1))
             g = np.int16(src.read(2))
             b = np.int16(src.read(3))
+
+        print(output + "test/" + str(testimage) + "_y.png")
 
         mask = np.zeros((red.shape[0], red.shape[1]))
         for c, r in centers:
@@ -478,11 +480,17 @@ if "xview" in availabledata:
             mask[r - size : r + size + 1, c - size : c + size + 1] = 255
 
         if np.sum(mask) == 0:
+            print("caca ??")
+            for center in centers:
+                r, c = rasterio.transform.rowcol(affine, center[0], center[1])
+                r, c = int(r), int(c)
+                print(r, c, mask.shape[0], mask.shape[1])
+
             # remove image with one car at the corner
             continue
 
         mask = np.zeros((red.shape[0], red.shape[1]))
-        for c, r in centers:
+        for center in centers:
             r, c = rasterio.transform.rowcol(affine, center[0], center[1])
             r, c = int(r), int(c)
             if (
@@ -495,6 +503,9 @@ if "xview" in availabledata:
 
             mask[r - size : r + size + 1, c - size : c + size + 1] = 255
 
+        print(output + "test/" + str(testimage) + "_y.png")
+        quit()
+
         mask = PIL.Image.fromarray(np.uint8(mask))
         rgb = np.stack([red, g, b], axis=-1)
         image = PIL.Image.fromarray(np.uint8(rgb))
@@ -502,8 +513,10 @@ if "xview" in availabledata:
             mask.save(output + "test/" + str(testimage) + "_y.png")
             image.save(output + "test/" + str(testimage) + "_x.png")
             testimage += 1
+            print("test", name, testimage)
         else:
             mask.save(output + "train/" + str(trainimage) + "_y.png")
             image.save(output + "train/" + str(trainimage) + "_x.png")
             trainimage += 1
+            print("train", name, testimage)
         RAHHH += 1
