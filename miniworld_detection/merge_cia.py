@@ -100,7 +100,7 @@ if whereIam == "wdtim719z":
     root = "/data/"
 
 if whereIam == "ldtis706z":
-    availabledata = ["xview"]  # ,"isprs","dfc", "vedai", "saclay" ]
+    availabledata = ["isprs", "xview"]  # ,"dfc", "vedai", "saclay" ]
     root = "/media/achanhon/bigdata/data/"
 
 rootminiworld = root + "/CIA/"
@@ -454,21 +454,17 @@ if "xview" in availabledata:
             # too bad vt or no object
             continue
 
-        centers = imagesname[name].copy()
-        print(name, len(centers))
-        if centers == [] or True:
-            continue
-
         with rasterio.open("/data/XVIEW1/train_images/" + name) as src:
             affine = src.transform
             red = np.int16(src.read(1))
             g = np.int16(src.read(2))
             b = np.int16(src.read(3))
 
-        print(output + "test/" + str(testimage) + "_y.png")
+        centers = imagesname[name]
+        # print(name, len(centers))
 
         mask = np.zeros((red.shape[0], red.shape[1]))
-        for c, r in centers:
+        for center in centers:
             r, c = rasterio.transform.rowcol(affine, center[0], center[1])
             r, c = int(r), int(c)
             if (
@@ -482,8 +478,6 @@ if "xview" in availabledata:
             mask[r - size : r + size + 1, c - size : c + size + 1] = 255
 
         if np.sum(mask) == 0:
-            print("caca ??")
-
             # remove image with one car at the corner
             continue
 
@@ -500,9 +494,6 @@ if "xview" in availabledata:
                 continue
 
             mask[r - size : r + size + 1, c - size : c + size + 1] = 255
-
-        print(output + "test/" + str(testimage) + "_y.png")
-        quit()
 
         mask = PIL.Image.fromarray(np.uint8(mask))
         rgb = np.stack([red, g, b], axis=-1)
