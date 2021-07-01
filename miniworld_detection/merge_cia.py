@@ -100,7 +100,7 @@ if whereIam == "wdtim719z":
     root = "/data/"
 
 if whereIam == "ldtis706z":
-    availabledata = ["isprs", "xview"]  # ,"dfc", "vedai", "saclay" ]
+    availabledata = ["xview"]  # ,"isprs","dfc", "vedai", "saclay" ]
     root = "/media/achanhon/bigdata/data/"
 
 rootminiworld = root + "/CIA/"
@@ -422,7 +422,7 @@ if "xview" in availabledata:
     imagesname = os.listdir("/data/XVIEW1/train_images")
     imagesname = [name for name in imagesname if name[0] != "."]
     imagesname = sorted(imagesname)
-    imagesname = dict.fromkeys(imagesname, [])
+    imagesname = dict.fromkeys(imagesname, None)
 
     output = rootminiworld + "xview/"
     size = 1
@@ -442,19 +442,21 @@ if "xview" in availabledata:
                 rect = rect[0]
                 center = np.mean(rect, axis=0)
 
+                if imagesname[tokenid] is None:
+                    imagesname[tokenid] = []
                 imagesname[tokenid].append(center)
 
     print("export image")
     RAHHH = 0
     trainimage, testimage = 0, 0
     for name in imagesname:
-        if name in ["caca"]:
-            # too bad vt
+        if name in ["caca"] or imagesname[name] is None:
+            # too bad vt or no object
             continue
 
         centers = imagesname[name].copy()
         print(name, len(centers))
-        if centers == []:
+        if centers == [] or True:
             continue
 
         with rasterio.open("/data/XVIEW1/train_images/" + name) as src:
@@ -481,7 +483,6 @@ if "xview" in availabledata:
 
         if np.sum(mask) == 0:
             print("caca ??")
-            
 
             # remove image with one car at the corner
             continue

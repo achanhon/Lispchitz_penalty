@@ -22,8 +22,9 @@ if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
     root = "/scratch_ai4geo/"
 
 if os.path.exists(root + "CIA"):
-    print("it seems cia exists, please remove it by hand")
-    quit()
+    os.system("rm -rf " + root + "CIA")
+    # print("it seems cia exists, please remove it by hand")
+    # quit()
 os.makedirs(root + "CIA")
 
 if whereIam == "super":
