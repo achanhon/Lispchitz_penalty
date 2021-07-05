@@ -6,6 +6,8 @@ print("only use 30 images from xview - waiting for visual review")
 # keep testx{0,31}-testx{2}+trainx{2}+testx{226}
 # split in 2
 
+os.system("cp -r /data/dota/dota /media/achanhon/bigdata/data/CIA/")
+
 os.makedirs("/media/achanhon/bigdata/data/CIA/xview")
 os.makedirs("/media/achanhon/bigdata/data/CIA/xview/train")
 os.makedirs("/media/achanhon/bigdata/data/CIA/xview/test")
