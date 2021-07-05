@@ -24,12 +24,10 @@ def getjsonstructure(text,level=0):
         
     if isinstance(text,list):
         for token in text:
-            print(inden(level),token)
+            print(inden(level),"list:",token)
             return
         
-            
-
-
+           
 
 imagesname = os.listdir("/data/XVIEW1/train_images")
 imagesname = sorted(imagesname)
@@ -42,16 +40,11 @@ with open("/data/XVIEW1/xView_train.geojson", "r") as infile:
     text = json.load(infile)
     
     getjsonstructure(text)
-    quit()
     
-    #crs
-    #    property
-    #    type
-    #type
-    #features
-
-    for token in text["crs"]:
-        print(token)
+    
+    for token in text["crs"]["properties"]["name"]:
+        if "1346.tif" in token:
+            print(token)
     
 
     
@@ -59,8 +52,7 @@ with open("/data/XVIEW1/xView_train.geojson", "r") as infile:
         print(section)
         
         for token in text[section]:
-            if "1346.tif" in token:
-                print(token)
+            
             
             continue
             tokenid = token["properties"]["image_id"]
