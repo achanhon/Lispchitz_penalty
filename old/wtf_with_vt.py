@@ -5,29 +5,30 @@ from PIL import Image
 
 import json
 
+
 def inden(n):
-    out="  "
+    out = "  "
     for i in range(n):
-        out+="  "
+        out += "  "
     return out
 
-def getjsonstructure(text,level=0):
-    if isinstance(text,str):
-        print(inden(level),text)
+
+def getjsonstructure(text, level=0):
+    if isinstance(text, str):
+        print(inden(level), text)
         return
-        
-    if isinstance(text,dict):
+
+    if isinstance(text, dict):
         for token in text:
-            print(inden(level),token)
-            getjsonstructure(text[token],level+1)
+            print(inden(level), token)
+            getjsonstructure(text[token], level + 1)
         return
-        
-    if isinstance(text,list):
+
+    if isinstance(text, list):
         for token in text:
-            print(inden(level),"list:",token)
+            print(inden(level), "list:", token)
             return
-        
-           
+
 
 imagesname = os.listdir("/data/XVIEW1/train_images")
 imagesname = sorted(imagesname)
@@ -38,32 +39,20 @@ output = "build/"
 
 with open("/data/XVIEW1/xView_train.geojson", "r") as infile:
     text = json.load(infile)
-    
+
     getjsonstructure(text)
-    
-    
-    for token in text["crs"]["properties"]["name"]:
-        if "1346.tif" in token:
-            print(token)
-    
 
-    
-    for section in text:
-        print(section)
-        
-        for token in text[section]:
-            
-            
-            continue
-            tokenid = token["properties"]["image_id"]
-            tokenclass = token["properties"]["type_id"]
-            if tokenid in imagesname and int(tokenclass) == 18:
-                rect = token["geometry"]["coordinates"]
-                rect = np.asarray(rect)
-                rect = rect[0]
-                center = np.mean(rect, axis=0)
+    text = text["features"]
+    for token in text:
+        tokenid = token["properties"]["image_id"]
+        tokenclass = token["properties"]["type_id"]
+        if tokenid in imagesname and int(tokenclass) == 18:
+            rect = token["geometry"]["coordinates"]
+            rect = np.asarray(rect)
+            rect = rect[0]
+            center = np.mean(rect, axis=0)
 
-                imagesname[tokenid].append(center)
+            imagesname[tokenid].append(center)
 
 import rasterio
 
