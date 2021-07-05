@@ -12,16 +12,29 @@ def inden(n):
     return out
 
 def getjsonstructure(text,level=0):
+    print(type(text))
+    
     if isinstance(text,str):
+        print("caca")
+        quit()
         print(inden(level),text)
-    else:    
-        if isinstance(text,list):
-            for token in text:
-                print(inden(level),token)
-            return
-        else:
-            for token in text:
-                getjsonstructure(text[token],level+1)
+        return
+        
+    if isinstance(text,dict):
+        print("pipi")
+        quit()
+        for token in text:
+            getjsonstructure(text[token],level+1)
+        return
+        
+    if isinstance(text,list):
+        print("vomi")
+        quit()
+        for token in text:
+            print(inden(level),token)
+        return
+        
+            
 
 
 
@@ -35,8 +48,12 @@ output = "build/"
 with open("/data/XVIEW1/xView_train.geojson", "r") as infile:
     text = json.load(infile)
     
-    print(type(text))
     print(type(text["features"]))
+    getjsonstructure(text["features"])
+    quit()
+    
+    print(type(text))
+    
     quit()
     
     getjsonstructure(text)
