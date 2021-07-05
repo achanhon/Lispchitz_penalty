@@ -6,33 +6,26 @@ from PIL import Image
 import json
 
 def inden(n):
-    out=" "
+    out="  "
     for i in range(n):
-        out+=" "
+        out+="  "
     return out
 
 def getjsonstructure(text,level=0):
-    print(type(text))
-    
     if isinstance(text,str):
-        print("caca")
-        quit()
         print(inden(level),text)
         return
         
     if isinstance(text,dict):
-        print("pipi")
-        quit()
         for token in text:
+            print(inden(level),token)
             getjsonstructure(text[token],level+1)
         return
         
     if isinstance(text,list):
-        print("vomi")
-        quit()
         for token in text:
             print(inden(level),token)
-        return
+            return
         
             
 
@@ -47,14 +40,6 @@ output = "build/"
 
 with open("/data/XVIEW1/xView_train.geojson", "r") as infile:
     text = json.load(infile)
-    
-    print(type(text["features"]))
-    getjsonstructure(text["features"])
-    quit()
-    
-    print(type(text))
-    
-    quit()
     
     getjsonstructure(text)
     quit()
