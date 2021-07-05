@@ -100,7 +100,7 @@ if whereIam == "wdtim719z":
     root = "/data/"
 
 if whereIam == "ldtis706z":
-    availabledata = ["isprs", "xview"]  # ,"dfc", "vedai", "saclay" ]
+    availabledata = ["isprs", "dfc", "vedai", "saclay"]  # xview needs review !
     root = "/media/achanhon/bigdata/data/"
 
 rootminiworld = root + "/CIA/"
@@ -450,7 +450,7 @@ if "xview" in availabledata:
     RAHHH = 0
     trainimage, testimage = 0, 0
     for name in imagesname:
-        if name in ["caca"] or imagesname[name] is None:
+        if name in ["1346.tif"] or imagesname[name] is None:
             # too bad vt or no object
             continue
 
