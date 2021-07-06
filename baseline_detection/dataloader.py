@@ -282,7 +282,7 @@ def convertIn3class(y, size=2):
     yy = torch.nn.functional.max_pool2d(
         y.float(), kernel_size=size * 2 + 1, stride=1, padding=size
     )
-    yy = yy * 2 - y
+    yy = yy * 2 - y.float()
     return yy.long()
 
 
