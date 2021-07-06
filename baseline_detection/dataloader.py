@@ -1,7 +1,25 @@
 import numpy as np
+import os
 
 
-def getcentroide(label, size=70):
+def safeuint8(x):
+    x0 = np.zeros(x.shape, dtype=float)
+    x255 = np.ones(x.shape, dtype=float) * 255
+    x = np.maximum(x0, np.minimum(x.copy(), x255))
+    return np.uint8(x)
+
+
+def symetrie(x, y, i, j, k):
+    if i == 1:
+        x, y = np.transpose(x, axes=(1, 0, 2)), np.transpose(y, axes=(1, 0))
+    if j == 1:
+        x, y = np.flip(x, axis=1), np.flip(y, axis=1)
+    if k == 1:
+        x, y = np.flip(x, axis=1), np.flip(y, axis=1)
+    return x.copy(), y.copy()
+
+
+def getsomecenters(label, size):
     centerlabel = np.zeros(label.shape)
 
     blobs_image = measure.label(label, background=0)
@@ -24,24 +42,6 @@ def getcentroide(label, size=70):
     return output
 
 
-def safeuint8(x):
-    x0 = np.zeros(x.shape, dtype=float)
-    x255 = np.ones(x.shape, dtype=float) * 255
-    x = np.maximum(x0, np.minimum(x.copy(), x255))
-    return np.uint8(x)
-
-
-def symetrie(x, y, i, j, k):
-    if i == 1:
-        x, y = np.transpose(x, axes=(1, 0, 2)), np.transpose(y, axes=(1, 0))
-    if j == 1:
-        x, y = np.flip(x, axis=1), np.flip(y, axis=1)
-    if k == 1:
-        x, y = np.flip(x, axis=1), np.flip(y, axis=1)
-    return x.copy(), y.copy()
-
-
-import os
 import PIL
 from PIL import Image
 
@@ -52,18 +52,17 @@ import random
 def getindexeddata():
     whereIam = os.uname()[1]
 
+    root = None
+    availabledata = ["dfc", "vedai", "saclay", "little_xview", "dota", "isprs"]
+
     if whereIam in ["super", "wdtim719z"]:
         root = "/data/CIA/"
-        availabledata = [
-            "isprs",
-        ]
 
     if whereIam in ["ldtis706z"]:
-        root = "/data/CIA/"
-        availabledata = ["xview", "dfc", "vedai", "saclay"]
+        root = "/media/achanhon/bigdata/data/CIA/"
 
-    #    if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
-    #        root = "/scratch_ai4geo/CIA/"
+    if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
+        root = "/scratchf/CIA/"
 
     return root, availabledata
 
@@ -171,7 +170,10 @@ class CIA:
         if flag == "custom":
             self.towns = custom
         else:
-            self.towns = [town + "/" + flag for town in self.towns]
+            if flag == "train":
+                self.towns = [town + "/train" for town in self.towns if town != "isprs"]
+            else:
+                self.towns = ["isprs/test"]
 
         self.data = {}
         self.nbImages = 0
@@ -197,10 +199,16 @@ class CIA:
 
     def getrandomtiles(self, tilesize, batchsize):
         nbtiles = {}
-        nbtiles["vedai"] = (5, 10)
-        nbtiles["dfc"] = (50, 150)
-        nbtiles["saclay"] = (500, 500)
-        nbtiles["xview"] = (100, 200)
+        nbtiles["vedai"] = (1, 5)  # very small image
+
+        nbtiles["isprs"] = (20, 100)  # small image
+        nbtiles["dfc"] = (20, 100)
+
+        nbtiles["dota"] = (5, 25)  # small image but large dataset
+
+        nbtiles["saclay"] = (100, 500)  # medium image
+
+        nbtiles["little_xview"] = (100, 100)  # medium image with many image with no car
 
         XY = []
         for town in self.towns:
@@ -262,7 +270,7 @@ def largeforwardCPU(net, image, device, tilesize=128, stride=32):
     return pred
 
 
-def convertIn3class(y, size=3):
+def convertIn3class(y, size=2):
     yy = torch.nn.functional.max_pool2d(
         y.float(), kernel_size=size * 2 + 1, stride=1, padding=size
     )
