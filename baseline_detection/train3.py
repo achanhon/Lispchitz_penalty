@@ -21,6 +21,11 @@ os.system("cat train3.py")
 whereIam = os.uname()[1]
 
 print("define model")
+if whereIam == "super":
+    sys.path.append("/home/achanhon/github/segmentation_models/EfficientNet-PyTorch")
+    sys.path.append("/home/achanhon/github/segmentation_models/pytorch-image-models")
+    sys.path.append("/home/achanhon/github/segmentation_models/pretrained-models.pytorch")
+    sys.path.append("/home/achanhon/github/segmentation_models/segmentation_models.pytorch")
 if whereIam == "wdtim719z":
     sys.path.append("/home/optimom/github/EfficientNet-PyTorch")
     sys.path.append("/home/optimom/github/pytorch-image-models")
@@ -36,12 +41,20 @@ import segmentation_models_pytorch as smp
 import collections
 import random
 
-net = smp.Unet(
-    encoder_name="efficientnet-b0",
-    encoder_weights="imagenet",
-    in_channels=3,
-    classes=2,
-)
+if whereIam == "super":
+    net = smp.Unet(
+        encoder_name="efficientnet-b0",
+        encoder_weights="imagenet",
+        in_channels=3,
+        classes=2,
+    )
+else:
+    net = smp.Unet(
+        encoder_name="efficientnet-b7",
+        encoder_weights="imagenet",
+        in_channels=3,
+        classes=2,
+    )
 net = net.cuda()
 net.train()
 
@@ -52,7 +65,7 @@ import dataloader
 cia = dataloader.CIA()
 
 earlystopping = cia.getrandomtiles(128, 32)
-weights = torch.Tensor([1, 5, 0.000001]).to(device)
+weights = torch.Tensor([1, 1, 0.000001]).to(device)
 criterion = torch.nn.CrossEntropyLoss(weight=weights)
 
 criterionbis = smp.losses.dice.DiceLoss(mode="multiclass", ignore_index=[2])
@@ -95,6 +108,7 @@ for epoch in range(nbepoch):
 
     if epoch % changecrops == 0:
         XY = cia.getrandomtiles(128, batchsize)
+        print(len(XY))
 
     for x, y in XY:
         x, y = x.to(device), y.to(device)
