@@ -117,8 +117,6 @@ for epoch in range(nbepoch):
 
     if epoch % changecrops == 0:
         XY = cia.getrandomtiles(128, batchsize)
-        print(len(XY))
-        quit()
 
     for x, y in XY:
         x, y = x.to(device), y.to(device)

@@ -129,13 +129,13 @@ class SegSemDataset:
             l = l[0 : min(len(l), nbtilespositifperimage)]
             for r, c in l:
                 im = image[
-                    r - tilesize // 2 : r + tilesize // 2 + 1,
-                    c - tilesize // 2 : c + tilesize // 2 + 1,
+                    r - tilesize // 2 : r + tilesize // 2,
+                    c - tilesize // 2 : c + tilesize // 2,
                     :,
                 ].copy()
                 mask = label[
-                    r - tilesize // 2 : r + tilesize // 2 + 1,
-                    c - tilesize // 2 : c + tilesize // 2 + 1,
+                    r - tilesize // 2 : r + tilesize // 2,
+                    c - tilesize // 2 : c + tilesize // 2,
                 ].copy()
                 XY.append((im, mask))
 
@@ -222,6 +222,9 @@ class CIA:
             XY += self.data[town].getrawrandomtiles(
                 nbtiles[town][0], nbtiles[town][1], tilesize
             )
+
+        print(len(XY))
+        quit()
 
         # pytorch
         X = torch.stack(
