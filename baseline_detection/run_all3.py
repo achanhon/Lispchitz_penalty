@@ -5,6 +5,7 @@ import random
 
 whereIam = os.uname()[1]
 assert whereIam in [
+    "super",
     "wdtim719z",
     "calculon",
     "astroboy",
@@ -12,12 +13,12 @@ assert whereIam in [
     "bender",
 ]
 
-if whereIam == "wdtim719z":
+if whereIam in ["wdtim719z", "super"]:
     root = "/data/"
 if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
-    root = "/scratch_ai4geo/"
+    root = "/scratchf/"
 
-if not os.path.exists(root + "miniworld"):
+if not os.path.exists(root + "CIA"):
     print("run merge before")
     quit()
 
@@ -30,8 +31,12 @@ myhash = str(today) + "_" + str(tmp)
 print(myhash)
 
 if whereIam == "wdtim719z":
-    os.system("/data/anaconda3/envs/pytorch/bin/python train3.py " + myhash)
-    os.system("/data/anaconda3/envs/pytorch/bin/python test3.py " + myhash)
+    os.system(
+        "/data/anaconda3/envs/pytorch/bin/python train3.py build/" + myhash + ".pth"
+    )
+    os.system(
+        "/data/anaconda3/envs/pytorch/bin/python test3.py build/" + myhash + ".pth"
+    )
 if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
-    os.system("/d/jcastillo/anaconda3/bin/python train3.py " + myhash)
-    os.system("/d/jcastillo/anaconda3/bin/python test3.py " + myhash)
+    os.system("/d/jcastillo/anaconda3/bin/python train3.py build/" + myhash + ".pth")
+    os.system("/d/jcastillo/anaconda3/bin/python test3.py build/" + myhash + ".pth")

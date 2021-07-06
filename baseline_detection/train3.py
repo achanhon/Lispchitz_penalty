@@ -13,7 +13,7 @@ if device == "cuda":
     torch.cuda.empty_cache()
     cudnn.benchmark = True
 
-outputname = "model.pth"
+outputname = "build/model.pth"
 if len(sys.argv) > 1:
     outputname = sys.argv[1]
 os.system("cat train3.py")
@@ -24,8 +24,12 @@ print("define model")
 if whereIam == "super":
     sys.path.append("/home/achanhon/github/segmentation_models/EfficientNet-PyTorch")
     sys.path.append("/home/achanhon/github/segmentation_models/pytorch-image-models")
-    sys.path.append("/home/achanhon/github/segmentation_models/pretrained-models.pytorch")
-    sys.path.append("/home/achanhon/github/segmentation_models/segmentation_models.pytorch")
+    sys.path.append(
+        "/home/achanhon/github/segmentation_models/pretrained-models.pytorch"
+    )
+    sys.path.append(
+        "/home/achanhon/github/segmentation_models/segmentation_models.pytorch"
+    )
 if whereIam == "wdtim719z":
     sys.path.append("/home/optimom/github/EfficientNet-PyTorch")
     sys.path.append("/home/optimom/github/pytorch-image-models")
@@ -62,7 +66,7 @@ net.train()
 print("load data")
 import dataloader
 
-cia = dataloader.CIA()
+cia = dataloader.CIA("train")
 
 earlystopping = cia.getrandomtiles(128, 32)
 weights = torch.Tensor([1, 1, 0.000001]).to(device)
@@ -109,6 +113,7 @@ for epoch in range(nbepoch):
     if epoch % changecrops == 0:
         XY = cia.getrandomtiles(128, batchsize)
         print(len(XY))
+        quit()
 
     for x, y in XY:
         x, y = x.to(device), y.to(device)
@@ -142,7 +147,7 @@ for epoch in range(nbepoch):
             print("loss=", (sum(meanloss) / len(meanloss)))
 
     print("backup model")
-    torch.save(net, "build/" + outputname)
+    torch.save(net, outputname)
     cm = trainaccuracy()
     print("accuracy", accu(cm))
 

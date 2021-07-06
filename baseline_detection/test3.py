@@ -39,20 +39,17 @@ import segmentation_models_pytorch
 
 with torch.no_grad():
     if len(sys.argv) > 1:
-        net = torch.load("build/" + sys.argv[1])
+        net = torch.load(sys.argv[1])
     else:
-        net = torch.load("build/debug.pth")
+        net = torch.load("build/model.pth")
     net = net.to(device)
     net.eval()
 
 
-print("massif benchmark")
+print("eval in transfert setting")
 import dataloader
 
-if whereIam == "super":
-    cia = dataloader.CIA(flag="custom", custom=["potsdam/test", "bruges/test"])
-else:
-    cia = dataloader.CIA("test")
+cia = dataloader.CIA("test")
 
 
 def accu(cm):
@@ -98,7 +95,7 @@ with torch.no_grad():
                 label.flatten(), pred.flatten(), labels=[0, 1, 2]
             )
 
-            if town in ["potsdam/test", "bruges/test"]:
+            if town in ["isprs/test"]:
                 imageraw = PIL.Image.fromarray(np.uint8(imageraw))
                 imageraw.save("build/" + town[0:-5] + "_" + str(i) + "_x.png")
                 labelim = PIL.Image.fromarray(np.uint8(label) * 125)

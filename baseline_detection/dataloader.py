@@ -163,7 +163,7 @@ class SegSemDataset:
 
 
 class CIA:
-    def __init__(self, flag="train", custom=None):
+    def __init__(self, flag, custom=None):
         assert flag in ["train", "test", "custom"]
 
         self.root, self.towns = getindexeddata()
@@ -173,7 +173,7 @@ class CIA:
             if flag == "train":
                 self.towns = [town + "/train" for town in self.towns if town != "isprs"]
             else:
-                self.towns = ["isprs/test"]
+                self.towns = [town + "/test" for town in self.towns] + ["isprs/train"]
 
         self.data = {}
         self.nbImages = 0
