@@ -222,9 +222,7 @@ class CIA:
             XY += self.data[town].getrawrandomtiles(
                 nbtiles[town][0], nbtiles[town][1], tilesize
             )
-
-        print(len(XY))
-        quit()
+        # print(len(XY)) ~ 25000
 
         # pytorch
         X = torch.stack(
