@@ -86,6 +86,12 @@ def accu(cm):
     return 100.0 * (cm[0][0] + cm[1][1]) / np.sum(cm)
 
 
+def f1(cm):
+    return 50.0 * cm[0][0] / (cm[0][0] + cm[1][0] + cm[0][1]) + 50.0 * cm[1][1] / (
+        cm[1][1] + cm[1][0] + cm[0][1]
+    )
+
+
 def trainaccuracy():
     cm = np.zeros((3, 3), dtype=int)
     net.eval()
@@ -152,6 +158,6 @@ for epoch in range(nbepoch):
     print("backup model")
     torch.save(net, outputname)
     cm = trainaccuracy()
-    print("accuracy", accu(cm))
+    print("accuracy and IoU", accu(cm), f1(cm))
 
 print("training stops after reaching time limit")
