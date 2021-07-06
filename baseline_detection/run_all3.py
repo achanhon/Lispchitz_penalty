@@ -30,6 +30,9 @@ tmp = random.randint(0, 1000)
 myhash = str(today) + "_" + str(tmp)
 print(myhash)
 
+if whereIam == "super":
+    os.system("/data/anaconda3/bin/python train3.py build/" + myhash + ".pth")
+    os.system("/data/anaconda3/bin/python test3.py build/" + myhash + ".pth")
 if whereIam == "wdtim719z":
     os.system(
         "/data/anaconda3/envs/pytorch/bin/python train3.py build/" + myhash + ".pth"

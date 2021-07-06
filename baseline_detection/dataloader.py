@@ -19,6 +19,27 @@ def symetrie(x, y, i, j, k):
     return x.copy(), y.copy()
 
 
+def getindexeddata():
+    whereIam = os.uname()[1]
+
+    root = None
+    availabledata = ["dfc", "vedai", "saclay", "little_xview", "dota", "isprs"]
+
+    if whereIam in ["super", "wdtim719z"]:
+        root = "/data/CIA/"
+
+    if whereIam in ["ldtis706z"]:
+        root = "/media/achanhon/bigdata/data/CIA/"
+
+    if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
+        root = "/scratchf/CIA/"
+
+    return root, availabledata
+
+
+from skimage import measure
+
+
 def getsomecenters(label, size):
     centerlabel = np.zeros(label.shape)
 
@@ -47,24 +68,6 @@ from PIL import Image
 
 import torch
 import random
-
-
-def getindexeddata():
-    whereIam = os.uname()[1]
-
-    root = None
-    availabledata = ["dfc", "vedai", "saclay", "little_xview", "dota", "isprs"]
-
-    if whereIam in ["super", "wdtim719z"]:
-        root = "/data/CIA/"
-
-    if whereIam in ["ldtis706z"]:
-        root = "/media/achanhon/bigdata/data/CIA/"
-
-    if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
-        root = "/scratchf/CIA/"
-
-    return root, availabledata
 
 
 class SegSemDataset:
@@ -121,7 +124,7 @@ class SegSemDataset:
             image, label = self.getImageAndLabel(name)
 
             # positive crop
-            l = getcentroide(label, size=tilesize // 2 + 6)
+            l = getsomecenters(label, size=tilesize // 2 + 6)
             random.shuffle(l)
             l = l[0 : min(len(l), nbtilespositifperimage)]
             for r, c in l:
@@ -199,16 +202,19 @@ class CIA:
 
     def getrandomtiles(self, tilesize, batchsize):
         nbtiles = {}
-        nbtiles["vedai"] = (1, 5)  # very small image
+        nbtiles["vedai/train"] = (1, 5)  # very small image
 
-        nbtiles["isprs"] = (20, 100)  # small image
-        nbtiles["dfc"] = (20, 100)
+        nbtiles["isprs/train"] = (20, 100)  # small image
+        nbtiles["dfc/train"] = (20, 100)
 
-        nbtiles["dota"] = (5, 25)  # small image but large dataset
+        nbtiles["dota/train"] = (5, 25)  # small image but large dataset
 
-        nbtiles["saclay"] = (100, 500)  # medium image
+        nbtiles["saclay/train"] = (100, 500)  # medium image
 
-        nbtiles["little_xview"] = (100, 100)  # medium image with many image with no car
+        nbtiles["little_xview/train"] = (
+            100,
+            100,
+        )  # medium image with many image with no car
 
         XY = []
         for town in self.towns:
