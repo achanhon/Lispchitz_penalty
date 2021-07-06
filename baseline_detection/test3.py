@@ -17,6 +17,11 @@ whereIam = os.uname()[1]
 
 print("load model")
 if whereIam == "super":
+    sys.path.append("/home/achanhon/github/EfficientNet-PyTorch")
+    sys.path.append("/home/achanhon/github/pytorch-image-models")
+    sys.path.append("/home/achanhon/github/pretrained-models.pytorch")
+    sys.path.append("/home/achanhon/github/segmentation_models.pytorch")
+if whereIam == "ldtis706z":
     sys.path.append("/home/achanhon/github/segmentation_models/EfficientNet-PyTorch")
     sys.path.append("/home/achanhon/github/segmentation_models/pytorch-image-models")
     sys.path.append(

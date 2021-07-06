@@ -6,6 +6,7 @@ import random
 whereIam = os.uname()[1]
 assert whereIam in [
     "super",
+    "ldtis706z",
     "wdtim719z",
     "calculon",
     "astroboy",
@@ -15,6 +16,8 @@ assert whereIam in [
 
 if whereIam in ["wdtim719z", "super"]:
     root = "/data/"
+if whereIam == "ldtis706z":
+    root = "/media/achanhon/bigdata/data/"
 if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
     root = "/scratchf/"
 
@@ -40,6 +43,9 @@ if whereIam == "wdtim719z":
     os.system(
         "/data/anaconda3/envs/pytorch/bin/python test3.py build/" + myhash + ".pth"
     )
+if whereIam == "ldtis706z":
+    os.system("python3 train3.py build/" + myhash + ".pth")
+    os.system("python3 test3.py build/" + myhash + ".pth")
 if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
     os.system("/d/jcastillo/anaconda3/bin/python train3.py build/" + myhash + ".pth")
     os.system("/d/jcastillo/anaconda3/bin/python test3.py build/" + myhash + ".pth")
