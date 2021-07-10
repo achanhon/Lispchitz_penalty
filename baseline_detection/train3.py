@@ -73,8 +73,8 @@ import dataloader
 
 cia = dataloader.CIA("train")
 
-earlystopping = cia.getrandomtiles(128, 32)
-weights = torch.Tensor([1, 1, 0.000001]).to(device)
+earlystopping = cia.getrandomtiles(128, 16)
+weights = torch.Tensor([1, 5, 0.000001]).to(device)
 criterion = torch.nn.CrossEntropyLoss(weight=weights)
 
 criterionbis = smp.losses.dice.DiceLoss(mode="multiclass", ignore_index=[2])
@@ -114,8 +114,8 @@ def trainaccuracy():
 
 optimizer = torch.optim.Adam(net.parameters(), lr=0.0001)
 meanloss = collections.deque(maxlen=200)
-nbepoch = 90
-batchsize = 16
+nbepoch = 300
+batchsize = 32
 changecrops = 3
 
 for epoch in range(nbepoch):
