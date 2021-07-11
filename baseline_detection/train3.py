@@ -163,3 +163,6 @@ for epoch in range(nbepoch):
     print("accuracy and IoU", accu(cm), f1(cm))
 
 print("training stops after reaching time limit")
+
+
+##le code précédent marchait pas si mal
