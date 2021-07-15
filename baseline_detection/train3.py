@@ -74,7 +74,7 @@ import dataloader
 cia = dataloader.CIA("train")
 
 earlystopping = cia.getrandomtiles(128, 16)
-weights = torch.Tensor([1, 5, 0.000001]).to(device)
+weights = torch.Tensor([1, 10, 0.000001]).to(device)
 criterion = torch.nn.CrossEntropyLoss(weight=weights)
 
 criterionbis = smp.losses.dice.DiceLoss(mode="multiclass", ignore_index=[2])
@@ -144,12 +144,12 @@ for epoch in range(nbepoch):
             loss = loss * 0.5
         if epoch > 160:
             loss = loss * 0.5
-        if epoch > 400:
+        if epoch > 260:
             loss = loss * 0.5
 
         optimizer.zero_grad()
         loss.backward()
-        torch.nn.utils.clip_grad_norm_(net.parameters(), 3)
+        torch.nn.utils.clip_grad_norm_(net.parameters(), 1)
         optimizer.step()
 
         if random.randint(0, 30) == 0:
