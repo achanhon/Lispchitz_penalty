@@ -130,9 +130,9 @@ class SegSemDataset:
             for r, c in l:
                 if (
                     r > tilesize
-                    and r + tilesize < mask.shape[2]
+                    and r + tilesize < image.shape[2]
                     and c > tilesize
-                    and c + tilesize < mask.shape[3]
+                    and c + tilesize < image.shape[3]
                 ):
                     r += random.randint(-tilesize // 3, tilesize // 3)
                     c += random.randint(-tilesize // 3, tilesize // 3)
