@@ -164,5 +164,3 @@ for epoch in range(nbepoch):
 
 print("training stops after reaching time limit")
 
-
-##le code précédent marchait pas si mal
