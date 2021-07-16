@@ -115,7 +115,7 @@ def trainaccuracy():
 optimizer = torch.optim.Adam(net.parameters(), lr=0.0001)
 meanloss = collections.deque(maxlen=200)
 nbepoch = 300
-batchsize = 32  # too small !!
+batchsize = 32
 changecrops = 3
 
 for epoch in range(nbepoch):
@@ -140,9 +140,11 @@ for epoch in range(nbepoch):
 
         if epoch > 30:
             loss = loss * 0.5
+        if epoch > 60:
+            loss = loss * 0.5
         if epoch > 90:
             loss = loss * 0.5
-        if epoch > 160:
+        if epoch > 120:
             loss = loss * 0.5
         if epoch > 260:
             loss = loss * 0.5
@@ -161,3 +163,6 @@ for epoch in range(nbepoch):
     print("accuracy and IoU", accu(cm), f1(cm))
 
 print("training stops after reaching time limit")
+
+
+##le code précédent marchait pas si mal
