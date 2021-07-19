@@ -122,7 +122,7 @@ class SegSemDataset:
             l = getsomecenters(label)
             random.shuffle(l)
             l = l[0 : min(len(l), nbtilespositifperimage)]
-            random01 = np.random.rand((len(l), 2))
+            random01 = np.random.rand(len(l), 2)
             for i, (r, c) in enumerate(l):
                 # computing possible value for left corner of the crop containing r,c
                 maxR = l - 1
