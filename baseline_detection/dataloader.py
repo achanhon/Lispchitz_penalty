@@ -125,7 +125,7 @@ class SegSemDataset:
             random01 = np.random.rand(len(l), 2)
             for i, (r, c) in enumerate(l):
                 # computing possible value for left corner of the crop containing r,c
-                maxR = l - 1
+                maxR = r - 1
                 maxC = c - 1
                 # always possible because r,c can not be the left corner of the image
                 minR = max(r - tilesize + 1, 0)
