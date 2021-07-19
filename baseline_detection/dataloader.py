@@ -40,7 +40,7 @@ def getindexeddata():
 from skimage import measure
 
 
-def getsomecenters(label, size):
+def getsomecenters(label):
     centerlabel = np.zeros(label.shape)
 
     blobs_image = measure.label(label, background=0)
@@ -50,12 +50,7 @@ def getsomecenters(label, size):
     for blob in blobs:
         r, c = blob.centroid
         r, c = int(r), int(c)
-        if (
-            r <= size + 1
-            or r + size + 1 >= label.shape[0]
-            or c <= size + 1
-            or c + size + 1 >= label.shape[1]
-        ):
+        if r <= 8 or r + 8 >= label.shape[0] or c <= 8 or c + 8 >= label.shape[1]:
             continue
 
         output.append((r, c))
@@ -124,29 +119,25 @@ class SegSemDataset:
             image, label = self.getImageAndLabel(name)
 
             # positive crop
-            l = getsomecenters(label, size=tilesize // 2 + 6)
+            l = getsomecenters(label)
             random.shuffle(l)
             l = l[0 : min(len(l), nbtilespositifperimage)]
-            for r, c in l:
-                if (
-                    r > tilesize
-                    and r + tilesize < image.shape[2]
-                    and c > tilesize
-                    and c + tilesize < image.shape[3]
-                ):
-                    r += random.randint(-tilesize // 3, tilesize // 3)
-                    c += random.randint(-tilesize // 3, tilesize // 3)
+            random01 = np.random.rand((len(l), 2))
+            for i, (r, c) in enumerate(l):
+                # computing possible value for left corner of the crop containing r,c
+                maxR = l - 1
+                maxC = c - 1
+                # always possible because r,c can not be the left corner of the image
+                minR = max(r - tilesize + 1, 0)
+                minC = max(c - tilesize + 1, 0)
+                # should not be outside the image so max(0,...)
 
-                im = image[
-                    r - tilesize // 2 : r + tilesize // 2,
-                    c - tilesize // 2 : c + tilesize // 2,
-                    :,
-                ].copy()
-                mask = label[
-                    r - tilesize // 2 : r + tilesize // 2,
-                    c - tilesize // 2 : c + tilesize // 2,
-                ].copy()
-                XY.append((im, mask))
+                R = int(random01[i][0] * (maxR - minR)) + minR
+                C = int(random01[i][0] * (maxC - minC)) + minC
+
+                im = image[R : R + tilesize, C : C + tilesize, :]
+                mask = label[R : R + tilesize, C : C + tilesize]
+                XY.append((im.copy(), mask.copy()))
 
             # random crop
             row = np.random.randint(
