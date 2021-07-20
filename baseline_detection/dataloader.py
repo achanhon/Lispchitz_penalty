@@ -205,19 +205,23 @@ class CIA:
 
     def getrandomtiles(self, tilesize, batchsize):
         nbtiles = {}
-        nbtiles["vedai/train"] = (1, 5)  # very small image
+        nbtiles["vedai"] = (1, 5)  # very small image
 
-        nbtiles["isprs/train"] = (20, 100)  # small image
-        nbtiles["dfc/train"] = (20, 100)
+        nbtiles["isprs"] = (20, 100)  # small image
+        nbtiles["dfc"] = (20, 100)
 
-        nbtiles["dota/train"] = (5, 25)  # small image but large dataset
+        nbtiles["dota"] = (5, 25)  # small image but large dataset
 
-        nbtiles["saclay/train"] = (100, 500)  # medium image
+        nbtiles["saclay"] = (100, 500)  # medium image
 
-        nbtiles["little_xview/train"] = (
-            100,
-            100,
-        )  # medium image with many image with no car
+        nbtiles["little_xview"] = (100, 100)  # medium image with many image with no car
+
+        tmp = {}
+        for key in nbtiles:
+            tmp[key + "/train"] = nbtiles[key]
+            tmp[key + "/test"] = nbtiles[key]
+        nbtiles = tmp.copy()
+        del tmp
 
         XY = []
         for town in self.towns:
