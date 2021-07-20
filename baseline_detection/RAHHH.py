@@ -95,8 +95,8 @@ def trainaccuracy():
                 predim.save("build/" + str(i * 16 + j) + "_z.png")
 
                 cm += confusion_matrix(
-                    pred[i].cpu().numpy().flatten(),
-                    targets[i].cpu().numpy().flatten(),
+                    pred[j].cpu().numpy().flatten(),
+                    targets[j].cpu().numpy().flatten(),
                     labels=[0, 1, 2],
                 )
     return cm[0:2, 0:2]
