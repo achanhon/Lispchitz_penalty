@@ -1,0 +1,6 @@
+2 effets
+-> gros overfitting sur du 128x128 de train -> test
+ET
+-> grosse perte de perfo de 128x128 -> wxh
+
+AV !
