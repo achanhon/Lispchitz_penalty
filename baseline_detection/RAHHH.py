@@ -56,7 +56,7 @@ import dataloader
 
 cia = dataloader.CIA("train")
 
-crops = cia.getrandomtiles(128, 16)
+earlystopping = cia.getrandomtiles(128, 16)
 
 print("test on training crop")
 
