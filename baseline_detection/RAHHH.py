@@ -54,11 +54,11 @@ with torch.no_grad():
 print("load data")
 import dataloader
 
-cia = dataloader.CIA("train")
+cia = dataloader.CIA("test")
 
 earlystopping = cia.getrandomtiles(128, 16)
 
-print("test on training crop")
+print("test on testing crop")
 
 
 def accu(cm):
@@ -95,12 +95,20 @@ def trainaccuracy():
                 predim.save("build/" + str(i * 16 + j) + "_z.png")
 
                 cm += confusion_matrix(
-                    pred[i].cpu().numpy().flatten(),
-                    targets[i].cpu().numpy().flatten(),
+                    pred[j].cpu().numpy().flatten(),
+                    targets[j].cpu().numpy().flatten(),
                     labels=[0, 1, 2],
                 )
     return cm[0:2, 0:2]
 
+
+cm = trainaccuracy()
+print("accuracy and IoU", accu(cm), f1(cm))
+
+print("test on training crop")
+cia = dataloader.CIA("train")
+
+earlystopping = cia.getrandomtiles(128, 16)
 
 cm = trainaccuracy()
 print("accuracy and IoU", accu(cm), f1(cm))
