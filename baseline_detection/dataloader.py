@@ -23,7 +23,7 @@ def getindexeddata():
     whereIam = os.uname()[1]
 
     root = None
-    availabledata = ["dfc", "vedai", "saclay", "little_xview", "dota", "isprs"]
+    availabledata = ["dfc", "vedai", "saclay", "isprs" ]#"little_xview", "dota"]
 
     if whereIam in ["super", "wdtim719z"]:
         root = "/data/CIA/"
