@@ -128,13 +128,24 @@ for epoch in range(nbepoch):
         x, y = x.to(device), y.to(device)
 
         preds = net(x)
+
+        predsSign = 0.5 * (preds[:, 1, :, :] - preds[:, 0, :, :])
+        predsSign8 = torch.nn.functional.max_pool2d(predsSign, kernel_size=8, stride=8)
+        y8 = torch.nn.functional.max_pool2d(y.float(), kernel_size=8, stride=8).long()
+
         tmp = torch.zeros(preds.shape[0], 1, preds.shape[2], preds.shape[3])
         tmp = tmp.to(device)
-        preds = torch.cat([preds, tmp], dim=1)
+        preds3class = torch.stack([-predsSign, predsSign, tmp], dim=1)
+        preds83class = torch.stack([-predsSign8, predsSign8, tmp], dim=1)
 
         yy = dataloader.convertIn3class(y)
+        yy8 = dataloader.convertIn3class(y8)
 
-        loss = criterion(preds, yy) + criterionbis(preds, yy)
+        loss = (
+            criterion(preds3class, yy) * 0.1
+            + criterion(preds83class, yy8)
+            + criterionbis(preds, yy)
+        )
 
         meanloss.append(loss.cpu().data.numpy())
 
