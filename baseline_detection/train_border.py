@@ -53,7 +53,7 @@ earlystopping = cia.getrandomtiles(batchsize)
 
 
 def accu(cm):
-    return 100.0 * (cm[0][0] + cm[1][1]) / numpy.sum(cm)
+    return 100.0 * (cm[0][0] + cm[1][1]) / torch.sum(cm)
 
 
 def iou(cm):
