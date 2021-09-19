@@ -64,7 +64,7 @@ def iou(cm):
 
 def trainCM():
     with torch.no_grad():
-        cm = torch.zeros((2, 2))
+        cm = torch.zeros((2, 2)).cuda()
         net.eval()
         good, tot = torch.zeros(1).cuda(), torch.zeros(1).cuda()
         for x, y in earlystopping:
