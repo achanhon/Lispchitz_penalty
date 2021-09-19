@@ -77,7 +77,7 @@ with torch.no_grad():
             imageraw, label = cia.data[town].getImageAndLabel(i)
 
             label = torch.Tensor(label).cuda()
-            distance = dataloader.distanceToBorder(label)
+            distance = dataloader.distancetransform(label)
 
             image = torch.Tensor(numpy.transpose(imageraw, axes=(2, 0, 1))).unsqueeze(0)
             h, w = image.shape[2], image.shape[3]

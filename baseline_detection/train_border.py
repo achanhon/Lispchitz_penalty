@@ -70,7 +70,7 @@ def trainCM():
         for x, y in earlystopping:
             x, y = x.cuda(), y.cuda()
 
-            D = dataloader.distanceToBorder(y)
+            D = dataloader.distancetransform(y)
 
             z = net(x)
             _, z = z.max(1)
@@ -93,7 +93,7 @@ for epoch in range(nbepoch):
     XY = cia.getrandomtiles(batchsize)
     for x, y in XY:
         x, y = x.cuda(), y.cuda()
-        D = dataloader.distanceToBorder(y)
+        D = dataloader.distancetransform(y)
 
         nb0, nb1 = torch.sum((y == 0).float()), torch.sum((y == 1).float())
         weights = torch.Tensor([1, nb0 / (nb1 + 1)]).cuda()
