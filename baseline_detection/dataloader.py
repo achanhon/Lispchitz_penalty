@@ -216,7 +216,7 @@ def largeforward(net, image, device, tilesize=128, stride=64):
 
 
 def distancetransform(y, size=6):
-    yy = y.unsqueeze(0)
+    yy = y.unsqueeze(0).float()
     yyy = yy.clone()
     for i in range(size):
         yy = torch.nn.functional.max_pool2d(yy, kernel_size=3, stride=1, padding=1)
