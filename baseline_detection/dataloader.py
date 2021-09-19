@@ -106,7 +106,7 @@ class SegSemDataset:
             noise = np.random.randint(-tilesize, tilesize, size=(len(l), 2))
 
             for i, (r, c) in enumerate(l):
-                R, C = r + noise[i][0], r + noise[i][c]
+                R, C = r + noise[i][0], c + noise[i][1]
 
                 R = max(0, min(R, image.shape[0] - tilesize - 2))
                 C = max(0, min(C, image.shape[1] - tilesize - 2))
