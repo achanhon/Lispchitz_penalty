@@ -113,24 +113,14 @@ class SegSemDataset:
 
                 im = image[R : R + tilesize, C : C + tilesize, :]
                 mask = label[R : R + tilesize, C : C + tilesize]
-
-                if mask.shape != (128, 128):
-                    print(R, C, image.shape)
-                    quit()
-
                 XY.append((im.copy(), mask.copy()))
 
             # random crop
-            RC = np.random.randint(
-                0, image.shape[0] - tilesize - 2, size=(negperimage, 2)
-            )
+            R = np.random.randint(0, image.shape[0] - tilesize - 2, size=negperimage)
+            C = np.random.randint(0, image.shape[1] - tilesize - 2, size=negperimage)
             for i in range(negperimage):
-                im = image[
-                    RC[i][0] : RC[i][0] + tilesize, RC[i][1] : RC[i][1] + tilesize, :
-                ].copy()
-                mask = label[
-                    RC[i][0] : RC[i][0] + tilesize, RC[i][1] : RC[i][1] + tilesize
-                ].copy()
+                im = image[R[i] : R[i] + tilesize, C[i] : C[i] + tilesize, :].copy()
+                mask = label[R[i] : R[i] + tilesize, C[i] : C[i] + tilesize].copy()
                 XY.append((im, mask))
 
         # symetrie
