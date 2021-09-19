@@ -43,7 +43,7 @@ print("load data")
 import dataloader
 
 cia = dataloader.CIA("train")
-batchsize = 24
+batchsize = 32
 
 print("train")
 import collections
