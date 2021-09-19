@@ -156,7 +156,6 @@ class CIA:
             self.data[town] = SegSemDataset(self.root + town + "/")
             self.nbImages += self.data[town].nbImages
 
-        self.balance = self.nbnonbat / self.nbbat
         print(
             "indexing cia (mode",
             flag,
