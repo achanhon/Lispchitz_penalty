@@ -113,6 +113,11 @@ class SegSemDataset:
 
                 im = image[R : R + tilesize, C : C + tilesize, :]
                 mask = label[R : R + tilesize, C : C + tilesize]
+
+                if mask.shape != (128, 128):
+                    print(R, C, image.shape)
+                    quit()
+
                 XY.append((im.copy(), mask.copy()))
 
             # random crop
