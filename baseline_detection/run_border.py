@@ -15,9 +15,9 @@ assert whereIam in [
 if whereIam == "wdtim719z":
     root = "/data/"
 if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
-    root = "/scratch_ai4geo/"
+    root = "/scratchf/"
 
-if not os.path.exists(root + "cia"):
+if not os.path.exists(root + "CIA"):
     print("run merge before")
     quit()
 
