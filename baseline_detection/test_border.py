@@ -46,9 +46,9 @@ print("load data")
 import dataloader
 
 if whereIam == "super":
-    miniworld = dataloader.MiniWorld(flag="custom", custom=["potsdam/test"])
+    cia = dataloader.CIA(flag="custom", custom=["potsdam/test"])
 else:
-    miniworld = dataloader.MiniWorld("test")
+    cia = dataloader.CIA("test")
 
 
 print("test")
@@ -70,11 +70,11 @@ def iou(cm):
 cmforlogging = []
 cm = {}
 with torch.no_grad():
-    for town in miniworld.towns:
+    for town in cia.towns:
         print(town)
         cm[town] = torch.zeros((2, 2)).cuda()
-        for i in range(miniworld.data[town].nbImages):
-            imageraw, label = miniworld.data[town].getImageAndLabel(i)
+        for i in range(cia.data[town].nbImages):
+            imageraw, label = cia.data[town].getImageAndLabel(i)
 
             label = torch.Tensor(label).cuda()
             distance = dataloader.distanceToBorder(label)
@@ -120,17 +120,16 @@ with torch.no_grad():
                 debug.save("build/" + town[0:-5] + "_" + str(i) + "_z.png")
 
         cm[town] = cm[town].cpu().numpy()
-        print(cm[town][0][0], cm[town][0][1], cm[town][1][0], cm[town][1][1])
-        print(accu(cm[town]), iou(cm[town]))
+        print(iou(cm[town]))
         cmforlogging.append(iou(cm[town]))
         debug = numpy.asarray(cmforlogging)
         numpy.savetxt("build/logtest.txt", debug)
 
 print("-------- results ----------")
-for town in miniworld.towns:
-    print(town, accu(cm[town]), iou(cm[town]))
+for town in cia.towns:
+    print(town, iou(cm[town]), accu(cm[town]))
 
 globalcm = numpy.zeros((2, 2))
-for town in miniworld.towns:
+for town in cia.towns:
     globalcm += cm[town]
-print("miniworld", accu(globalcm), iou(globalcm))
+print("cia", iou(globalcm), accu(globalcm))

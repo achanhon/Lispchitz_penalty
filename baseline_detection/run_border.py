@@ -17,7 +17,7 @@ if whereIam == "wdtim719z":
 if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
     root = "/scratch_ai4geo/"
 
-if not os.path.exists(root + "miniworld"):
+if not os.path.exists(root + "cia"):
     print("run merge before")
     quit()
 

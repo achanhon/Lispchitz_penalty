@@ -42,64 +42,67 @@ net.train()
 print("load data")
 import dataloader
 
-miniworld = dataloader.MiniWorld()
+cia = dataloader.CIA("train")
+batchsize = 32
 
 print("train")
 import collections
 import random
 
-earlystopping = miniworld.getrandomtiles(5000, 128, 32)
+earlystopping = cia.getrandomtiles(batchsize)
 
 
-def trainaccuracy():
+def accu(cm):
+    return 100.0 * (cm[0][0] + cm[1][1]) / numpy.sum(cm)
+
+
+def iou(cm):
+    return 50.0 * cm[0][0] / (cm[0][0] + cm[1][0] + cm[0][1]) + 50.0 * cm[1][1] / (
+        cm[1][1] + cm[1][0] + cm[0][1]
+    )
+
+
+def trainCM():
     with torch.no_grad():
+        cm = torch.zeros((2, 2))
         net.eval()
         good, tot = torch.zeros(1).cuda(), torch.zeros(1).cuda()
         for x, y in earlystopping:
             x, y = x.cuda(), y.cuda()
 
             D = dataloader.distanceToBorder(y)
-            tot += torch.sum(D)
 
             z = net(x)
             _, z = z.max(1)
 
-            cool = (z == y).float()
-            cool *= D
-            good += torch.sum(cool)
-        return 100.0 * good.cpu().numpy() / tot.cpu().numpy()
+            cm[0][0] += torch.sum((z == 0).float() * (y == 0).float() * D)
+            cm[1][1] += torch.sum((z == 1).float() * (y == 1).float() * D)
+            cm[1][0] += torch.sum((z == 1).float() * (y == 0).float() * D)
+            cm[0][1] += torch.sum((z == 0).float() * (y == 1).float() * D)
+
+        return cm
 
 
-# weights = torch.Tensor([1, miniworld.balance]).cuda()
-# criterion = torch.nn.CrossEntropyLoss(weight=weights, reduction="none")
-criterionbis = smp.losses.dice.DiceLoss(mode="multiclass")
 optimizer = torch.optim.Adam(net.parameters(), lr=0.0001)
 meanloss = collections.deque(maxlen=200)
 nbepoch = 800
-batchsize = 16
 
 for epoch in range(nbepoch):
     print("epoch=", epoch, "/", nbepoch)
 
-    XY = miniworld.getrandomtiles(10000, 128, batchsize)
+    XY = cia.getrandomtiles(batchsize)
     for x, y in XY:
         x, y = x.cuda(), y.cuda()
         D = dataloader.distanceToBorder(y)
 
+        nb0, nb1 = torch.sum((y == 0).float()), torch.sum((y == 1).float())
+        weights = torch.Tensor([1, nb0 / (nb1 + 1)]).cuda()
+        criterion = torch.nn.CrossEntropyLoss(weight=weights, reduction="none")
+
         z = net(x)
 
-        if random.randint(0, 10) == 0:
-            weights = torch.Tensor([1, miniworld.balance]).cuda()
-            criterion = torch.nn.CrossEntropyLoss(weight=weights, reduction="none")
-        else:
-            nb0, nb1 = torch.sum((y == 0).float()), torch.sum((y == 1).float())
-            weights = torch.Tensor([1, nb0 / nb1]).cuda()
-            criterion = torch.nn.CrossEntropyLoss(weight=weights, reduction="none")
-
         CE = criterion(z, y)
-        CE = torch.mean(CE * D)
-        dice = criterionbis(z, y)
-        loss = CE + dice
+        loss = torch.mean(CE * D)
 
         meanloss.append(loss.cpu().data.numpy())
 
@@ -122,10 +125,10 @@ for epoch in range(nbepoch):
 
     print("backup model")
     torch.save(net, outputname)
-    accu = trainaccuracy()
-    print("accuracy", accu)
+    cm = trainCM()
+    print("perf", iou(cm), accu(cm))
 
-    if accu > 98:
+    if iou(cm) > 92:
         print("training stops after reaching high training accuracy")
         quit()
 print("training stops after reaching time limit")

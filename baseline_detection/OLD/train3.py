@@ -74,7 +74,7 @@ import dataloader
 cia = dataloader.CIA("train")
 
 earlystopping = cia.getrandomtiles(128, 16)
-weights = torch.Tensor([1, cia.balance/2, 0.000001]).to(device)
+weights = torch.Tensor([1, cia.balance / 2, 0.000001]).to(device)
 criterion = torch.nn.CrossEntropyLoss(weight=weights)
 
 criterionbis = smp.losses.dice.DiceLoss(mode="multiclass", ignore_index=[2])
