@@ -99,7 +99,7 @@ for epoch in range(nbepoch):
 
     XY = cia.getrandomtiles(batchsize)
     good = torch.zeros(1).cuda()
-    fa, miss = good.clone(), good.clone()
+    fa, miss, acc, tot = good.clone(), good.clone(), good.clone(), good.clone()
 
     for x, y in XY:
         x, y = x.cuda(), y.cuda()
@@ -113,10 +113,6 @@ for epoch in range(nbepoch):
         CE = criterion(z, y)
 
         G, (good_, fa_, miss_) = gscore(y, z, D)
-        good += good_.clone()
-        fa += fa_.clone()
-        miss += miss_.clone()
-
         loss = torch.mean(CE * D) + G
 
         meanloss.append(loss.cpu().data.numpy())
@@ -135,16 +131,25 @@ for epoch in range(nbepoch):
         torch.nn.utils.clip_grad_norm_(net.parameters(), 3)
         optimizer.step()
 
+        with torch.no_grad():
+            good += good_.clone()
+            fa += fa_.clone()
+            miss += miss_.clone()
+            acc_ = ((2.0 * y - 1.0) * (z[:, 1, :, :] - z[:, 0, :, :]) > 0).float() * D
+            acc += torch.sum(acc_)
+            tot += torch.sum(D)
+
         if random.randint(0, 30) == 0:
             print("loss=", (sum(meanloss) / len(meanloss)))
 
     torch.save(net, outputname)
     precision = good / (good + fa + 0.0001)
-    recall = precision = good / (good + miss + 0.0001)
+    recall = good / (good + miss + 0.0001)
     g = precision * recall * 100
-    print("smooth gscore", g)
+    accuracy = acc / tot * 100
+    print("perf", g, accuracy)
 
-    if g > 92:
+    if g > 92 and accuracy > 99:
         print("training stops after reaching high training accuracy")
         quit()
 print("training stops after reaching time limit")
