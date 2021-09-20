@@ -45,7 +45,7 @@ with torch.no_grad():
 print("load data")
 import dataloader
 
-if whereIam == "super" or True:
+if whereIam == "super":
     cia = dataloader.CIA(flag="custom", custom=["isprs/test"])
 else:
     cia = dataloader.CIA("test")
