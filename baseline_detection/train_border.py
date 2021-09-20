@@ -21,6 +21,7 @@ else:
 import torch
 import torch.backends.cudnn as cudnn
 import segmentation_models_pytorch as smp
+import dataloader
 
 print("define model")
 if torch.cuda.is_available():
@@ -43,8 +44,6 @@ net.train()
 
 
 print("load data")
-import dataloader
-
 cia = dataloader.CIA("train")
 batchsize = 32
 
