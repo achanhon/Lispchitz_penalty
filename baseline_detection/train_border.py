@@ -44,7 +44,7 @@ net.train()
 
 
 print("load data")
-cia = dataloader.CIA("custom", custom="isprs/train")
+cia = dataloader.CIA("custom", custom=["isprs/train"])
 batchsize = 32
 
 print("train")
