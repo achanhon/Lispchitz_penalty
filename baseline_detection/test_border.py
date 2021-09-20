@@ -50,7 +50,7 @@ with torch.no_grad():
 print("load data")
 import dataloader
 
-if whereIam == "super":
+if whereIam in ["super", "wdtim719z"]:
     cia = dataloader.CIA(flag="custom", custom=["isprs/test"])
 else:
     cia = dataloader.CIA("test")
