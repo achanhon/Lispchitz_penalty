@@ -223,7 +223,7 @@ def distancetransform(y, size=6):
         yyy += yy
     yyy /= size
 
-    D = (yyy - y.unsqueeze(0)).abs()
+    D = (yyy - y.unsqueeze(0).float()).abs()
     D = torch.exp(-D)
 
     return D[0]
