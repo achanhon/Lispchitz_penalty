@@ -248,4 +248,6 @@ class SoftNMS(torch.nn.Module):
         x = torch.cat([x, learnednms, expertnms], dim=1)
         x += self.merge(x)
         x = torch.cat([-x, x], dim=1)
+        print(x.shape)
+        quit()
         return x
