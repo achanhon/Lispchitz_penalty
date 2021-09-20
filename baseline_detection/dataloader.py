@@ -237,15 +237,15 @@ class SoftNMS(torch.nn.Module):
         self.merge = torch.nn.Conv2d(8, 1, kernel_size=1)
 
     def forward(self, x):
-        x = x[:, 1, :, :] - x[:, 0, :, :]
-        x = x.unsqueeze(1)
+        xs = x[:, 1, :, :] - x[:, 0, :, :]
+        xs = xs.unsqueeze(1)
 
-        learnednms = torch.nn.functional.leaky_relu(self.conv(x))
+        learnednms = torch.nn.functional.leaky_relu(self.conv(xs))
 
-        x5 = torch.nn.functional.max_pool2d(x, kernel_size=5, stride=1, padding=2)
-        expertnms = torch.nn.functional.relu(x * 10 - 9 * x5)
+        x5 = torch.nn.functional.max_pool2d(xs, kernel_size=5, stride=1, padding=2)
+        expertnms = torch.nn.functional.relu(xs * 10 - 9 * x5)
 
-        xall = torch.cat([x, learnednms, expertnms], dim=1)
-        x += self.merge(xall)
-        x = torch.cat([-x, x], dim=1)
-        return x
+        xall = torch.cat([xs, learnednms, expertnms], dim=1)
+        xs += self.merge(xall)
+        xs = torch.cat([-xs, xs], dim=1)
+        return xs
