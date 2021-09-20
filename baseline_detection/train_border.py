@@ -139,3 +139,5 @@ for epoch in range(nbepoch):
         print("training stops after reaching high training accuracy")
         quit()
 print("training stops after reaching time limit")
+
+## faudrait voir quand même - si ça se trouve ça marche pas parce que l'iou c'est pas une bonne mesure pource problème....... on voudrait que l'iou de la classe 1 non ?
