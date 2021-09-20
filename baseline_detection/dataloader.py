@@ -239,18 +239,13 @@ class SoftNMS(torch.nn.Module):
     def forward(self, x):
         x = x[:, 1, :, :] - x[:, 0, :, :]
         x = x.unsqueeze(1)
-        print(x.shape)
 
         learnednms = torch.nn.functional.leaky_relu(self.conv(x))
 
         x5 = torch.nn.functional.max_pool2d(x, kernel_size=5, stride=1, padding=2)
         expertnms = torch.nn.functional.relu(x * 10 - 9 * x5)
 
-        x = torch.cat([x, learnednms, expertnms], dim=1)
-        print(x.shape)
-        x += self.merge(x)
-        print(x.shape)
+        xall = torch.cat([x, learnednms, expertnms], dim=1)
+        x += self.merge(xall)
         x = torch.cat([-x, x], dim=1)
-        print(x.shape)
-        quit()
         return x
