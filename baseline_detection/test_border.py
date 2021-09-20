@@ -75,7 +75,7 @@ def iou(cm):
 def gscore(cm):
     precision = cm[1][1] / (cm[1][1] + cm[0][1])
     recall = cm[1][1] / (cm[1][1] + cm[1][0])
-    return precision * recall
+    return precision * recall * 100
 
 
 cmforlogging = []
