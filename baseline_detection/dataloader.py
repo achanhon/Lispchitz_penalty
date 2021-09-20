@@ -233,8 +233,8 @@ class SoftNMS(torch.nn.Module):
     def __init__(self):
         super(SoftNMS, self).__init__()
 
-        self.conv = nn.Conv2d(1, 6, kernel_size=7, padding=3)
-        self.merge = nn.Conv2d(8, 1, kernel_size=1)
+        self.conv = torch.nn.Conv2d(1, 6, kernel_size=7, padding=3)
+        self.merge = torch.nn.Conv2d(8, 1, kernel_size=1)
 
     def forward(self, x):
         x = x[:, 1, :, :] - x[:, 0, :, :]
