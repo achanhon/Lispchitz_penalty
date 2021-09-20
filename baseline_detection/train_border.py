@@ -115,7 +115,7 @@ for epoch in range(nbepoch):
         G, (good_, fa_, miss_) = gscore(y, z, D)
         loss = torch.mean(CE * D) + G
 
-        meanloss.append(loss.cpu().data.numpy())
+        meanloss.append(G.cpu().data.numpy())
 
         if epoch > 30:
             loss = loss * 0.5
