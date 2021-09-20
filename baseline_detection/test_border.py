@@ -103,7 +103,7 @@ with torch.no_grad():
                 (pred == 0).float() * (label == 1).float() * distance
             )
 
-            if town in ["potsdam/test"]:
+            if town in ["isprs/test"]:
                 debug = image[0].cpu().numpy()
                 debug = numpy.transpose(debug, axes=(1, 2, 0))
                 debug = PIL.Image.fromarray(numpy.uint8(debug))
