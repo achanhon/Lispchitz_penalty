@@ -85,9 +85,10 @@ def trainCM():
         return cm
 
 
-optimizer = torch.optim.Adam(net.parameters(), lr=0.0001)
+optimizer = torch.optim.Adam(net.parameters(), lr=0.001)
 meanloss = collections.deque(maxlen=200)
 nbepoch = 800
+criterionbis = smp.losses.dice.DiceLoss(mode="multiclass")
 
 for epoch in range(nbepoch):
     print("epoch=", epoch, "/", nbepoch)
@@ -104,7 +105,8 @@ for epoch in range(nbepoch):
         z = net(x)
 
         CE = criterion(z, y)
-        loss = torch.mean(CE * D)
+        dice = criterionbis(z, y)
+        loss = torch.mean(CE * D) + dice
 
         meanloss.append(loss.cpu().data.numpy())
 
