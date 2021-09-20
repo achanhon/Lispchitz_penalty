@@ -72,6 +72,12 @@ def iou(cm):
     )
 
 
+def gscore(cm):
+    precision = cm[1][1] / (cm[1][1] + cm[0][1])
+    recall = cm[1][1] / (cm[1][1] + cm[1][0])
+    return precision * recall
+
+
 cmforlogging = []
 cm = {}
 with torch.no_grad():
@@ -113,9 +119,6 @@ with torch.no_grad():
                 debug = numpy.transpose(debug, axes=(1, 2, 0))
                 debug = PIL.Image.fromarray(numpy.uint8(debug))
                 debug.save("build/" + town[0:-5] + "_" + str(i) + "_x.png")
-                debug = label.cpu().numpy() * 255
-                debug = PIL.Image.fromarray(numpy.uint8(debug))
-                debug.save("build/" + town[0:-5] + "_" + str(i) + "_v.png")
                 debug = (2.0 * label - 1) * distance * 127 + 127
                 debug = debug.cpu().numpy()
                 debug = PIL.Image.fromarray(numpy.uint8(debug))
@@ -125,16 +128,16 @@ with torch.no_grad():
                 debug.save("build/" + town[0:-5] + "_" + str(i) + "_z.png")
 
         cm[town] = cm[town].cpu().numpy()
-        print(iou(cm[town]))
-        cmforlogging.append(iou(cm[town]))
+        print(gscore(cm[town]))
+        cmforlogging.append(gscore(cm[town]))
         debug = numpy.asarray(cmforlogging)
         numpy.savetxt("build/logtest.txt", debug)
 
 print("-------- results ----------")
 for town in cia.towns:
-    print(town, iou(cm[town]), accu(cm[town]))
+    print(town, gscore(cm[town]), iou(cm[town]), accu(cm[town]))
 
 globalcm = numpy.zeros((2, 2))
 for town in cia.towns:
     globalcm += cm[town]
-print("cia", iou(globalcm), accu(globalcm))
+print("cia", gscore(cm[town]), iou(globalcm), accu(globalcm))
