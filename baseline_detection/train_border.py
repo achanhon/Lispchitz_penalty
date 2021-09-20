@@ -69,43 +69,55 @@ import collections
 import random
 
 
-def accu(cm):
-    return 100.0 * (cm[0][0] + cm[1][1]) / torch.sum(cm)
+class Gscore(torch.nn.Module):
+    def __init__(self):
+        super(Gscore, self).__init__()
 
+    def forward(self, y, z, D):
+        zs = z[:, 1, :, :] - z[:, 0, :, :]
+        zp = torch.nn.functional.relu(zs)
+        zm = torch.nn.functional.relu(-zs)
 
-def iou(cm):
-    return 50.0 * cm[0][0] / (cm[0][0] + cm[1][0] + cm[0][1]) + 50.0 * cm[1][1] / (
-        cm[1][1] + cm[1][0] + cm[0][1]
-    )
+        good = torch.sum(zp * (y == 1).float())
+        fa = torch.sum(zp * D * (y == 0).float())
+        miss = torch.sum(zm * (y == 1).float())
+
+        precision = good / (good + fa + 0.0001)
+        recall = precision = good / (good + miss + 0.0001)
+
+        loss = 1.0 - precision * recall
+        return loss, (good, fa, miss)
 
 
 optimizer = torch.optim.Adam(net.parameters(), lr=0.001)
 meanloss = collections.deque(maxlen=200)
+gscore = Gscore()
 nbepoch = 800
-criterionbis = smp.losses.dice.DiceLoss(mode="multiclass")
 
 for epoch in range(nbepoch):
     print("epoch=", epoch, "/", nbepoch)
 
     XY = cia.getrandomtiles(batchsize)
-    cm = torch.zeros((2, 2)).cuda()
+    good = torch.zeros(1).cuda()
+    fa, miss = good.clone(), good.clone()
 
     for x, y in XY:
         x, y = x.cuda(), y.cuda()
         D = dataloader.distancetransform(y)
 
+        z = net(x)
+
         nb0, nb1 = torch.sum((y == 0).float()), torch.sum((y == 1).float())
         weights = torch.Tensor([1, nb0 / (nb1 + 1)]).cuda()
         criterion = torch.nn.CrossEntropyLoss(weight=weights, reduction="none")
-
-        z = net(x)
-
         CE = criterion(z, y)
-        if nb1 != 0:
-            dice = criterionbis(z, y)
-            loss = torch.mean(CE * D) + dice
-        else:
-            loss = torch.mean(CE * D)
+
+        G, (good_, fa_, miss_) = gscore(y, z, D)
+        good += good_.clone()
+        fa += fa_.clone()
+        miss += miss_.clone()
+
+        loss = torch.mean(CE * D) + G
 
         meanloss.append(loss.cpu().data.numpy())
 
@@ -123,19 +135,16 @@ for epoch in range(nbepoch):
         torch.nn.utils.clip_grad_norm_(net.parameters(), 3)
         optimizer.step()
 
-        _, z = z.max(1)
-        cm[0][0] += torch.sum((z == 0).float() * (y == 0).float() * D)
-        cm[1][1] += torch.sum((z == 1).float() * (y == 1).float() * D)
-        cm[1][0] += torch.sum((z == 1).float() * (y == 0).float() * D)
-        cm[0][1] += torch.sum((z == 0).float() * (y == 1).float() * D)
-
         if random.randint(0, 30) == 0:
             print("loss=", (sum(meanloss) / len(meanloss)))
 
     torch.save(net, outputname)
-    print("perf", iou(cm), accu(cm))
+    precision = good / (good + fa + 0.0001)
+    recall = precision = good / (good + miss + 0.0001)
+    g = precision * recall * 100
+    print("smooth gscore", g)
 
-    if iou(cm) > 92:
+    if g > 92:
         print("training stops after reaching high training accuracy")
         quit()
 print("training stops after reaching time limit")
