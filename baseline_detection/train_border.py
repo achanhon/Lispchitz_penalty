@@ -51,8 +51,6 @@ print("train")
 import collections
 import random
 
-earlystopping = cia.getrandomtiles(batchsize)
-
 
 def accu(cm):
     return 100.0 * (cm[0][0] + cm[1][1]) / torch.sum(cm)
@@ -64,27 +62,6 @@ def iou(cm):
     )
 
 
-def trainCM():
-    with torch.no_grad():
-        cm = torch.zeros((2, 2)).cuda()
-        net.eval()
-        good, tot = torch.zeros(1).cuda(), torch.zeros(1).cuda()
-        for x, y in earlystopping:
-            x, y = x.cuda(), y.cuda()
-
-            D = dataloader.distancetransform(y)
-
-            z = net(x)
-            _, z = z.max(1)
-
-            cm[0][0] += torch.sum((z == 0).float() * (y == 0).float() * D)
-            cm[1][1] += torch.sum((z == 1).float() * (y == 1).float() * D)
-            cm[1][0] += torch.sum((z == 1).float() * (y == 0).float() * D)
-            cm[0][1] += torch.sum((z == 0).float() * (y == 1).float() * D)
-
-        return cm
-
-
 optimizer = torch.optim.Adam(net.parameters(), lr=0.001)
 meanloss = collections.deque(maxlen=200)
 nbepoch = 800
@@ -94,6 +71,8 @@ for epoch in range(nbepoch):
     print("epoch=", epoch, "/", nbepoch)
 
     XY = cia.getrandomtiles(batchsize)
+    cm = torch.zeros((2, 2)).cuda()
+
     for x, y in XY:
         x, y = x.cuda(), y.cuda()
         D = dataloader.distancetransform(y)
@@ -105,8 +84,11 @@ for epoch in range(nbepoch):
         z = net(x)
 
         CE = criterion(z, y)
-        dice = criterionbis(z, y)
-        loss = torch.mean(CE * D) + dice
+        if nb1 != 0:
+            dice = criterionbis(z, y)
+            loss = torch.mean(CE * D) + dice
+        else:
+            loss = torch.mean(CE * D)
 
         meanloss.append(loss.cpu().data.numpy())
 
@@ -124,12 +106,16 @@ for epoch in range(nbepoch):
         torch.nn.utils.clip_grad_norm_(net.parameters(), 3)
         optimizer.step()
 
+        _, z = z.max(1)
+        cm[0][0] += torch.sum((z == 0).float() * (y == 0).float() * D)
+        cm[1][1] += torch.sum((z == 1).float() * (y == 1).float() * D)
+        cm[1][0] += torch.sum((z == 1).float() * (y == 0).float() * D)
+        cm[0][1] += torch.sum((z == 0).float() * (y == 1).float() * D)
+
         if random.randint(0, 30) == 0:
             print("loss=", (sum(meanloss) / len(meanloss)))
 
-    print("backup model")
     torch.save(net, outputname)
-    cm = trainCM()
     print("perf", iou(cm), accu(cm))
 
     if iou(cm) > 92:
