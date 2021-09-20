@@ -245,7 +245,7 @@ class SoftNMS(torch.nn.Module):
         x5 = torch.nn.functional.max_pool2d(x, kernel_size=5, stride=1, padding=2)
         expertnms = torch.nn.functional.relu(x * 10 - 9 * x5)
 
-        x = torch.cat([x, xnms3, xnms5], dim=1)
+        x = torch.cat([x, learnednms, expertnms], dim=1)
         x += self.merge(x)
         x = torch.cat([-x, x], dim=1)
         return x
