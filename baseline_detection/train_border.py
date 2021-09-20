@@ -29,12 +29,15 @@ if torch.cuda.is_available():
 else:
     print("no cuda")
     quit()
-net = smp.Unet(
+tmp = smp.Unet(
     encoder_name="efficientnet-b7",
     encoder_weights="imagenet",
     in_channels=3,
     classes=2,
 )
+net = torch.nn.Sequential()
+net.add_module("core", tmp)
+net.add_module("softnms", dataloader.SoftNMS())
 net = net.cuda()
 net.train()
 
