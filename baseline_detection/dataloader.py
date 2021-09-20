@@ -237,7 +237,8 @@ class SoftNMS(torch.nn.Module):
         self.merge = torch.nn.Conv2d(8, 1, kernel_size=1)
 
     def forward(self, x):
-        xs = x[:, 1, :, :] - x[:, 0, :, :]
+        x[:, 0, :, :] *= -1
+        xs = torch.sum(x, dim=1)
         xs = xs.view(x.shape[0], 1, x.shape[2], x.shape[3])
 
         learnednms = torch.nn.functional.leaky_relu(self.conv(xs))
