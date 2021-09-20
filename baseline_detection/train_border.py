@@ -58,7 +58,10 @@ net.train()
 
 
 print("load data")
-cia = dataloader.CIA("custom", custom=["isprs/train"])
+if whereIam == "wdtim719z":
+    cia = dataloader.CIA("custom", custom=["isprs/train"])
+else:
+    cia = dataloader.CIA("train")
 batchsize = 32
 
 print("train")
