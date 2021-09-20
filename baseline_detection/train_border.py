@@ -83,7 +83,7 @@ class Gscore(torch.nn.Module):
         miss = torch.sum(zm * (y == 1).float())
 
         precision = good / (good + fa + 0.0001)
-        recall = precision = good / (good + miss + 0.0001)
+        recall = good / (good + miss + 0.0001)
 
         loss = 1.0 - precision * recall
         return loss, (good, fa, miss)
