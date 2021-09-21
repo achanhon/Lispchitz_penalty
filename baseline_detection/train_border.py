@@ -85,7 +85,7 @@ class Gscore(torch.nn.Module):
 
             goodP = torch.sum((zs > 0).float() * (y == 1).float())
             goodN = torch.sum((zs < 0).float() * (y == 0).float() * D)
-            self.correct = goodP + goodN
+            self.correct += goodP + goodN
             self.good += goodP
 
             self.fa += torch.sum((zs > 0).float() * (y == 0).float() * D)
