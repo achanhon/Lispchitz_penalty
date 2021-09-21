@@ -107,7 +107,11 @@ class GscoreLoss(torch.nn.Module):
         zp = torch.nn.functional.relu(zs)
         zm = torch.nn.functional.relu(-zs)
 
-        good = torch.sum(zp * (y == 1).float())
+        good = zp * (y == 1).float()
+        good = torch.min(good, 0.9 + 0.1 * good)
+        good = torch.sum(good)
+        # being very confident on trivial correct ones should not be sufficient
+
         fa = torch.sum(zp * D * (y == 0).float())
         miss = torch.sum(zm * (y == 1).float())
 
