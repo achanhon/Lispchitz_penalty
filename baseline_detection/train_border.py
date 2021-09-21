@@ -72,6 +72,35 @@ import random
 class Gscore(torch.nn.Module):
     def __init__(self):
         super(Gscore, self).__init__()
+        self.tot = torch.zeros(1).cuda()
+        self.correct = torch.zeros(1).cuda()
+        self.good = torch.zeros(1).cuda()
+        self.fa = torch.zeros(1).cuda()
+        self.miss = torch.zeros(1).cuda()
+
+    def forward(self, y, z, D):
+        with torch.no_grad():
+            zs = z[:, 1, :, :] - z[:, 0, :, :]
+            self.tot += torch.sum(D)
+
+            goodP = torch.sum((zs > 0).float() * (y == 1).float())
+            goodN = torch.sum((zs < 0).float() * (y == 0).float() * D)
+            self.correct = goodP + goodN
+            self.good += goodP
+
+            self.fa += torch.sum((zs > 0).float() * (y == 0).float() * D)
+            self.miss += torch.sum((zs < 0).float() * (y == 1).float())
+
+    def getPerf(self):
+        precision = self.good / (self.good + self.fa + 0.0001)
+        recall = self.good / (self.good + self.miss + 0.0001)
+
+        return precision * recall * 100.0, self.correct / self.tot * 100
+
+
+class GscoreLoss(torch.nn.Module):
+    def __init__(self):
+        super(GscoreLoss, self).__init__()
 
     def forward(self, y, z, D):
         zs = z[:, 1, :, :] - z[:, 0, :, :]
@@ -86,20 +115,19 @@ class Gscore(torch.nn.Module):
         recall = good / (good + miss + 0.0001)
 
         loss = 1.0 - precision * recall
-        return loss, (good, fa, miss)
+        return loss
 
 
 optimizer = torch.optim.Adam(net.parameters(), lr=0.001)
 meanloss = collections.deque(maxlen=200)
 gscore = Gscore()
+gscoreloss = GscoreLoss()
 nbepoch = 800
 
 for epoch in range(nbepoch):
     print("epoch=", epoch, "/", nbepoch)
 
     XY = cia.getrandomtiles(batchsize)
-    good = torch.zeros(1).cuda()
-    fa, miss, acc, tot = good.clone(), good.clone(), good.clone(), good.clone()
 
     for x, y in XY:
         x, y = x.cuda(), y.cuda()
@@ -112,7 +140,7 @@ for epoch in range(nbepoch):
         criterion = torch.nn.CrossEntropyLoss(weight=weights, reduction="none")
         CE = criterion(z, y)
 
-        G, (good_, fa_, miss_) = gscore(y, z, D)
+        G = gscoreloss(y, z, D)
         loss = torch.mean(CE * D) + G
 
         meanloss.append(loss.cpu().data.numpy())
@@ -131,27 +159,16 @@ for epoch in range(nbepoch):
         torch.nn.utils.clip_grad_norm_(net.parameters(), 3)
         optimizer.step()
 
-        with torch.no_grad():
-            good += good_.clone()
-            fa += fa_.clone()
-            miss += miss_.clone()
-            acc_ = ((2.0 * y - 1.0) * (z[:, 1, :, :] - z[:, 0, :, :]) > 0).float() * D
-            acc += torch.sum(acc_)
-            tot += torch.sum(D)
+        gscore(y, z, D)
 
         if random.randint(0, 30) == 0:
             print("loss=", (sum(meanloss) / len(meanloss)))
 
     torch.save(net, outputname)
-    precision = good / (good + fa + 0.0001)
-    recall = good / (good + miss + 0.0001)
-    g = precision * recall * 100
-    accuracy = acc / tot * 100
+    g, accuracy = gscore.getPerf()
     print("perf", g, accuracy)
 
     if g > 92 and accuracy > 99:
         print("training stops after reaching high training accuracy")
         quit()
 print("training stops after reaching time limit")
-
-## faudrait voir quand même - si ça se trouve ça marche pas parce que l'iou c'est pas une bonne mesure pource problème....... on voudrait que l'iou de la classe 1 non ?
