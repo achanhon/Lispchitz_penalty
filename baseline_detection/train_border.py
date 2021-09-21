@@ -127,6 +127,7 @@ meanloss = collections.deque(maxlen=200)
 gscore = Gscore()
 gscoreloss = GscoreLoss()
 nbepoch = 800
+criterionbis = smp.losses.dice.DiceLoss(mode="multiclass")
 
 for epoch in range(nbepoch):
     print("epoch=", epoch, "/", nbepoch)
@@ -143,9 +144,9 @@ for epoch in range(nbepoch):
         weights = torch.Tensor([1, nb0 / (nb1 + 1)]).cuda()
         criterion = torch.nn.CrossEntropyLoss(weight=weights, reduction="none")
         CE = criterion(z, y)
-
         G = gscoreloss(y, z, D)
-        loss = torch.mean(CE * D) + G
+        dice = criterionbis(z, y)
+        loss = torch.mean(CE * D) + G + dice
 
         meanloss.append(loss.cpu().data.numpy())
 
