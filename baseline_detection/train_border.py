@@ -146,7 +146,7 @@ for epoch in range(nbepoch):
         CE = criterion(z, y)
         G = gscoreloss(y, z, D)
         dice = criterionbis(z, y)
-        loss = torch.mean(CE * D) + G + dice
+        loss = torch.mean(CE * D) + 10.0 * G + dice
 
         meanloss.append(loss.cpu().data.numpy())
 
