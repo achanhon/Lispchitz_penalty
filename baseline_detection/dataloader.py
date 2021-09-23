@@ -215,7 +215,7 @@ def largeforward(net, image, device="cuda", tilesize=128, stride=64):
     return pred
 
 
-def distancetransform(y, size=6):
+def distancetransform(y, size=10):
     yy = y.unsqueeze(0).float()
     yyy = yy.clone()
     for i in range(size):
@@ -224,7 +224,7 @@ def distancetransform(y, size=6):
     yyy /= size
 
     D = (yyy - y.unsqueeze(0).float()).abs()
-    D = torch.exp(-D)
+    D = torch.exp(-10 * D)
 
     return D[0]
 

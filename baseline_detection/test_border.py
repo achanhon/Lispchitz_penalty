@@ -51,7 +51,7 @@ print("load data")
 import dataloader
 
 if whereIam in ["super", "wdtim719z"]:
-    cia = dataloader.CIA(flag="custom", custom=["isprs/test"])
+    cia = dataloader.CIA(flag="custom", custom=["isprs/test", "saclay/test"])
 else:
     cia = dataloader.CIA("test")
 
@@ -114,7 +114,7 @@ with torch.no_grad():
                 (pred == 0).float() * (label == 1).float() * distance
             )
 
-            if town in ["isprs/test"]:
+            if town in ["isprs/test", "saclay/test"]:
                 debug = image[0].cpu().numpy()
                 debug = numpy.transpose(debug, axes=(1, 2, 0))
                 debug = PIL.Image.fromarray(numpy.uint8(debug))

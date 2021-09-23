@@ -53,13 +53,14 @@ tmp = smp.Unet(
 net = torch.nn.Sequential()
 net.add_module("core", tmp)
 net.add_module("softnms", dataloader.SoftNMS())
+net.add_module("softnmsbis", dataloader.SoftNMS())
 net = net.cuda()
 net.train()
 
 
 print("load data")
 if whereIam == "wdtim719z":
-    cia = dataloader.CIA("custom", custom=["isprs/train"])
+    cia = dataloader.CIA("custom", custom=["isprs/train", "saclay/train"])
 else:
     cia = dataloader.CIA("train")
 batchsize = 32
@@ -173,7 +174,7 @@ for epoch in range(nbepoch):
     g, accuracy = gscore.getPerf()
     print("perf", g, accuracy)
 
-    if g > 92 and accuracy > 99:
+    if g > 92:
         print("training stops after reaching high training accuracy")
         quit()
 print("training stops after reaching time limit")
