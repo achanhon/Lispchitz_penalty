@@ -87,9 +87,9 @@ for epoch in range(nbepoch):
     cm = torch.zeros((2, 2)).cuda()
 
     for x, y in XY:
-        x, y = x.cuda(), y.cuda().float().unsqueeze(0).unsqueeze(0)
+        x, y = x.cuda(), y.cuda().float().unsqueeze(0)
         y = torch.nn.functional.max_pool2d(y, kernel_size=8, stride=8)
-        y = y[0][0].long()
+        y = y[0].long()
 
         nb0, nb1 = torch.sum((y == 0).float()), torch.sum((y == 1).float())
         weights = torch.Tensor([1, nb0 / (nb1 + 1)]).cuda()

@@ -76,12 +76,13 @@ with torch.no_grad():
             power2resize = torch.nn.AdaptiveAvgPool2d(((h // 64) * 64, (w // 64) * 64))
             image = power2resize(image)
 
+            label = torch.Tensor(label).unsqueeze(0).unsqueeze(0)
             label = torch.nn.functional.max_pool2d(label, kernel_size=8, stride=8)
             label = globalresize(label)[0][0]
 
             pred = dataloader.largeforward(net, image)
             pred = globalresize(pred)
-            pred = (pred[:, 1, :, :] > pred[:, 0, :, :]).float()
+            pred = (pred[0, 1, :, :] > pred[0, 0, :, :]).float()
 
             cm[town][0][0] += torch.sum((pred == 0).float() * (label == 0).float())
             cm[town][1][1] += torch.sum((pred == 1).float() * (label == 1).float())
