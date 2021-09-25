@@ -273,7 +273,7 @@ class PartialDecoder(torch.nn.Module):
 
         x1 = torch.nn.functional.leaky_relu(self.conv11(x1))
         x1 = torch.nn.functional.leaky_relu(self.conv12(x1))
-        x1 = torch.nn.functional.leaky_relu(self.conv13(x1))
+        x1 = self.conv13(x1)
         return x1
 
 
