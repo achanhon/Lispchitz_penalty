@@ -229,7 +229,7 @@ def perf(cm):
 
 class PartialDecoder(torch.nn.Module):
     def __init__(self):
-        super(PartialUnetDecoder, self).__init__()
+        super(PartialDecoder, self).__init__()
 
         self.inchannel = (3, 64, 48, 80, 224, 640)
 
