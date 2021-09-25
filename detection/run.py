@@ -34,22 +34,18 @@ myhash = str(today) + "_" + str(tmp)
 print(myhash)
 
 if whereIam == "super":
-    os.system("/data/anaconda3/bin/python train_border.py build/" + myhash + ".pth")
-    os.system("/data/anaconda3/bin/python test_border.py build/" + myhash + ".pth")
+    os.system("/data/anaconda3/bin/python train.py build/" + myhash + ".pth")
+    os.system("/data/anaconda3/bin/python test.py build/" + myhash + ".pth")
 if whereIam == "wdtim719z":
     os.system(
-        "/data/anaconda3/envs/pytorch/bin/python train_border.py build/"
-        + myhash
-        + ".pth"
+        "/data/anaconda3/envs/pytorch/bin/python train.py build/" + myhash + ".pth"
     )
     os.system(
-        "/data/anaconda3/envs/pytorch/bin/python test_border.py build/"
-        + myhash
-        + ".pth"
+        "/data/anaconda3/envs/pytorch/bin/python test.py build/" + myhash + ".pth"
     )
 if whereIam == "ldtis706z":
-    os.system("python3 train_border.py build/" + myhash + ".pth")
-    os.system("python3 test_border.py build/" + myhash + ".pth")
+    os.system("python3 train.py build/" + myhash + ".pth")
+    os.system("python3 test.py build/" + myhash + ".pth")
 if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
-    os.system("/d/jcastillo/anaconda3/bin/python train_border.py build/" + myhash)
-    os.system("/d/jcastillo/anaconda3/bin/python test_border.py build/" + myhash)
+    os.system("/d/jcastillo/anaconda3/bin/python train.py build/" + myhash)
+    os.system("/d/jcastillo/anaconda3/bin/python test.py build/" + myhash)
