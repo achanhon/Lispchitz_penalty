@@ -124,5 +124,3 @@ for town in cia.towns:
     globalcm += cm[town]
 g, pre, rec = dataloader.perf(globalcm)
 print("cia", g, pre, rec)
-
-#### un problème train test ou quoi ????????

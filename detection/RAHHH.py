@@ -67,7 +67,8 @@ with torch.no_grad():
     for town in cia.towns:
         print(town)
         cm[town] = torch.zeros((2, 2)).cuda()
-        XY = cia.getrandomtiles(batchsize)
+        i = 0
+        XY = cia.getrandomtiles(32)
         for x, y in XY:
             x, y = x.cuda(), y.cuda().float().unsqueeze(0)
 
@@ -91,6 +92,7 @@ with torch.no_grad():
                 debug = pred.cpu().numpy() * 255
                 debug = PIL.Image.fromarray(numpy.uint8(debug))
                 debug.save("build/" + str(i) + "_z.png")
+                i += 1
 
         cm[town] = cm[town].cpu().numpy()
         g, pre, rec = dataloader.perf(cm[town])
@@ -109,5 +111,3 @@ for town in cia.towns:
     globalcm += cm[town]
 g, pre, rec = dataloader.perf(globalcm)
 print("cia", g, pre, rec)
-
-#### un problème train test ou quoi ????????
