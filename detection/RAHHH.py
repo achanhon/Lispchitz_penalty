@@ -81,15 +81,15 @@ with torch.no_grad():
             cm[town][1][0] += torch.sum((z == 1).float() * (y == 0).float())
             cm[town][0][1] += torch.sum((z == 0).float() * (y == 1).float())
 
-            if True:
-                debug = image[0].cpu().numpy()
+            for j in range(x.shape[0]):
+                debug = x[j]
                 debug = numpy.transpose(debug, axes=(1, 2, 0))
                 debug = PIL.Image.fromarray(numpy.uint8(debug))
                 debug.save("build/" + str(i) + "_x.png")
-                debug = label.cpu().numpy() * 255
+                debug = y[j].cpu().numpy() * 255
                 debug = PIL.Image.fromarray(numpy.uint8(debug))
                 debug.save("build/" + str(i) + "_y.png")
-                debug = pred.cpu().numpy() * 255
+                debug = z[j].cpu().numpy() * 255
                 debug = PIL.Image.fromarray(numpy.uint8(debug))
                 debug.save("build/" + str(i) + "_z.png")
                 i += 1
