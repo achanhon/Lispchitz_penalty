@@ -60,7 +60,7 @@ net.add_module("softNMS", dataloader.SoftNMS())
 net.add_module("softNMS", dataloader.SoftNMS())
 net.add_module("head", dataloader.OneToTwo())
 net = net.cuda()
-net.train()
+net.eval()
 
 
 print("load data")
