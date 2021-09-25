@@ -77,7 +77,7 @@ import random
 
 optimizer = torch.optim.Adam(net.parameters(), lr=0.001)
 meanloss = collections.deque(maxlen=200)
-nbepoch = 1
+nbepoch = 800
 criterionbis = smp.losses.dice.DiceLoss(mode="multiclass")
 
 for epoch in range(nbepoch):
