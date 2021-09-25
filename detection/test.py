@@ -76,7 +76,7 @@ with torch.no_grad():
             power2resize = torch.nn.AdaptiveAvgPool2d(((h // 64) * 64, (w // 64) * 64))
             image = power2resize(image)
 
-            label = torch.Tensor(label).unsqueeze(0).cuda()
+            label = torch.Tensor(label).unsqueeze(0).unsqueeze(0).cuda()
             label = dataloader.hackdegeu(label)
             label = globalresize(label)[0]
 
