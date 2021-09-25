@@ -233,16 +233,16 @@ class PartialDecoder(torch.nn.Module):
 
         self.inchannel = (3, 64, 48, 80, 224, 640)
 
-        self.conv41 = nn.Conv2d(640, 512, kernel_size=1)
-        self.conv42 = nn.Conv2d(512, 224, kernel_size=1)
+        self.conv41 = torch.nn.Conv2d(640, 512, kernel_size=1)
+        self.conv42 = torch.nn.Conv2d(512, 224, kernel_size=1)
 
-        self.conv21 = nn.Conv2d(448, 256, kernel_size=3, padding=1)
-        self.conv22 = nn.Conv2d(256, 256, kernel_size=3, padding=1)
-        self.conv23 = nn.Conv2d(256, 128, kernel_size=3, padding=1)
+        self.conv21 = torch.nn.Conv2d(448, 256, kernel_size=3, padding=1)
+        self.conv22 = torch.nn.Conv2d(256, 256, kernel_size=3, padding=1)
+        self.conv23 = torch.nn.Conv2d(256, 128, kernel_size=3, padding=1)
 
-        self.conv11 = nn.Conv2d(128 + 80, 128, kernel_size=3, padding=1)
-        self.conv12 = nn.Conv2d(128, 64, kernel_size=3, padding=1)
-        self.conv13 = nn.Conv2d(64, 1, kernel_size=1)
+        self.conv11 = torch.nn.Conv2d(128 + 80, 128, kernel_size=3, padding=1)
+        self.conv12 = torch.nn.Conv2d(128, 64, kernel_size=3, padding=1)
+        self.conv13 = torch.nn.Conv2d(64, 1, kernel_size=1)
 
     def forward(self, x):
         x4 = x[-1]
