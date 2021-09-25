@@ -232,7 +232,7 @@ def hackdegeu(y):
     y = torch.nn.functional.max_pool2d(y, kernel_size=3, stride=1, padding=1)
     y = 1.0 - y
     y = torch.nn.functional.max_pool2d(y, kernel_size=8, stride=8, padding=0)
-    return y[0].long()
+    return y[0]
 
 
 class PartialDecoder(torch.nn.Module):
