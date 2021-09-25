@@ -82,7 +82,7 @@ with torch.no_grad():
             cm[town][0][1] += torch.sum((z == 0).float() * (y == 1).float())
 
             for j in range(x.shape[0]):
-                debug = x[j]
+                debug = x[j].cpu().numpy()
                 debug = numpy.transpose(debug, axes=(1, 2, 0))
                 debug = PIL.Image.fromarray(numpy.uint8(debug))
                 debug.save("build/" + str(i) + "_x.png")
