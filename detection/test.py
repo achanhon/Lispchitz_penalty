@@ -76,7 +76,7 @@ with torch.no_grad():
             power2resize = torch.nn.AdaptiveAvgPool2d(((h // 64) * 64, (w // 64) * 64))
             image = power2resize(image)
 
-            label = torch.Tensor(label).unsqueeze(0).unsqueeze(0)
+            label = torch.Tensor(label).unsqueeze(0).unsqueeze(0).cuda()
             label = torch.nn.functional.max_pool2d(label, kernel_size=8, stride=8)
             label = globalresize(label)[0][0]
 
