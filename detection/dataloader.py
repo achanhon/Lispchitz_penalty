@@ -223,7 +223,7 @@ def largeforward(net, image, device="cuda", tilesize=128, stride=64):
 def perf(cm):
     precision = 100.0 * cm[0][0] / (cm[0][0] + cm[1][0])
     recall = 100.0 * cm[0][0] / (cm[0][0] + cm[0][1])
-    gscore = recall * precision
+    gscore = recall * precision / 100
     return gscore, precision, recall
 
 
