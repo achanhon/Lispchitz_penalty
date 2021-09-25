@@ -70,7 +70,7 @@ with torch.no_grad():
         for i in range(cia.data[town].nbImages):
             imageraw, labelraw = cia.data[town].getImageAndLabel(i)
 
-            h, w = imageraw.shape[2], imageraw.shape[3]
+            h, w = imageraw.shape[0], imageraw.shape[1]
             h64, w64 = (h // 64 + 1) * 64, (w // 64 + 1) * 64
 
             image = numpy.zeros((h64, w64, 3))
