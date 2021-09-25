@@ -50,11 +50,7 @@ with torch.no_grad():
 print("load data")
 import dataloader
 
-if whereIam == "super" or True:
-    cia = dataloader.CIA(flag="custom", custom=["isprs/train"])
-else:
-    cia = dataloader.CIA("test")
-
+cia = dataloader.CIA(flag="custom", custom=["isprs/test", "saclay/test"])
 
 print("test")
 import numpy
@@ -99,13 +95,13 @@ with torch.no_grad():
                 debug = image[0].cpu().numpy()
                 debug = numpy.transpose(debug, axes=(1, 2, 0))
                 debug = PIL.Image.fromarray(numpy.uint8(debug))
-                debug.save("build/" + str(i) + "_x.png")
+                debug.save("build/" + town[0:-5] + "_" + str(i) + "_x.png")
                 debug = label.cpu().numpy() * 255
                 debug = PIL.Image.fromarray(numpy.uint8(debug))
-                debug.save("build/" + str(i) + "_y.png")
+                debug.save("build/" + town[0:-5] + "_" + str(i) + "_y.png")
                 debug = pred.cpu().numpy() * 255
                 debug = PIL.Image.fromarray(numpy.uint8(debug))
-                debug.save("build/" + str(i) + "_z.png")
+                debug.save("build/" + town[0:-5] + "_" + str(i) + "_z.png")
 
         cm[town] = cm[town].cpu().numpy()
         g, pre, rec = dataloader.perf(cm[town])
