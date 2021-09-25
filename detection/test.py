@@ -75,8 +75,8 @@ with torch.no_grad():
 
             image = numpy.zeros((h64, w64, 3))
             image[0:h, 0:w, :] = imageraw[:, :, :]
-            label = numpy.zeros((h64, w64, 3))
-            label[0:h, 0:w, :] = labelraw[:, :]
+            label = numpy.zeros((h64, w64))
+            label[0:h, 0:w] = labelraw[:, :]
 
             image = torch.Tensor(numpy.transpose(image, axes=(2, 0, 1))).unsqueeze(0)
             label = torch.Tensor(label).unsqueeze(0).unsqueeze(0).cuda()
