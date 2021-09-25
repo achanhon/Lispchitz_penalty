@@ -221,10 +221,18 @@ def largeforward(net, image, device="cuda", tilesize=128, stride=64):
 
 
 def perf(cm):
-    precision = 100.0 * cm[0][0] / (cm[0][0] + cm[1][0])
-    recall = 100.0 * cm[0][0] / (cm[0][0] + cm[0][1])
+    precision = 100.0 * cm[1][1] / (cm[1][1] + cm[1][0])
+    recall = 100.0 * cm[1][1] / (cm[1][1] + cm[0][1])
     gscore = recall * precision / 100
     return gscore, precision, recall
+
+
+def hackdegeu(y):
+    y = 1.0 - y
+    y = torch.nn.functional.max_pool2d(y, kernel_size=3, stride=1, padding=1)
+    y = 1.0 - y
+    y = torch.nn.functional.max_pool2d(y, kernel_size=8, stride=8, padding=0)
+    return y[0].long()
 
 
 class PartialDecoder(torch.nn.Module):
