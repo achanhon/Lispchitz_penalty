@@ -80,10 +80,11 @@ with torch.no_grad():
 
             image = torch.Tensor(numpy.transpose(image, axes=(2, 0, 1))).unsqueeze(0)
             label = torch.Tensor(label).unsqueeze(0).unsqueeze(0).cuda()
-            label = dataloader.hackdegeu(label)
-            label = globalresize(label)[0]
+            label = dataloader.hackdegeu(label)[0]
 
             pred = dataloader.largeforward(net, image)
+            globalresize = torch.nn.AdaptiveAvgPool2d((label.shape[0], label.shape[1]))
+            pred = globalresize(pred)
             pred = (pred[0, 1, :, :] > pred[0, 0, :, :]).float()
 
             cm[town][0][0] += torch.sum((pred == 0).float() * (label == 0).float())
