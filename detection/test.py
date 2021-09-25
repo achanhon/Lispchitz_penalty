@@ -68,20 +68,22 @@ with torch.no_grad():
         print(town)
         cm[town] = torch.zeros((2, 2)).cuda()
         for i in range(cia.data[town].nbImages):
-            imageraw, label = cia.data[town].getImageAndLabel(i)
+            imageraw, labelraw = cia.data[town].getImageAndLabel(i)
 
-            image = torch.Tensor(numpy.transpose(imageraw, axes=(2, 0, 1))).unsqueeze(0)
-            h, w = image.shape[2], image.shape[3]
-            globalresize = torch.nn.AdaptiveAvgPool2d((h, w))
-            power2resize = torch.nn.AdaptiveAvgPool2d(((h // 64) * 64, (w // 64) * 64))
-            image = power2resize(image)
+            h, w = imageraw.shape[2], imageraw.shape[3]
+            h64, w64 = (h // 64 + 1) * 64, (w // 64 + 1) * 64
 
+            image = numpy.zeros((h64, w64, 3))
+            image[0:h, 0:w, :] = imageraw[:, :, :]
+            label = numpy.zeros((h64, w64, 3))
+            label[0:h, 0:w, :] = labelraw[:, :]
+
+            image = torch.Tensor(numpy.transpose(image, axes=(2, 0, 1))).unsqueeze(0)
             label = torch.Tensor(label).unsqueeze(0).unsqueeze(0).cuda()
             label = dataloader.hackdegeu(label)
             label = globalresize(label)[0]
 
             pred = dataloader.largeforward(net, image)
-            pred = globalresize(pred)
             pred = (pred[0, 1, :, :] > pred[0, 0, :, :]).float()
 
             cm[town][0][0] += torch.sum((pred == 0).float() * (label == 0).float())
