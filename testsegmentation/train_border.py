@@ -42,7 +42,7 @@ net.eval()
 print("load data")
 import dataloader
 
-if whereIam == "wdtis719z":
+if whereIam == "wdtis719z" or True:
     miniworld = dataloader.CIA(flag="custom", custom=["isprs/train"])
 else:
     miniworld = dataloader.CIA("test")
