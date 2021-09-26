@@ -42,7 +42,7 @@ net.eval()
 print("load data")
 import dataloader
 
-if whereIam == "super":
+if whereIam == "wdtis719z":
     miniworld = dataloader.CIA(flag="custom", custom=["isprs/train"])
 else:
     miniworld = dataloader.CIA("test")
@@ -91,13 +91,9 @@ for epoch in range(nbepoch):
 
         z = net(x)
 
-        if random.randint(0, 10) == 0:
-            weights = torch.Tensor([1, miniworld.balance]).cuda()
-            criterion = torch.nn.CrossEntropyLoss(weight=weights, reduction="none")
-        else:
-            nb0, nb1 = torch.sum((y == 0).float()), torch.sum((y == 1).float())
-            weights = torch.Tensor([1, nb0 / nb1]).cuda()
-            criterion = torch.nn.CrossEntropyLoss(weight=weights, reduction="none")
+        nb0, nb1 = torch.sum((y == 0).float()), torch.sum((y == 1).float())
+        weights = torch.Tensor([1, nb0 / nb1]).cuda()
+        criterion = torch.nn.CrossEntropyLoss(weight=weights, reduction="none")
 
         CE = criterion(z, y)
         CE = torch.mean(CE * D)

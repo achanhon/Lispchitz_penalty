@@ -45,7 +45,7 @@ with torch.no_grad():
 print("load data")
 import dataloader
 
-if whereIam == "super":
+if whereIam == "wdtis719z":
     miniworld = dataloader.CIA(flag="custom", custom=["isprs/test"])
 else:
     miniworld = dataloader.CIA("test")
