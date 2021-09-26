@@ -202,7 +202,7 @@ class CIA:
         return dataloader
 
 
-def largeforward(net, image, device="cuda", tilesize=128, stride=128):
+def largeforward(net, image, device="cuda", tilesize=128, stride=64):
     net.eval()
     with torch.no_grad():
         pred = torch.zeros(1, 2, image.shape[2] // 8, image.shape[3] // 8).to(device)
