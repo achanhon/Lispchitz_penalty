@@ -215,4 +215,4 @@ def distanceToBorder(y, size=4):
         yy, kernel_size=2 * size + 1, stride=1, padding=size
     )
     D = 1.0 - 0.5 * (yy - yyy).abs()
-    return D[0]
+    return D[0]*D[0]
