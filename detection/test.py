@@ -80,6 +80,7 @@ with torch.no_grad():
 
             z = globalresize(z)
             zNMS = headNMS(z)[0]
+            print(y.shape,DVT.shape,zNMS.shape)
 
             cm[k][0] += torch.sum((zNMS > 0).float() * (y == 1).float())
             cm[k][1] += torch.sum((zNMS > 0).float() * (y == 0).float() * (1 - DVT) / 9)
