@@ -50,7 +50,7 @@ def perf(cm):
         precision = cm[0] / (cm[0] + cm[1] + 1)
         recall = cm[0] / (cm[0] + cm[2] + 1)
         g = precision * recall
-        return torch.Tensor((g, precision, recall))
+        return torch.Tensor((g * 100, precision * 100, recall * 100))
     else:
         out = torch.zeros(cm.shape[0], 3)
         for k in range(cm.shape[0]):
@@ -85,7 +85,7 @@ with torch.no_grad():
             cm[k][1] += torch.sum((zNMS > 0).float() * (y == 0).float() * (1 - DVT) / 9)
             cm[k][2] += torch.sum((zNMS == 0).float() * (y == 1).float())
 
-            if town in ["potsdam/test", "chicago/test", "Austin/test"]:
+            if town in ["isprs/test", "saclay/test"]:
                 nextI = len(os.listdir("build"))
                 debug = globalresize(x)[0].cpu().numpy()
                 debug = numpy.transpose(debug, axes=(1, 2, 0))
