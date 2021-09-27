@@ -105,7 +105,6 @@ with torch.no_grad():
         print("perf=", perf(cm[k]))
         numpy.savetxt("build/logtest.txt", perf(cm).cpu().numpy())
 
-
 print("-------- results ----------")
 for k, town in enumerate(miniworld.towns):
     print(town, perf(cm[k]))

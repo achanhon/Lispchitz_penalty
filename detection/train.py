@@ -60,14 +60,14 @@ for epoch in range(nbepoch):
     print("epoch=", epoch, "/", nbepoch)
 
     XY = cia.getrandomtiles(batchsize)
-    miss, fa, good = torch.zeros(0), torch.zeros(0), torch.zeros(0)
+    miss, fa, good = torch.zeros(1).cuda(), torch.zeros(1).cuda(), torch.zeros(1).cuda()
 
     for x, y in XY:
         x, y = x.cuda(), y.cuda()
         z = net(x)
 
         # coarse loss (emphasis recall)
-        DT = distancetransform(y)
+        DT = dataloader.distancetransform(y)
         y5 = torch.nn.functional.max_pool2d(y, kernel_size=5, stride=1, padding=2)
         nb0, nb1 = torch.sum((y == 0).float()), torch.sum((y == 1).float())
         weights = torch.Tensor([1, nb0 / (nb1 + 1)]).cuda()
@@ -98,12 +98,12 @@ for epoch in range(nbepoch):
         torch.nn.utils.clip_grad_norm_(net.parameters(), 3)
         optimizer.step()
 
+        if random.randint(0, 30) == 0:
+            print("loss=", (sum(meanloss) / len(meanloss)))
+
         good += torch.sum((zNMS > 0).float() * (y == 1).float())
         fa += torch.sum((zNMS > 0).float() * (y == 0).float() * (1 - DVT) / 9)
         miss += torch.sum((zNMS == 0).float() * (y == 1).float())
-
-        if random.randint(0, 30) == 0:
-            print("loss=", (sum(meanloss) / len(meanloss)))
 
     torch.save(net, "build/model.pth")
     precision = good / (good + fa)
