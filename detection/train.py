@@ -53,7 +53,7 @@ criteriondice = smp.losses.dice.DiceLoss(mode="multiclass")
 optimizer = torch.optim.Adam(net.parameters(), lr=0.0001)
 meanloss = collections.deque(maxlen=200)
 nbepoch = 800
-batchsize = 24
+batchsize = 32
 distanceVT = dataloader.DistanceVT()
 headNMS = dataloader.HardNMS()
 for epoch in range(nbepoch):
@@ -77,7 +77,7 @@ for epoch in range(nbepoch):
         dice = criteriondice(z, y5.long())
 
         # fine loss (emphasis precision)
-        DVT = distanceVT(y)
+        DVT = distanceVT(y.view(y.shape[0], 1, y.shape[1], y.shape[2]))
         zNMS = headNMS(z)
         softgood = torch.mean(zNMS * DVT)
         softfa = torch.mean(zNMS * (DVT == 0).float())
