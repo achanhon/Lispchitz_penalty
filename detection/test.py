@@ -69,7 +69,7 @@ with torch.no_grad():
 
             y = torch.Tensor(label).cuda().float()
             h, w = y.shape[0], y.shape[1]
-            D = distanceVT(y.unsqueeze(0))[0]
+            DVT = distanceVT(y.unsqueeze(0))[0]
 
             x = torch.Tensor(numpy.transpose(imageraw, axes=(2, 0, 1))).unsqueeze(0)
             globalresize = torch.nn.AdaptiveAvgPool2d((h, w))
@@ -94,7 +94,7 @@ with torch.no_grad():
                 debug = torch.nn.functional.max_pool2d(
                     y, kernel_size=3, stride=1, padding=1
                 )
-                debug = debug.cpu().numpy() * 255
+                debug = debug.cpu().numpy() * 255 * DVT
                 debug = PIL.Image.fromarray(numpy.uint8(debug))
                 debug.save("build/" + str(nextI) + "_y.png")
                 debug = (zNMS > 0).float()
