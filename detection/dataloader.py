@@ -252,46 +252,39 @@ class DistanceVT(torch.nn.Module):
         hackconv = torch.nn.Conv2d(1, 1, kernel_size=13, padding=6, bias=False)
         hackconv.weight.data = self.w.detach().clone().detach()
         hackconv = hackconv.cuda()
-        yyy = hackconv(yy)
+        yyy = hackconv(yy).detach()
         return torch.clamp(yyy, 0, 1)
+
+
+class PoolWithHole(torch.nn.Module):
+    def __init__(self):
+        super(PoolWithHole, self).__init__()
+
+    def forward(self, x):
+        B, H, W = x.shape[0], x.shape[1], x.shape[2]
+        X = torch.zeros(B, H + 2, W + 2).cuda()
+        X = [X for i in range(9)]
+        for i in range(3):
+            for j in range(3):
+                X[i * 3 + j, :, i : i + H, j : j + W] = x[:, :, :]
+        X = [X[i] for i in range(9) if i != 4]
+        Xm = torch.max(X[0], X[1], X[2], X[3], X[4], X[5], X[6], X[7])
+
+        return Xm[:, 1 : 1 + H, 1 : 1 + W]
 
 
 class HardNMS(torch.nn.Module):
     def __init__(self):
         super(HardNMS, self).__init__()
-
-        l = []
-        for i in range(3):
-            for j in range(3):
-                l.append((i, j))
-        l = [(i, j) for i, j in l if (i != 1 or j != 1)]
-
-        self.w = torch.zeros(8, 1, 3, 3)
-        self.w[:, :, 1, 1] = 1
-        for i in range(8):
-            self.w[i, 0, l[i][0], l[i][1]] = -1
+        self.pool = PoolWithHole()
 
     def forward(self, x, eps=0.1):
         xp = x[:, 1, :, :] - x[:, 0, :, :] - eps
         xp = torch.nn.functional.relu(xp)
-        xp = xp.view(x.shape[0], 1, x.shape[2], x.shape[3])
 
-        self.hackconv = torch.nn.Conv2d(1, 8, kernel_size=3, padding=1, bias=False)
-        self.hackconv.weight.data = self.w.detach().clone().detach()
-        self.hackconv = hackconv.cuda()
-
-        xdiff = torch.nn.functional.relu(hackconv(xp))  # only the max survives
-        xNMS = (
-            xdiff[:, 0, :, :]
-            * xdiff[:, 1, :, :]
-            * xdiff[:, 2, :, :]
-            * xdiff[:, 3, :, :]
-            * xdiff[:, 4, :, :]
-            * xdiff[:, 5, :, :]
-            * xdiff[:, 6, :, :]
-            * xdiff[:, 7, :, :]
-            * 256
-        ).view(xp.shape)
+        xother = self.pool(xp)
+        xNMS = torch.nn.functional.relu(x - xother)  # only the max survives
 
         xNMS3 = torch.nn.functional.max_pool2d(xNMS, kernel_size=3, stride=1, padding=1)
-        return xp * xNMS3
+        xf = xp * xNMS3 * 10
+        return xf.view(x.shape[0], 1, x.shape[2], x.shape[3])

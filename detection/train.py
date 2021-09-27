@@ -100,7 +100,6 @@ for epoch in range(nbepoch):
 
         optimizer.zero_grad()
         loss.backward()
-        del headNMS.hackconv
         torch.nn.utils.clip_grad_norm_(net.parameters(), 3)
         optimizer.step()
 
