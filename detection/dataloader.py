@@ -81,7 +81,7 @@ class SegSemDataset:
         label = PIL.Image.open(self.pathTOdata + str(i) + "_y.png").convert("L").copy()
         label = np.uint8(np.asarray(label))  # warning wh swapping
         center = getcenters(label)
-        label = np.zeros(image.shape)
+        label = np.zeros(label.shape)
         for r, c in center:
             label[r][c] = 1
         label = np.uint8(label)
@@ -119,10 +119,7 @@ class SegSemDataset:
                 XY.append((im.copy(), mask.copy()))
 
             if nbpos != 0 and np.sum(label) > 1:
-                WTF = np.nonzero(label)
-                if len(WTF) != 2:
-                    print(label.shape, len(WTF))
-                row, col = WTF
+                row, col = np.nonzero(label)
                 l = [(row[i], col[i]) for i in range(row.shape[0])]
                 random.shuffle(l)
                 l = l[0 : min(len(l), posperimage)]
