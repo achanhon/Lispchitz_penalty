@@ -268,7 +268,9 @@ class PoolWithHole(torch.nn.Module):
             for j in range(3):
                 X[i * 3 + j][:, i : i + H, j : j + W] = x[:, :, :]
         X = [X[i] for i in range(9) if i != 4]
-        Xm = torch.max(X[0], X[1], X[2], X[3], X[4], X[5], X[6], X[7])
+        Xm = torch.zeros(X[0].shape)
+        for i in range(8):
+            Xm = torch.max(Xm, X[i])
 
         return Xm[:, 1 : 1 + H, 1 : 1 + W]
 
