@@ -92,9 +92,9 @@ with torch.no_grad():
                 debug = PIL.Image.fromarray(numpy.uint8(debug))
                 debug.save("build/" + str(nextI) + "_x.png")
                 debug = torch.nn.functional.max_pool2d(
-                    y, kernel_size=3, stride=1, padding=1
+                    y.unsqueeze(0), kernel_size=3, stride=1, padding=1
                 )
-                debug = debug.cpu().numpy() * 255 * DVT
+                debug = debug[0].cpu().numpy() * 255 * DVT
                 debug = PIL.Image.fromarray(numpy.uint8(debug))
                 debug.save("build/" + str(nextI) + "_y.png")
                 debug = (zNMS > 0).float()
