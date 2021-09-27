@@ -228,7 +228,7 @@ def largeforward(net, image, device="cuda", tilesize=128, stride=128):
 
 
 def distancetransform(y, size=4):
-    yy = 2.0 * y.unsqueeze(0) - 1
+    yy = 2.0 * y.unsqueeze(1) - 1
     yyy = torch.nn.functional.avg_pool2d(
         yy, kernel_size=2 * size + 1, stride=1, padding=size
     )

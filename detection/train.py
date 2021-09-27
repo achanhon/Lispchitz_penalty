@@ -77,7 +77,7 @@ for epoch in range(nbepoch):
         dice = criteriondice(z, y5.long())
 
         # fine loss (emphasis precision)
-        DVT = distanceVT(y.view(y.shape[0], 1, y.shape[1], y.shape[2]))
+        DVT = distanceVT(y)
         zNMS = headNMS(z)
         softgood = torch.mean(zNMS * DVT)
         softfa = torch.mean(zNMS * (DVT == 0).float())
