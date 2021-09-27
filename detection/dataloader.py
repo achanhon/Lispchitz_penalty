@@ -228,7 +228,7 @@ def largeforward(net, image, device="cuda", tilesize=128, stride=128):
 
 
 def distancetransform(y, size=4):
-    yy = 2.0 * y.unsqueeze(1) - 1
+    yy = 2.0 * y.unsqueeze(0) - 1
     yyy = torch.nn.functional.avg_pool2d(
         yy, kernel_size=2 * size + 1, stride=1, padding=size
     )
@@ -248,7 +248,7 @@ class DistanceVT(torch.nn.Module):
         self.w = 1.0 / (1 + self.w)
 
     def forward(self, y):
-        yy = y.unsqueeze(0)
+        yy = y.unsqueeze(1)
         hackconv = torch.nn.Conv2d(1, 1, kernel_size=13, padding=6, bias=False)
         hackconv.weight.data = self.w.clone()
         yyy = hackconv(yy)
