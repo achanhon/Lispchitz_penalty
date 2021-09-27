@@ -241,13 +241,13 @@ class DistanceVT(torch.nn.Module):
         super(DistanceVT, self).__init__()
 
         self.hackconv = torch.nn.Conv2d(1, 1, kernel_size=13, padding=6, bias=False)
-        for i in range(11):
-            for j in range(11):
-                self.hackconv.weight.data[0][0][i][j] = (i - 6) * (i - 6) + (j - 6) * (
-                    j - 6
-                )
-        self.hackconv.weight = torch.sqrt(self.hackconv.weight)
-        self.hackconv.weight = 1.0 / (1 + self.hackconv.weight)
+        w = torch.zeros(1, 1, 13, 13)
+        for i in range(13):
+            for j in range(13):
+                w[0][0][i][j] = (i - 6) * (i - 6) + (j - 6) * (j - 6)
+        w = torch.sqrt(w)
+        w = 1.0 / (1 + w)
+        self.hackconv.weight.data = w
         self.hackconv = self.hackconv.cuda()
 
     def forward(self, y):
