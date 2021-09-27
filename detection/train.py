@@ -82,7 +82,11 @@ for epoch in range(nbepoch):
         softgood = torch.mean(zNMS * DVT)
         softfa = torch.mean(zNMS * (DVT == 0).float())
 
-        loss = CE * 0.5 + dice * 0.1  # + 1.0 - softgood / (softgood + fa + 0.00001)
+        if epoch < 10:
+            loss = CE * 0.5 + dice * 0.1
+        else:
+            loss = CE * 0.5 + dice * 0.1 + 1.0 - softgood / (softgood + fa + 0.00001)
+
         meanloss.append(loss.cpu().data.numpy())
         if epoch > 30:
             loss = loss * 0.5

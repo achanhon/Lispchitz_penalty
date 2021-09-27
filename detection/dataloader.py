@@ -250,7 +250,7 @@ class DistanceVT(torch.nn.Module):
     def forward(self, y):
         yy = y.unsqueeze(1)
         hackconv = torch.nn.Conv2d(1, 1, kernel_size=13, padding=6, bias=False)
-        hackconv.weight.data = self.w.clone().detach()
+        hackconv.weight.data = self.w.detach().clone().detach()
         hackconv = hackconv.cuda()
         yyy = hackconv(yy)
         return torch.clamp(yyy, 0, 1)
@@ -277,9 +277,8 @@ class HardNMS(torch.nn.Module):
         xp = xp.view(x.shape[0], 1, x.shape[2], x.shape[3])
 
         hackconv = torch.nn.Conv2d(1, 8, kernel_size=3, padding=1, bias=False)
-        hackconv.weight.data = self.w.clone().detach()
+        hackconv.weight.data = self.w.detach().clone().detach()
         hackconv = hackconv.cuda()
-        # hackconv.requires_grad_()
 
         xdiff = torch.nn.functional.relu(hackconv(xp))  # only the max survives
         xNMS = (
