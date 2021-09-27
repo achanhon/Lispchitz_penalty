@@ -67,9 +67,9 @@ with torch.no_grad():
         for i in range(cia.data[town].nbImages):
             imageraw, label = cia.data[town].getImageAndLabel(i)
 
-            y = torch.Tensor(label).cuda().float().unsqueeze(0)
+            y = torch.Tensor(label).cuda().float()
             h, w = y.shape[0], y.shape[1]
-            D = distanceVT(y)
+            D = distanceVT(y.unsqueeze(0))
 
             x = torch.Tensor(numpy.transpose(imageraw, axes=(2, 0, 1))).unsqueeze(0)
             globalresize = torch.nn.AdaptiveAvgPool2d((h, w))
@@ -80,7 +80,6 @@ with torch.no_grad():
 
             z = globalresize(z)
             zNMS = headNMS(z)[0]
-            y = y[0]
 
             cm[k][0] += torch.sum((zNMS > 0).float() * (y == 1).float())
             cm[k][1] += torch.sum((zNMS > 0).float() * (y == 0).float() * (1 - DVT) / 9)
