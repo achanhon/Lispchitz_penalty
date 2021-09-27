@@ -109,7 +109,7 @@ for epoch in range(nbepoch):
     precision = good / (good + fa + 1)
     rappel = good / (good + miss + 1)
     gs = precision * rappel
-    print("perf", gs * 100, precision * 100, recall * 100)
+    print("perf", gs * 100, precision * 100, rappel * 100)
 
     if gs * 100 > 92:
         print("training stops after reaching high training accuracy")
