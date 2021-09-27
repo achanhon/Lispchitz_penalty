@@ -69,7 +69,7 @@ with torch.no_grad():
 
             y = torch.Tensor(label).cuda().float()
             h, w = y.shape[0], y.shape[1]
-            D = distanceVT(y.unsqueeze(0))
+            D = distanceVT(y.unsqueeze(0))[0]
 
             x = torch.Tensor(numpy.transpose(imageraw, axes=(2, 0, 1))).unsqueeze(0)
             globalresize = torch.nn.AdaptiveAvgPool2d((h, w))
