@@ -261,8 +261,7 @@ class PoolWithHole(torch.nn.Module):
 
     def forward(self, x):
         B, H, W = x.shape[0], x.shape[1], x.shape[2]
-
-        Xm = torch.zeros(X[0].shape).cuda()
+        Xm = torch.zeros(B, H + 2, W + 2).cuda()
         X = [Xm.clone() for i in range(9)]
         for i in range(3):
             for j in range(3):
