@@ -240,7 +240,7 @@ class DistanceVT(torch.nn.Module):
     def __init__(self):
         super(DistanceVT, self).__init__()
 
-        self.w = torch.zeros(1, 1, 11, 11)
+        self.w = torch.zeros(1, 1, 13, 13)
         for i in range(11):
             for j in range(11):
                 self.w[0][0][i][j] = (i - 6) * (i - 6) + (j - 6) * (j - 6)
