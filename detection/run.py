@@ -1,7 +1,5 @@
 import os
 import sys
-import datetime
-import random
 
 whereIam = os.uname()[1]
 assert whereIam in [
@@ -10,11 +8,10 @@ assert whereIam in [
     "astroboy",
     "flexo",
     "bender",
-    "super",
     "ldtis706z",
 ]
 
-if whereIam in ["wdtim719z", "super"]:
+if whereIam == "wdtim719z":
     root = "/data/"
 if whereIam == "ldtis706z":
     root = "/media/achanhon/bigdata/data/"
@@ -22,30 +19,18 @@ if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
     root = "/scratchf/"
 
 if not os.path.exists(root + "CIA"):
-    print("run merge before")
+    print("cia not found")
     quit()
 
-if not os.path.exists("build"):
-    os.makedirs("build")
+os.system("rm -rf build")
+os.makedirs("build")
 
-today = datetime.date.today()
-tmp = random.randint(0, 1000)
-myhash = str(today) + "_" + str(tmp)
-print(myhash)
-
-if whereIam == "super":
-    os.system("/data/anaconda3/bin/python train.py build/" + myhash + ".pth")
-    os.system("/data/anaconda3/bin/python test.py build/" + myhash + ".pth")
 if whereIam == "wdtim719z":
-    os.system(
-        "/data/anaconda3/envs/pytorch/bin/python train.py build/" + myhash + ".pth"
-    )
-    os.system(
-        "/data/anaconda3/envs/pytorch/bin/python test.py build/" + myhash + ".pth"
-    )
+    os.system("/data/anaconda3/envs/pytorch/bin/python train.py build/model.pth")
+    os.system("/data/anaconda3/envs/pytorch/bin/python test.py build/model.pth")
 if whereIam == "ldtis706z":
-    os.system("python3 train.py build/" + myhash + ".pth")
-    os.system("python3 test.py build/" + myhash + ".pth")
+    os.system("python3 train.py build/model.pth")
+    os.system("python3 test.py build/model.pth")
 if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
-    os.system("/d/jcastillo/anaconda3/bin/python train.py build/" + myhash)
-    os.system("/d/jcastillo/anaconda3/bin/python test.py build/" + myhash)
+    os.system("/d/jcastillo/anaconda3/bin/python train.py build/model.pth")
+    os.system("/d/jcastillo/anaconda3/bin/python test.py build/model.pth")

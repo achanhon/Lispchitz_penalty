@@ -1,16 +1,16 @@
 import os
 import sys
+import torch
+import torch.backends.cudnn as cudnn
+
+if torch.cuda.is_available():
+    torch.cuda.empty_cache()
+    cudnn.benchmark = True
+else:
+    print("no cuda")
+    quit()
 
 whereIam = os.uname()[1]
-if whereIam == "super":
-    sys.path.append("/home/achanhon/github/segmentation_models/EfficientNet-PyTorch")
-    sys.path.append("/home/achanhon/github/segmentation_models/pytorch-image-models")
-    sys.path.append(
-        "/home/achanhon/github/segmentation_models/pretrained-models.pytorch"
-    )
-    sys.path.append(
-        "/home/achanhon/github/segmentation_models/segmentation_models.pytorch"
-    )
 if whereIam == "ldtis706z":
     sys.path.append("/home/achanhon/github/EfficientNet-PyTorch")
     sys.path.append("/home/achanhon/github/pytorch-image-models")
@@ -27,96 +27,88 @@ if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
     sys.path.append("/d/achanhon/github/pretrained-models.pytorch")
     sys.path.append("/d/achanhon/github/segmentation_models.pytorch")
 
-import torch
-import torch.backends.cudnn as cudnn
 import segmentation_models_pytorch as smp
+import dataloader
 
 print("load model")
-if torch.cuda.is_available():
-    torch.cuda.empty_cache()
-    cudnn.benchmark = True
-else:
-    print("no cuda")
-    quit()
 with torch.no_grad():
-    if len(sys.argv) > 1:
-        net = torch.load(sys.argv[1])
-    else:
-        net = torch.load("build/model.pth")
+    net = torch.load("build/model.pth")
     net = net.cuda()
     net.eval()
 
-
 print("load data")
-import dataloader
-
-cia = dataloader.CIA(flag="custom", custom=["isprs/test", "saclay/test"])
+cia = dataloader.CIA(flag="custom", custom=["isprs/test"])
 
 print("test")
 import numpy
 import PIL
 from PIL import Image
 
-cmforlogging = []
-cm = {}
+
+def perf(cm):
+    if len(cm.shape) == 1:
+        precision = cm[0] / (cm[0] + cm[1] + 1)
+        recall = cm[0] / (cm[0] + cm[2] + 1)
+        g = precision * recall
+        return g, precision, recall
+    else:
+        out = torch.zeros(cm.shape[0], 3)
+        for k in range(cm.shape[0]):
+            out[k, :] = perf(cm[k])
+        return out
+
+
+cm = torch.zeros((len(cia.towns), 3)).cuda()
+distanceVT = dataloader.DistanceVT()
+headNMS = dataloader.HardNMS()
 with torch.no_grad():
-    for town in cia.towns:
-        print(town)
-        cm[town] = torch.zeros((2, 2)).cuda()
+    for k, town in enumerate(cia.towns):
+        print(k, town)
         for i in range(cia.data[town].nbImages):
-            imageraw, labelraw = cia.data[town].getImageAndLabel(i)
+            imageraw, label = miniworld.data[town].getImageAndLabel(i)
 
-            h, w = imageraw.shape[0], imageraw.shape[1]
-            h64, w64 = (h // 64 + 1) * 64, (w // 64 + 1) * 64
+            y = torch.Tensor(label).cuda().float()
+            h, w = y.shape[0], y.shape[1]
+            D = distanceVT(y)
 
-            image = numpy.zeros((h64, w64, 3))
-            image[0:h, 0:w, :] = imageraw[:, :, :]
-            label = numpy.zeros((h64, w64))
-            label[0:h, 0:w] = labelraw[:, :]
-            globalresize = torch.nn.AdaptiveAvgPool2d((h64, w64))
+            x = torch.Tensor(numpy.transpose(imageraw, axes=(2, 0, 1))).unsqueeze(0)
+            globalresize = torch.nn.AdaptiveAvgPool2d((h, w))
+            power2resize = torch.nn.AdaptiveAvgPool2d(((h // 64) * 64, (w // 64) * 64))
+            x = power2resize(x)
 
-            image = torch.Tensor(numpy.transpose(image, axes=(2, 0, 1))).unsqueeze(0)
+            z = dataloader.largeforward(net, x)
 
-            label = torch.Tensor(label).unsqueeze(0).unsqueeze(0).cuda()
-            label = dataloader.hackdegeu(label)
-            label = globalresize(label)[0]
-            label = (label > 0).float()
+            z = globalresize(z)
+            zNMS = headNMS(z)
 
-            pred = dataloader.largeforward(net, image)
-            pred = globalresize(pred)
-            pred = (pred[0, 1, :, :] > pred[0, 0, :, :]).float()
+            cm[k][0] += torch.sum((zNMS > 0).float() * (y == 1).float())
+            cm[k][1] += torch.sum((zNMS > 0).float() * (y == 0).float() * (1 - DVT) / 9)
+            cm[k][2] += torch.sum((zNMS == 0).float() * (y == 1).float())
 
-            cm[town][0][0] += torch.sum((pred == 0).float() * (label == 0).float())
-            cm[town][1][1] += torch.sum((pred == 1).float() * (label == 1).float())
-            cm[town][1][0] += torch.sum((pred == 1).float() * (label == 0).float())
-            cm[town][0][1] += torch.sum((pred == 0).float() * (label == 1).float())
-
-            if True:
-                debug = image[0].cpu().numpy()
+            if town in ["potsdam/test", "chicago/test", "Austin/test"]:
+                nextI = len(os.listdir("build"))
+                debug = globalresize(x)[0].cpu().numpy()
                 debug = numpy.transpose(debug, axes=(1, 2, 0))
                 debug = PIL.Image.fromarray(numpy.uint8(debug))
-                debug.save("build/" + town[0:-5] + "_" + str(i) + "_x.png")
-                debug = label.cpu().numpy() * 255
+                debug.save("build/" + str(nextI) + "_x.png")
+                debug = torch.nn.functional.max_pool2d(
+                    y, kernel_size=3, stride=1, padding=1
+                )
+                debug = debug.cpu().numpy() * 255
                 debug = PIL.Image.fromarray(numpy.uint8(debug))
-                debug.save("build/" + town[0:-5] + "_" + str(i) + "_y.png")
-                debug = pred.cpu().numpy() * 255
+                debug.save("build/" + str(nextI) + "_y.png")
+                debug = (zNMS > 0).float()
+                debug = debug.cpu().numpy() * 255
                 debug = PIL.Image.fromarray(numpy.uint8(debug))
-                debug.save("build/" + town[0:-5] + "_" + str(i) + "_z.png")
+                debug.save("build/" + str(nextI) + "_z.png")
 
-        cm[town] = cm[town].cpu().numpy()
-        g, pre, rec = dataloader.perf(cm[town])
-        print("gscore=", g)
-        cmforlogging.append(g)
-        debug = numpy.asarray(cmforlogging)
-        numpy.savetxt("build/logtest.txt", debug)
+        print("perf=", perf(cm[k]))
+        numpy.savetxt("build/logtest.txt", perf(cm).cpu().numpy())
+
 
 print("-------- results ----------")
-for town in cia.towns:
-    g, pre, rec = dataloader.perf(cm[town])
-    print(town, g, pre, rec)
+for k, town in enumerate(miniworld.towns):
+    print(town, perf(cm[k]))
 
-globalcm = numpy.zeros((2, 2))
-for town in cia.towns:
-    globalcm += cm[town]
-g, pre, rec = dataloader.perf(globalcm)
-print("cia", g, pre, rec)
+cm = torch.sum(cm, dim=0)
+print("miniworld", perf(cm))

@@ -213,7 +213,7 @@ class CIA:
         return dataloader
 
 
-def largeforward(net, image, device="cuda", tilesize=128, stride=64):
+def largeforward(net, image, device="cuda", tilesize=128, stride=128):
     net.eval()
     with torch.no_grad():
         pred = torch.zeros(1, 2, image.shape[2], image.shape[3]).to(device)
@@ -226,31 +226,32 @@ def largeforward(net, image, device="cuda", tilesize=128, stride=64):
     return pred
 
 
-def perf(cm):
-    precision = 100.0 * cm[1][1] / (cm[1][1] + cm[1][0])
-    recall = 100.0 * cm[1][1] / (cm[1][1] + cm[0][1])
-    gscore = recall * precision / 100
-    return gscore, precision, recall
+def distancetransform(y, size=4):
+    yy = 2.0 * y.unsqueeze(0) - 1
+    yyy = torch.nn.functional.avg_pool2d(
+        yy, kernel_size=2 * size + 1, stride=1, padding=size
+    )
+    D = 1.0 - 0.5 * (yy - yyy).abs()
+    return D[0]
 
 
-class DistanceTransform(torch.nn.Module):
+class DistanceVT(torch.nn.Module):
     def __init__(self):
-        super(DistanceTransform, self).__init__()
+        super(DistanceVT, self).__init__()
 
         self.w = torch.zeros(1, 1, 11, 11)
         for i in range(11):
             for j in range(11):
-                self.w[0][0][i][j] = 1.0 / ((i - 5) * (i - 5) + (j - 5) * (j - 5) + 1)
+                self.w[0][0][i][j] = (i - 6) * (i - 6) + (j - 6) * (j - 6)
+        self.w = torch.sqrt(self.w)
+        self.w = 1.0 / (1 + self.w)
 
     def forward(self, y):
         yy = y.unsqueeze(0)
-
-        hackconv = torch.nn.Conv2d(1, 1, kernel_size=11, padding=5, bias=False)
+        hackconv = torch.nn.Conv2d(1, 1, kernel_size=13, padding=6, bias=False)
         hackconv.weight.data = self.w.copy()
         yyy = hackconv(yy)
-
-        D = 1.0 - (yyy - yy).abs()
-        return D[0]
+        return torch.clamp(yyy, 0, 1)
 
 
 class HardNMS(torch.nn.Module):
@@ -268,36 +269,28 @@ class HardNMS(torch.nn.Module):
         for i in range(8):
             self.w[i, 0, l[i][0], l[i][1]] = -1
 
-    def forward(self, x):
-        x = x[:, 1, :, :] - x[:, 0, :, :]
-        xm = -torch.nn.functional.relu(-x)
-        xm = xm.view(x.shape[0], 1, x.shape[2], x.shape[3])
-
-        xp = torch.nn.functional.relu(x)
-        xp = xp.view(xm.shape)
+    def forward(self, x, eps=0.1):
+        xp = x[:, 1, :, :] - x[:, 0, :, :] - eps
+        xp = torch.nn.functional.relu(xp)
+        xp = xp.view(x.shape[0], 1, x.shape[2], x.shape[3])
 
         hackconv = torch.nn.Conv2d(1, 8, kernel_size=3, padding=1, bias=False)
         hackconv.weight.data = self.w.copy()
         hackconv.requires_grad_()
 
-        xp = torch.nn.functional.relu(hackconv(xp))
-        xpNMS = (
-            xp[:, 0, :, :]
-            * xp[:, 1, :, :]
-            * xp[:, 2, :, :]
-            * xp[:, 3, :, :]
-            * xp[:, 4, :, :]
-            * xp[:, 5, :, :]
-            * xp[:, 6, :, :]
-            * xp[:, 7, :, :]
-            * xp[:, 8, :, :]
+        xdiff = torch.nn.functional.relu(hackconv(xp))  # only the max survives
+        xNMS = (
+            xdiff[:, 0, :, :]
+            * xdiff[:, 1, :, :]
+            * xdiff[:, 2, :, :]
+            * xdiff[:, 3, :, :]
+            * xdiff[:, 4, :, :]
+            * xdiff[:, 5, :, :]
+            * xdiff[:, 6, :, :]
+            * xdiff[:, 7, :, :]
+            * xdiff[:, 8, :, :]
             * 256
-        )
-        # only the max survives
+        ).view(xp.shape)
 
-        xpSoftNMS = torch.nn.functional.max_pool2d(
-            xpNMS, kernel_size=3, stride=1, padding=1
-        )
-        xpSoftNMS = xp * xpSoftNMS
-
-        return xpSoftNMS.view(xm.shape) + xm
+        xNMS3 = torch.nn.functional.max_pool2d(xNMS, kernel_size=3, stride=1, padding=1)
+        return xp * xNMS3
