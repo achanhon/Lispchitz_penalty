@@ -59,7 +59,7 @@ headNMS = dataloader.HardNMS()
 for epoch in range(nbepoch):
     print("epoch=", epoch, "/", nbepoch)
 
-    XY = cia.getrandomtiles(batchsize)
+    XY = cia.getrandomtiles(128, batchsize)
     miss, fa, good = torch.zeros(1).cuda(), torch.zeros(1).cuda(), torch.zeros(1).cuda()
 
     for x, y in XY:
