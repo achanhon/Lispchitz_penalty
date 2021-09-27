@@ -65,6 +65,7 @@ for epoch in range(nbepoch):
     for x, y in XY:
         x, y = x.cuda(), y.cuda().float()
         z = net(x)
+        zNMS = headNMS(z)
 
         # coarse loss (emphasis recall)
         DT = dataloader.distancetransform(y)
@@ -81,7 +82,6 @@ for epoch in range(nbepoch):
         else:
             # fine loss (emphasis precision)
             DVT = distanceVT(y)
-            zNMS = headNMS(z)
             softgood = torch.mean(zNMS * DVT)
             softfa = torch.mean(zNMS * (DVT == 0).float())
 
