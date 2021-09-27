@@ -119,7 +119,7 @@ class SegSemDataset:
                 XY.append((im.copy(), mask.copy()))
 
             if nbpos != 0:
-                l = getsomecenters(label)
+                l = getcenters(label)
                 random.shuffle(l)
                 l = l[0 : min(len(l), posperimage)]
                 noise = np.random.randint(-tilesize, tilesize, size=(len(l), 2))
