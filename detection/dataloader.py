@@ -118,7 +118,7 @@ class SegSemDataset:
                 mask = label[row[i] : row[i] + tilesize, col[i] : col[i] + tilesize]
                 XY.append((im.copy(), mask.copy()))
 
-            if nbpos != 0:
+            if nbpos != 0 and np.sum(label) > 1:
                 row, col = np.nonzero(label)
                 l = [(row[i], col[i]) for i in range(row.shape[0])]
                 random.shuffle(l)
