@@ -285,7 +285,7 @@ class HardNMS(torch.nn.Module):
         xp = torch.nn.functional.relu(xp)
 
         xother = self.pool(xp)
-        xNMS = torch.nn.functional.relu(x - xother)  # only the max survives
+        xNMS = torch.nn.functional.relu(xp - xother)  # only the max survives
 
         xNMS3 = torch.nn.functional.max_pool2d(xNMS, kernel_size=3, stride=1, padding=1)
         xf = xp * xNMS3 * 10
