@@ -291,7 +291,6 @@ class HardNMS(torch.nn.Module):
             * xdiff[:, 5, :, :]
             * xdiff[:, 6, :, :]
             * xdiff[:, 7, :, :]
-            * xdiff[:, 8, :, :]
             * 256
         ).view(xp.shape)
 
