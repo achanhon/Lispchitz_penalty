@@ -50,11 +50,11 @@ def perf(cm):
         precision = cm[0] / (cm[0] + cm[1] + 1)
         recall = cm[0] / (cm[0] + cm[2] + 1)
         g = precision * recall
-        return g, precision, recall
+        return torch.Tensor((g, precision, recall))
     else:
         out = torch.zeros(cm.shape[0], 3)
         for k in range(cm.shape[0]):
-            out[k, :] = perf(cm[k])
+            out[k] = perf(cm[k])
         return out
 
 
