@@ -63,7 +63,7 @@ for epoch in range(nbepoch):
     miss, fa, good = torch.zeros(1).cuda(), torch.zeros(1).cuda(), torch.zeros(1).cuda()
 
     for x, y in XY:
-        x, y = x.cuda(), y.cuda()
+        x, y = x.cuda(), y.cuda().float()
         z = net(x)
 
         # coarse loss (emphasis recall)
