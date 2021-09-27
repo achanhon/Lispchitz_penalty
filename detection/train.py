@@ -76,15 +76,15 @@ for epoch in range(nbepoch):
         CE = torch.mean(CE * DT)
         dice = criteriondice(z, y5.long())
 
-        # fine loss (emphasis precision)
-        DVT = distanceVT(y)
-        zNMS = headNMS(z)
-        softgood = torch.mean(zNMS * DVT)
-        softfa = torch.mean(zNMS * (DVT == 0).float())
-
         if epoch < 10:
             loss = CE * 0.5 + dice * 0.1
         else:
+            # fine loss (emphasis precision)
+            DVT = distanceVT(y)
+            zNMS = headNMS(z)
+            softgood = torch.mean(zNMS * DVT)
+            softfa = torch.mean(zNMS * (DVT == 0).float())
+
             loss = CE * 0.5 + dice * 0.1 + 1.0 - softgood / (softgood + fa + 0.00001)
 
         meanloss.append(loss.cpu().data.numpy())
