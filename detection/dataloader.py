@@ -279,7 +279,7 @@ class HardNMS(torch.nn.Module):
         hackconv = torch.nn.Conv2d(1, 8, kernel_size=3, padding=1, bias=False)
         hackconv.weight.data = self.w.clone()
         hackconv = hackconv.cuda()
-        hackconv.requires_grad_()
+        # hackconv.requires_grad_()
 
         xdiff = torch.nn.functional.relu(hackconv(xp))  # only the max survives
         xNMS = (
