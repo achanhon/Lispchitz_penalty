@@ -65,7 +65,7 @@ with torch.no_grad():
     for k, town in enumerate(cia.towns):
         print(k, town)
         for i in range(cia.data[town].nbImages):
-            imageraw, label = miniworld.data[town].getImageAndLabel(i)
+            imageraw, label = cia.data[town].getImageAndLabel(i)
 
             y = torch.Tensor(label).cuda().float()
             h, w = y.shape[0], y.shape[1]
@@ -106,8 +106,8 @@ with torch.no_grad():
         numpy.savetxt("build/logtest.txt", perf(cm).cpu().numpy())
 
 print("-------- results ----------")
-for k, town in enumerate(miniworld.towns):
+for k, town in enumerate(cia.towns):
     print(town, perf(cm[k]))
 
 cm = torch.sum(cm, dim=0)
-print("miniworld", perf(cm))
+print("cia", perf(cm))
