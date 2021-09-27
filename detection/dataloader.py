@@ -276,9 +276,9 @@ class HardNMS(torch.nn.Module):
         xp = torch.nn.functional.relu(xp)
         xp = xp.view(x.shape[0], 1, x.shape[2], x.shape[3])
 
-        hackconv = torch.nn.Conv2d(1, 8, kernel_size=3, padding=1, bias=False)
-        hackconv.weight.data = self.w.detach().clone().detach()
-        hackconv = hackconv.cuda()
+        self.hackconv = torch.nn.Conv2d(1, 8, kernel_size=3, padding=1, bias=False)
+        self.hackconv.weight.data = self.w.detach().clone().detach()
+        self.hackconv = hackconv.cuda()
 
         xdiff = torch.nn.functional.relu(hackconv(xp))  # only the max survives
         xNMS = (
