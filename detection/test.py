@@ -67,7 +67,7 @@ with torch.no_grad():
         for i in range(cia.data[town].nbImages):
             imageraw, label = cia.data[town].getImageAndLabel(i)
 
-            y = torch.Tensor(label).cuda().float()
+            y = torch.Tensor(label).cuda().float().unsqueeze(0)
             h, w = y.shape[0], y.shape[1]
             D = distanceVT(y)
 
@@ -79,7 +79,8 @@ with torch.no_grad():
             z = dataloader.largeforward(net, x)
 
             z = globalresize(z)
-            zNMS = headNMS(z)
+            zNMS = headNMS(z)[0]
+            y = y[0]
 
             cm[k][0] += torch.sum((zNMS > 0).float() * (y == 1).float())
             cm[k][1] += torch.sum((zNMS > 0).float() * (y == 0).float() * (1 - DVT) / 9)
