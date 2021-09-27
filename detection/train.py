@@ -67,8 +67,10 @@ for epoch in range(nbepoch):
         z = net(x)
         zNMS = headNMS(z)
 
-        # coarse loss (emphasis recall)
         DT = dataloader.distancetransform(y)
+        DVT = distanceVT(y)
+
+        # coarse loss (emphasis recall)
         y5 = torch.nn.functional.max_pool2d(y, kernel_size=5, stride=1, padding=2)
         nb0, nb1 = torch.sum((y == 0).float()), torch.sum((y5 == 1).float())
         weights = torch.Tensor([1, nb0 / (nb1 + 1) * 2]).cuda()
@@ -81,7 +83,6 @@ for epoch in range(nbepoch):
             loss = CE * 0.5 + dice * 0.1
         else:
             # fine loss (emphasis precision)
-            DVT = distanceVT(y)
             softgood = torch.mean(zNMS * DVT)
             softfa = torch.mean(zNMS * (DVT == 0).float())
 
