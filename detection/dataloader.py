@@ -228,32 +228,31 @@ def largeforward(net, image, device="cuda", tilesize=128, stride=128):
 
 
 def distancetransform(y, size=4):
-    yy = 2.0 * y.unsqueeze(0) - 1
+    yy = 2.0 * y - 1
     yyy = torch.nn.functional.avg_pool2d(
         yy, kernel_size=2 * size + 1, stride=1, padding=size
     )
     D = 1.0 - 0.5 * (yy - yyy).abs()
-    return D[0]
+    return D
 
 
 class DistanceVT(torch.nn.Module):
     def __init__(self):
         super(DistanceVT, self).__init__()
 
-        self.w = torch.zeros(1, 1, 13, 13)
+        self.hackconv = torch.nn.Conv2d(1, 1, kernel_size=13, padding=6, bias=False)
         for i in range(11):
             for j in range(11):
-                self.w[0][0][i][j] = (i - 6) * (i - 6) + (j - 6) * (j - 6)
-        self.w = torch.sqrt(self.w)
-        self.w = 1.0 / (1 + self.w)
+                self.hackconv.weight.data[0][0][i][j] = (i - 6) * (i - 6) + (j - 6) * (
+                    j - 6
+                )
+        self.hackconv.weight = torch.sqrt(self.hackconv.weight)
+        self.hackconv.weight = 1.0 / (1 + self.hackconv.weight)
+        self.hackconv = self.hackconv.cuda()
 
     def forward(self, y):
-        yy = y.unsqueeze(1)
-        hackconv = torch.nn.Conv2d(1, 1, kernel_size=13, padding=6, bias=False)
-        hackconv.weight.data = self.w.detach().clone().detach()
-        hackconv = hackconv.cuda()
-        yyy = hackconv(yy).detach()
-        return torch.clamp(yyy, 0, 1)
+        yy = self.hackconv(y.unsqueeze(1)).detach()
+        return torch.clamp(yy[:, 0, :, :], 0, 1)
 
 
 class PoolWithHole(torch.nn.Module):
@@ -262,16 +261,16 @@ class PoolWithHole(torch.nn.Module):
 
     def forward(self, x):
         B, H, W = x.shape[0], x.shape[1], x.shape[2]
-        X = torch.zeros(B, H + 2, W + 2).cuda()
-        X = [X for i in range(9)]
+
+        Xm = torch.zeros(X[0].shape).cuda()
+        X = [Xm.clone() for i in range(9)]
         for i in range(3):
             for j in range(3):
-                X[i * 3 + j][:, i : i + H, j : j + W] = x[:, :, :]
-        X = [X[i] for i in range(9) if i != 4]
-        Xm = torch.zeros(X[0].shape).cuda()
-        for i in range(8):
-            Xm = torch.max(Xm, X[i])
+                if i != 1 or j != 1:
+                    X[i * 3 + j][:, i : i + H, j : j + W] = x[:, :, :]
 
+        for i in range(9):
+            Xm = torch.max(Xm, X[i])
         return Xm[:, 1 : 1 + H, 1 : 1 + W]
 
 
@@ -288,5 +287,4 @@ class HardNMS(torch.nn.Module):
         xNMS = torch.nn.functional.relu(xp - xother)  # only the max survives
 
         xNMS3 = torch.nn.functional.max_pool2d(xNMS, kernel_size=3, stride=1, padding=1)
-        xf = xp * xNMS3 * 10
-        return xf.view(x.shape[0], 1, x.shape[2], x.shape[3])
+        return xp * xNMS3 * 10

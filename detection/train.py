@@ -37,7 +37,7 @@ net = smp.Unet(
     in_channels=3,
     classes=2,
 )
-head = dataloader.HardNMS()
+headNMS = dataloader.HardNMS()
 net = net.cuda()
 net.eval()
 
@@ -55,7 +55,6 @@ meanloss = collections.deque(maxlen=200)
 nbepoch = 800
 batchsize = 32
 distanceVT = dataloader.DistanceVT()
-headNMS = dataloader.HardNMS()
 for epoch in range(nbepoch):
     print("epoch=", epoch, "/", nbepoch)
 
@@ -72,7 +71,7 @@ for epoch in range(nbepoch):
 
         # coarse loss (emphasis recall)
         y5 = torch.nn.functional.max_pool2d(y, kernel_size=5, stride=1, padding=2)
-        nb0, nb1 = torch.sum((y == 0).float()), torch.sum((y5 == 1).float())
+        nb0, nb1 = torch.sum((y5 == 0).float()), torch.sum((y5 == 1).float())
         weights = torch.Tensor([1, nb0 / (nb1 + 1) * 2]).cuda()
         criterion = torch.nn.CrossEntropyLoss(weight=weights, reduction="none")
         CE = criterion(z, y5.long())
@@ -80,7 +79,7 @@ for epoch in range(nbepoch):
         dice = criteriondice(z, y5.long())
 
         if epoch < 10:
-            loss = CE * 0.5 + dice * 0.1
+            loss = CE + dice * 0.1
         else:
             # fine loss (emphasis precision)
             softgood = torch.mean(zNMS * DVT)
