@@ -66,11 +66,10 @@ for epoch in range(nbepoch):
         z = net(x)
         zNMS = headNMS(z)
 
-        DT = dataloader.distancetransform(y)
-        DVT = distanceVT(y)
-
         # coarse loss (emphasis recall)
         y5 = torch.nn.functional.max_pool2d(y, kernel_size=5, stride=1, padding=2)
+        DT = dataloader.distancetransform(y5)
+        DVT = distanceVT(y)
         nb0, nb1 = torch.sum((y5 == 0).float()), torch.sum((y5 == 1).float())
         weights = torch.Tensor([1, nb0 / (nb1 + 1) * 2]).cuda()
         criterion = torch.nn.CrossEntropyLoss(weight=weights, reduction="none")
