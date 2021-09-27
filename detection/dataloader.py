@@ -26,20 +26,22 @@ def getindexeddata():
 
     if whereIam in ["super", "wdtim719z"]:
         root = "/data/CIA/"
-
     if whereIam in ["ldtis706z"]:
         root = "/media/achanhon/bigdata/data/CIA/"
-
     if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
         root = "/scratchf/CIA/"
 
     return root, availabledata
 
 
+import PIL
+from PIL import Image
+import torch
+import random
 from skimage import measure
 
 
-def getsomecenters(label):
+def getcenters(label):
     blobs_image = measure.label(label, background=0)
     blobs = measure.regionprops(blobs_image)
 
@@ -50,13 +52,6 @@ def getsomecenters(label):
         output.append((r, c))
 
     return output
-
-
-import PIL
-from PIL import Image
-
-import torch
-import random
 
 
 class SegSemDataset:
@@ -85,42 +80,59 @@ class SegSemDataset:
 
         label = PIL.Image.open(self.pathTOdata + str(i) + "_y.png").convert("L").copy()
         label = np.uint8(np.asarray(label))  # warning wh swapping
-        label = np.uint8(label != 0)
+        center = getcenters(label)
+        label = np.zeros(image.shape)
+        for r, c in center:
+            label[r][c] = 1
+        label = np.uint8(label)
+
         return image, label
 
     ###
     ### get randomcrops + symetrie
     ### get train usage
-    def getrawrandomtiles(self, posperimage, negperimage, tilesize):
+    def getrawrandomtiles(self, nbtiles, tilesize, nbpos=0):
         XY = []
+        nbtilesperimage = int(nbtiles / self.nbImages + 1)
 
         # crop
         for name in range(self.nbImages):
+            # nbtilesperimage*probaOnImage==nbtiles
+            if (
+                nbtiles < self.nbImages
+                and random.randint(0, int(nbtiles + 1)) > nbtilesperimage
+            ):
+                continue
+
             image, label = self.getImageAndLabel(name)
 
-            # positive crop
-            l = getsomecenters(label)
-            random.shuffle(l)
-            l = l[0 : min(len(l), posperimage)]
-            noise = np.random.randint(-tilesize, tilesize, size=(len(l), 2))
+            row = np.random.randint(
+                0, image.shape[0] - tilesize - 2, size=nbtilesperimage
+            )
+            col = np.random.randint(
+                0, image.shape[1] - tilesize - 2, size=nbtilesperimage
+            )
 
-            for i, (r, c) in enumerate(l):
-                R, C = r + noise[i][0], c + noise[i][1]
-
-                R = max(0, min(R, image.shape[0] - tilesize - 2))
-                C = max(0, min(C, image.shape[1] - tilesize - 2))
-
-                im = image[R : R + tilesize, C : C + tilesize, :]
-                mask = label[R : R + tilesize, C : C + tilesize]
+            for i in range(nbtilesperimage):
+                im = image[row[i] : row[i] + tilesize, col[i] : col[i] + tilesize, :]
+                mask = label[row[i] : row[i] + tilesize, col[i] : col[i] + tilesize]
                 XY.append((im.copy(), mask.copy()))
 
-            # random crop
-            R = np.random.randint(0, image.shape[0] - tilesize - 2, size=negperimage)
-            C = np.random.randint(0, image.shape[1] - tilesize - 2, size=negperimage)
-            for i in range(negperimage):
-                im = image[R[i] : R[i] + tilesize, C[i] : C[i] + tilesize, :].copy()
-                mask = label[R[i] : R[i] + tilesize, C[i] : C[i] + tilesize].copy()
-                XY.append((im, mask))
+            if nbpos != 0:
+                l = getsomecenters(label)
+                random.shuffle(l)
+                l = l[0 : min(len(l), posperimage)]
+                noise = np.random.randint(-tilesize, tilesize, size=(len(l), 2))
+
+                for i, (r, c) in enumerate(l):
+                    R, C = r + noise[i][0], c + noise[i][1]
+
+                    R = max(0, min(R, image.shape[0] - tilesize - 2))
+                    C = max(0, min(C, image.shape[1] - tilesize - 2))
+
+                    im = image[R : R + tilesize, C : C + tilesize, :]
+                    mask = label[R : R + tilesize, C : C + tilesize]
+                    XY.append((im.copy(), mask.copy()))
 
         # symetrie
         symetrieflag = np.random.randint(0, 2, size=(len(XY), 3))
@@ -162,7 +174,7 @@ class CIA:
             "images",
         )
 
-    def getrandomtiles(self, batchsize, tilesize=128):
+    def getrandomtiles(self, tilesize, batchsize):
         nbtiles = {}
         nbtiles["vedai"] = (1, 5)  # very small image
 
@@ -185,7 +197,7 @@ class CIA:
         XY = []
         for town in self.towns:
             XY += self.data[town].getrawrandomtiles(
-                nbtiles[town][0], nbtiles[town][1], tilesize
+                nbtiles[town][1], tilesize, nbpos=nbtiles[town][0]
             )
 
         # pytorch
@@ -204,17 +216,12 @@ class CIA:
 def largeforward(net, image, device="cuda", tilesize=128, stride=64):
     net.eval()
     with torch.no_grad():
-        pred = torch.zeros(1, 2, image.shape[2] // 8, image.shape[3] // 8).to(device)
+        pred = torch.zeros(1, 2, image.shape[2], image.shape[3]).to(device)
         image = image.float().to(device)
         for row in range(0, image.shape[2] - tilesize + 1, stride):
             for col in range(0, image.shape[3] - tilesize + 1, stride):
                 tmp = net(image[:, :, row : row + tilesize, col : col + tilesize])
-                pred[
-                    0,
-                    :,
-                    row // 8 : row // 8 + tilesize // 8,
-                    col // 8 : col // 8 + tilesize // 8,
-                ] += tmp[0]
+                pred[0, :, row : row + tilesize, col : col + tilesize] += tmp[0]
 
     return pred
 
@@ -226,76 +233,71 @@ def perf(cm):
     return gscore, precision, recall
 
 
-def hackdegeu(y):
-    y = 1.0 - y
-    y = torch.nn.functional.max_pool2d(y, kernel_size=3, stride=1, padding=1)
-    y = 1.0 - y
-    y = torch.nn.functional.max_pool2d(y, kernel_size=8, stride=8, padding=0)
-    return y[0]
-
-
-class PartialDecoder(torch.nn.Module):
+class DistanceTransform(torch.nn.Module):
     def __init__(self):
-        super(PartialDecoder, self).__init__()
+        super(DistanceTransform, self).__init__()
 
-        self.inchannel = (3, 64, 48, 80, 224, 640)
+        self.w = torch.zeros(1, 1, 11, 11)
+        for i in range(11):
+            for j in range(11):
+                self.w[0][0][i][j] = 1.0 / ((i - 5) * (i - 5) + (j - 5) * (j - 5) + 1)
 
-        self.conv41 = torch.nn.Conv2d(640, 512, kernel_size=1)
-        self.conv42 = torch.nn.Conv2d(512, 224, kernel_size=1)
+    def forward(self, y):
+        yy = y.unsqueeze(0)
 
-        self.conv21 = torch.nn.Conv2d(448, 256, kernel_size=3, padding=1)
-        self.conv22 = torch.nn.Conv2d(256, 256, kernel_size=3, padding=1)
-        self.conv23 = torch.nn.Conv2d(256, 128, kernel_size=3, padding=1)
+        hackconv = torch.nn.Conv2d(1, 1, kernel_size=11, padding=5, bias=False)
+        hackconv.weight.data = self.w.copy()
+        yyy = hackconv(yy)
 
-        self.conv11 = torch.nn.Conv2d(128 + 80, 128, kernel_size=3, padding=1)
-        self.conv12 = torch.nn.Conv2d(128, 64, kernel_size=3, padding=1)
-        self.conv13 = torch.nn.Conv2d(64, 1, kernel_size=1)
+        D = 1.0 - (yyy - yy).abs()
+        return D[0]
+
+
+class HardNMS(torch.nn.Module):
+    def __init__(self):
+        super(HardNMS, self).__init__()
+
+        l = []
+        for i in range(3):
+            for j in range(3):
+                l.append((i, j))
+        l = [(i, j) for i, j in l if (i != 1 or j != 1)]
+
+        self.w = torch.zeros(8, 1, 3, 3)
+        self.w[:, :, 1, 1] = 1
+        for i in range(8):
+            self.w[i, 0, l[i][0], l[i][1]] = -1
 
     def forward(self, x):
-        x4 = x[-1]
-        x4 = torch.nn.functional.leaky_relu(self.conv41(x4))
-        x4 = torch.nn.functional.leaky_relu(self.conv42(x4))
+        x = x[:, 1, :, :] - x[:, 0, :, :]
+        xm = -torch.nn.functional.relu(-x)
+        xm = xm.view(x.shape[0], 1, x.shape[2], x.shape[3])
 
-        x2 = x[-2]
-        resize2 = torch.nn.AdaptiveAvgPool2d((x2.shape[2], x2.shape[3]))
-        x4 = resize2(x4)
-        x2 = torch.cat([x2, x4], dim=1)
+        xp = torch.nn.functional.relu(x)
+        xp = xp.view(xm.shape)
 
-        x2 = torch.nn.functional.leaky_relu(self.conv21(x2))
-        x2 = torch.nn.functional.leaky_relu(self.conv22(x2))
-        x2 = torch.nn.functional.leaky_relu(self.conv23(x2))
+        hackconv = torch.nn.Conv2d(1, 8, kernel_size=3, padding=1, bias=False)
+        hackconv.weight.data = self.w.copy()
+        hackconv.requires_grad_()
 
-        x1 = x[-3]
-        resize = torch.nn.AdaptiveAvgPool2d((x1.shape[2], x1.shape[3]))
-        x2 = resize(x2)
-        x1 = torch.cat([x1, x2], dim=1)
+        xp = torch.nn.functional.relu(hackconv(xp))
+        xpNMS = (
+            xp[:, 0, :, :]
+            * xp[:, 1, :, :]
+            * xp[:, 2, :, :]
+            * xp[:, 3, :, :]
+            * xp[:, 4, :, :]
+            * xp[:, 5, :, :]
+            * xp[:, 6, :, :]
+            * xp[:, 7, :, :]
+            * xp[:, 8, :, :]
+            * 256
+        )
+        # only the max survives
 
-        x1 = torch.nn.functional.leaky_relu(self.conv11(x1))
-        x1 = torch.nn.functional.leaky_relu(self.conv12(x1))
-        x1 = self.conv13(x1)
-        return x1
+        xpSoftNMS = torch.nn.functional.max_pool2d(
+            xpNMS, kernel_size=3, stride=1, padding=1
+        )
+        xpSoftNMS = xp * xpSoftNMS
 
-
-class SoftNMS(torch.nn.Module):
-    def __init__(self):
-        super(SoftNMS, self).__init__()
-
-        self.conv = torch.nn.Conv2d(1, 6, kernel_size=7, padding=3)
-        self.merge = torch.nn.Conv2d(8, 1, kernel_size=1)
-
-    def forward(self, x):
-        learnednms = torch.nn.functional.leaky_relu(self.conv(x))
-
-        x5 = torch.nn.functional.max_pool2d(x, kernel_size=5, stride=1, padding=2)
-        expertnms = torch.nn.functional.relu(x * 10 - 9 * x5)
-
-        xall = torch.cat([x, learnednms, expertnms], dim=1)
-        return expertnms * 9 / 10 + x / 10 + self.merge(xall)
-
-
-class OneToTwo(torch.nn.Module):
-    def __init__(self):
-        super(OneToTwo, self).__init__()
-
-    def forward(self, x):
-        return torch.cat([-x, x], dim=1)
+        return xpSoftNMS.view(xm.shape) + xm
