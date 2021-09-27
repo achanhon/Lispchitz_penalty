@@ -119,6 +119,9 @@ class SegSemDataset:
                 XY.append((im.copy(), mask.copy()))
 
             if nbpos != 0 and np.sum(label) > 1:
+                print(label.shape)
+                print(np.nonzero(label))
+                quit()
                 row, col = np.nonzero(label)
                 l = [(row[i], col[i]) for i in range(row.shape[0])]
                 random.shuffle(l)
