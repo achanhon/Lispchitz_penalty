@@ -50,7 +50,7 @@ import collections
 import random
 
 criteriondice = smp.losses.dice.DiceLoss(mode="multiclass")
-optimizer = torch.optim.Adam(net.parameters(), lr=0.001)
+optimizer = torch.optim.Adam(net.parameters(), lr=0.0001)
 meanloss = collections.deque(maxlen=200)
 nbepoch = 800
 batchsize = 32
