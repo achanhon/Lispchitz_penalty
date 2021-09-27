@@ -106,8 +106,8 @@ for epoch in range(nbepoch):
         miss += torch.sum((zNMS == 0).float() * (y == 1).float())
 
     torch.save(net, "build/model.pth")
-    precision = good / (good + fa)
-    rappel = good / (good + miss)
+    precision = good / (good + fa + 1)
+    rappel = good / (good + miss + 1)
     gs = precision * rappel
     print("perf", gs * 100, precision * 100, recall * 100)
 
