@@ -69,7 +69,7 @@ with torch.no_grad():
 
             y = torch.Tensor(label).cuda().float()
             h, w = y.shape[0], y.shape[1]
-            DVT = distanceVT(y.unsqueeze(0))[0]
+            DVT = distanceVT(y.unsqueeze(0))[0][0]
 
             x = torch.Tensor(numpy.transpose(imageraw, axes=(2, 0, 1))).unsqueeze(0)
             globalresize = torch.nn.AdaptiveAvgPool2d((h, w))
@@ -79,8 +79,7 @@ with torch.no_grad():
             z = dataloader.largeforward(net, x)
 
             z = globalresize(z)
-            zNMS = headNMS(z)[0]
-            print(y.shape,DVT.shape,zNMS.shape)
+            zNMS = headNMS(z)[0][0]
 
             cm[k][0] += torch.sum((zNMS > 0).float() * (y == 1).float())
             cm[k][1] += torch.sum((zNMS > 0).float() * (y == 0).float() * (1 - DVT) / 9)
