@@ -72,9 +72,9 @@ for epoch in range(nbepoch):
         nb0, nb1 = torch.sum((y == 0).float()), torch.sum((y == 1).float())
         weights = torch.Tensor([1, nb0 / (nb1 + 1)]).cuda()
         criterion = torch.nn.CrossEntropyLoss(weight=weights, reduction="none")
-        CE = criterion(z, y5)
+        CE = criterion(z, y5.long())
         CE = torch.mean(CE * DT)
-        dice = criteriondice(z, y5)
+        dice = criteriondice(z, y5.long())
 
         # fine loss (emphasis precision)
         DVT = distanceVT(y)
