@@ -50,7 +50,7 @@ import collections
 import random
 
 criteriondice = smp.losses.dice.DiceLoss(mode="multiclass")
-optimizer = torch.optim.Adam(net.parameters(), lr=0.0001)
+optimizer = torch.optim.Adam(net.parameters(), lr=0.001)
 meanloss = collections.deque(maxlen=200)
 nbepoch = 800
 batchsize = 32
@@ -69,8 +69,8 @@ for epoch in range(nbepoch):
         # coarse loss (emphasis recall)
         DT = dataloader.distancetransform(y)
         y5 = torch.nn.functional.max_pool2d(y, kernel_size=5, stride=1, padding=2)
-        nb0, nb1 = torch.sum((y == 0).float()), torch.sum((y == 1).float())
-        weights = torch.Tensor([1, nb0 / (nb1 + 1)]).cuda()
+        nb0, nb1 = torch.sum((y == 0).float()), torch.sum((y5 == 1).float())
+        weights = torch.Tensor([1, nb0 / (nb1 + 1) * 2]).cuda()
         criterion = torch.nn.CrossEntropyLoss(weight=weights, reduction="none")
         CE = criterion(z, y5.long())
         CE = torch.mean(CE * DT)

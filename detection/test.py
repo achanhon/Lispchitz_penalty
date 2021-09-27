@@ -104,7 +104,7 @@ with torch.no_grad():
                 debug = (zNMS > 0).float()
                 debug = debug.cpu().numpy() * 255
                 debug = PIL.Image.fromarray(numpy.uint8(debug))
-                debug.save("build/" + str(nextI) + "_{.png")
+                debug.save("build/" + str(nextI) + "_Z.png")
 
         print("perf=", perf(cm[k]))
         numpy.savetxt("build/logtest.txt", perf(cm).cpu().numpy())
