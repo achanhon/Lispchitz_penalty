@@ -22,7 +22,6 @@ def symetrie(x, y, i, j, k):
 def getindexeddata():
     whereIam = os.uname()[1]
 
-    root = None
     availabledata = ["dfc", "vedai", "saclay", "isprs", "little_xview", "dota"]
 
     if whereIam in ["super", "wdtim719z"]:
