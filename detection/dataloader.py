@@ -122,7 +122,7 @@ class SegSemDataset:
                 row, col = np.nonzero(label)
                 l = [(row[i], col[i]) for i in range(row.shape[0])]
                 random.shuffle(l)
-                l = l[0 : min(len(l), posperimage)]
+                l = l[0 : min(len(l), nbpos)]
                 noise = np.random.randint(-tilesize, tilesize, size=(len(l), 2))
 
                 for i, (r, c) in enumerate(l):
