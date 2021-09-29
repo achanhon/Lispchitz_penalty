@@ -60,7 +60,6 @@ def perf(cm):
 
 
 cm = torch.zeros((len(cia.towns), 3)).cuda()
-distanceVT = dataloader.DistanceVT()
 with torch.no_grad():
     for k, town in enumerate(cia.towns):
         print(k, town)
