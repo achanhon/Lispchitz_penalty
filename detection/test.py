@@ -38,7 +38,7 @@ with torch.no_grad():
     net.eval()
 
 print("load data")
-cia = dataloader.CIA(flag="custom", custom=["isprs/test"])
+cia = dataloader.CIA(flag="custom", custom=["isprs/test", "saclay/test"])
 
 print("test")
 import numpy
