@@ -38,20 +38,6 @@ import PIL
 from PIL import Image
 import torch
 import random
-from skimage import measure
-
-
-def getcenters(label):
-    blobs_image = measure.label(label, background=0)
-    blobs = measure.regionprops(blobs_image)
-
-    output = []
-    for blob in blobs:
-        r, c = blob.centroid
-        r, c = int(r), int(c)
-        output.append((r, c))
-
-    return output
 
 
 class SegSemDataset:
@@ -80,11 +66,7 @@ class SegSemDataset:
 
         label = PIL.Image.open(self.pathTOdata + str(i) + "_y.png").convert("L").copy()
         label = np.uint8(np.asarray(label))  # warning wh swapping
-        center = getcenters(label)
-        label = np.zeros(label.shape)
-        for r, c in center:
-            label[r][c] = 1
-        label = np.uint8(label)
+        label = np.uint8(label != 0)
 
         return image, label
 
@@ -236,23 +218,10 @@ def distancetransform(y, size=4):
     return D[0]
 
 
-class DistanceVT(torch.nn.Module):
-    def __init__(self):
-        super(DistanceVT, self).__init__()
-
-        self.hackconv = torch.nn.Conv2d(1, 1, kernel_size=13, padding=6, bias=False)
-        w = torch.zeros(1, 1, 13, 13)
-        for i in range(13):
-            for j in range(13):
-                w[0][0][i][j] = (i - 6) * (i - 6) + (j - 6) * (j - 6)
-        w = torch.sqrt(w)
-        w = 1.0 / (1 + w)
-        self.hackconv.weight.data = w
-        self.hackconv = self.hackconv.cuda()
-
-    def forward(self, y):
-        yy = self.hackconv(y.unsqueeze(1)).detach()
-        return torch.clamp(yy[:, 0, :, :], 0, 1)
+def etendre(x, size):
+    return torch.nn.functional.max_pool2d(
+        x, kernel_size=2 * size + 1, stride=1, padding=size
+    )
 
 
 class PoolWithHole(torch.nn.Module):
@@ -285,5 +254,5 @@ class HardNMS(torch.nn.Module):
         xother = self.pool(xp)
         xNMS = torch.nn.functional.relu(xp - xother)  # only the max survives
 
-        xNMS3 = torch.nn.functional.max_pool2d(xNMS, kernel_size=3, stride=1, padding=1)
+        xNMS3 = etendre(xNMS, 1)
         return xp * xNMS3 * 10

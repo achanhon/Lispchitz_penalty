@@ -69,7 +69,7 @@ with torch.no_grad():
 
             y = torch.Tensor(label).cuda().float()
             h, w = y.shape[0], y.shape[1]
-            DVT = distanceVT(y.unsqueeze(0))[0]
+            y5 = dataloader.pool(y.unsqueeze(0), 1)[0]
 
             x = torch.Tensor(numpy.transpose(imageraw, axes=(2, 0, 1))).unsqueeze(0)
             globalresize = torch.nn.AdaptiveAvgPool2d((h, w))
@@ -79,10 +79,11 @@ with torch.no_grad():
             z = dataloader.largeforward(net, x)
             z = globalresize(z)
             zNMS = headNMS(z)[0]
+            zNMS5 = dataloader.etendre(zNMS.unsqueeze(0), 1)[0]
 
             cm[k][0] += torch.sum((zNMS > 0).float() * (y == 1).float())
-            cm[k][1] += torch.sum((zNMS > 0).float() * (y == 0).float() * (1 - DVT) / 9)
-            cm[k][2] += torch.sum((zNMS == 0).float() * (y == 1).float())
+            cm[k][1] += torch.sum((zNMS > 0).float() * (y5 == 0).float())
+            cm[k][2] += torch.sum((zNMS5 == 0).float() * (y == 1).float())
 
             if town in ["isprs/test", "saclay/test"]:
                 nextI = len(os.listdir("build"))
@@ -90,20 +91,17 @@ with torch.no_grad():
                 debug = numpy.transpose(debug, axes=(1, 2, 0))
                 debug = PIL.Image.fromarray(numpy.uint8(debug))
                 debug.save("build/" + str(nextI) + "_x.png")
-                debug = torch.nn.functional.max_pool2d(
-                    y.unsqueeze(0), kernel_size=5, stride=1, padding=2
-                )
-                debug = (debug[0] * 255 * DVT).cpu().numpy()
+                debug = y.cpu().numpy() * 255
                 debug = PIL.Image.fromarray(numpy.uint8(debug))
                 debug.save("build/" + str(nextI) + "_y.png")
                 debug = (z[0, 1, :, :] > z[0, 0, :, :]).float()
                 debug = debug.cpu().numpy() * 255
                 debug = PIL.Image.fromarray(numpy.uint8(debug))
-                debug.save("build/" + str(nextI) + "_z.png")
+                debug.save("build/" + str(nextI) + "_Z.png")
                 debug = (zNMS > 0).float()
                 debug = debug.cpu().numpy() * 255
                 debug = PIL.Image.fromarray(numpy.uint8(debug))
-                debug.save("build/" + str(nextI) + "_Z.png")
+                debug.save("build/" + str(nextI) + "_z.png")
 
         print("perf=", perf(cm[k]))
         numpy.savetxt("build/logtest.txt", perf(cm).cpu().numpy())
