@@ -129,7 +129,7 @@ for epoch in range(nbepoch):
         if random.randint(0, 30) == 0:
             print("loss=", (sum(meanloss) / len(meanloss)))
 
-        y5 = dataloader.pool(y, 1)
+        y5 = dataloader.etendre(y, 1)
         zNMS5 = dataloader.etendre(zNMS.unsqueeze(0), 1)
         good += torch.sum((zNMS > 0).float() * (y == 1).float())
         fa += torch.sum((zNMS > 0).float() * (y5 == 0).float())
