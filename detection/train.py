@@ -39,7 +39,7 @@ net = smp.Unet(
 )
 headNMS = dataloader.HardNMS()
 net = net.cuda()
-net.eval()
+net.train()
 
 
 print("load data")
