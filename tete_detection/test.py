@@ -45,20 +45,6 @@ import numpy
 import PIL
 from PIL import Image
 
-
-def perf(cm):
-    if len(cm.shape) == 1:
-        precision = cm[0] / (cm[0] + cm[1] + 1)
-        recall = cm[0] / (cm[0] + cm[2] + 1)
-        g = precision * recall
-        return torch.Tensor((g * 100, precision * 100, recall * 100))
-    else:
-        out = torch.zeros(cm.shape[0], 3)
-        for k in range(cm.shape[0]):
-            out[k] = perf(cm[k])
-        return out
-
-
 cm = torch.zeros((len(cia.towns), 3)).cuda()
 with torch.no_grad():
     for k, town in enumerate(cia.towns):
@@ -66,43 +52,34 @@ with torch.no_grad():
         for i in range(cia.data[town].nbImages):
             imageraw, label = cia.data[town].getImageAndLabel(i)
 
-            y = torch.Tensor(label).cuda().float()
-            h, w = y.shape[0], y.shape[1]
-            y5 = dataloader.etendre(y.unsqueeze(0), 1)[0]
+            x = torch.Tensor(numpy.transpose(imageraw, axes=(2, 0, 1))).cuda()
+            y = torch.Tensor(label).cuda()
 
-            x = torch.Tensor(numpy.transpose(imageraw, axes=(2, 0, 1))).unsqueeze(0)
-            globalresize = torch.nn.AdaptiveAvgPool2d((h, w))
-            power2resize = torch.nn.AdaptiveAvgPool2d(((h // 64) * 64, (w // 64) * 64))
-            x = power2resize(x)
+            z, s = net(x)
+            good, fa, miss = net.computegscore(z, y)
 
-            z = dataloader.largeforward(net, x)
-            z = globalresize(z)
-            zNMS = headNMS(z)[0]
-            zNMS5 = dataloader.etendre(zNMS.unsqueeze(0), 1)[0]
-
-            cm[k][0] += torch.sum((zNMS > 0).float() * (y == 1).float())
-            cm[k][1] += torch.sum((zNMS > 0).float() * (y5 == 0).float())
-            cm[k][2] += torch.sum((zNMS5 == 0).float() * (y == 1).float())
+            cm[k][0] += good
+            cm[k][1] += fa
+            cm[k][2] += miss
 
             if town in ["isprs/test", "saclay/test"]:
                 nextI = len(os.listdir("build"))
-                debug = globalresize(x)[0].cpu().numpy()
-                debug = numpy.transpose(debug, axes=(1, 2, 0))
+                debug = numpy.transpose(x.cpu().numpy(), axes=(1, 2, 0))
                 debug = PIL.Image.fromarray(numpy.uint8(debug))
                 debug.save("build/" + str(nextI) + "_x.png")
                 debug = y.cpu().numpy() * 255
                 debug = PIL.Image.fromarray(numpy.uint8(debug))
                 debug.save("build/" + str(nextI) + "_y.png")
-                debug = (z[0, 1, :, :] > z[0, 0, :, :]).float()
+                debug = (s[0, 1, :, :] > s[0, 0, :, :]).float()
                 debug = debug.cpu().numpy() * 255
                 debug = PIL.Image.fromarray(numpy.uint8(debug))
                 debug.save("build/" + str(nextI) + "_Z.png")
-                debug = (zNMS > 0).float()
+                debug = (z > 0).float()
                 debug = debug.cpu().numpy() * 255
                 debug = PIL.Image.fromarray(numpy.uint8(debug))
                 debug.save("build/" + str(nextI) + "_z.png")
 
-        print("perf=", perf(cm[k]))
+        print("perf=", dataloader.computegscore(cm[k]))
         numpy.savetxt("build/logtest.txt", perf(cm).cpu().numpy())
 
 print("-------- results ----------")

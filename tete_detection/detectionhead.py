@@ -40,38 +40,42 @@ class DetectionHead(torch.nn.Module):
         self.backbone = backbone
         self.pool = PoolWithHole()
 
-    def headforward(self, segmentation):
+    def headforward(self, x):
         eps = 0.01
-        x = segmentation[:, 1, :, :] - segmentation[:, 0, :, :] - eps
-        xp = torch.nn.functional.relu(x)
+        xp = torch.nn.functional.relu(x - eps)
         xm = self.pool(xp)
 
         localmax = (x > xm).float()
-        return x * localmax
+        # localmaxwithgrad = torch.nn.functional.relu(x - xm)
+        return xp * localmax  # , xp * localmaxwithgrad
 
     def largeforward(self, x):
-        tilesize, stride = 128, 32
+        tile, stride = 128, 32
+        h, w = x.shape[1], y.shape[2]
         x = x.unsqueeze(0)
+
+        globalresize = torch.nn.AdaptiveAvgPool2d((h, w))
+        power2resize = torch.nn.AdaptiveAvgPool2d(
+            ((h // stride) * stride, (w // stride) * stride)
+        )
+        x = power2resize(x)
+
         with torch.no_grad():
             pred = torch.zeros(1, 2, x.shape[2], x.shape[3]).to(device)
-            for row in range(0, image.shape[2] - tilesize + 1, stride):
-                for col in range(0, image.shape[3] - tilesize + 1, stride):
-                    tmp = self.backbone(
-                        x[0, :, row : row + tilesize, col : col + tilesize]
-                    )
-                    pred[0, :, row : row + tilesize, col : col + tilesize] += tmp[0]
+            for row in range(0, image.shape[2] - tile + 1, stride):
+                for col in range(0, image.shape[3] - tile + 1, stride):
+                    tmp = self.backbone(x[0, :, row : row + tile, col : col + tile])
+                    pred[0, :, row : row + tile, col : col + tile] += tmp[0]
 
-        return pred
+        return globalresize(pred)
 
     def forward(self, x):
         if len(x.shape) == 3:
             segmentation = self.largeforward(x)
+            x = segmentation[:, 1, :, :] - segmentation[:, 0, :, :]
+            return self.headforward(x), x
         else:
-            segmentation = self.backbone(x)
-
-        xnms = self.headforward(segmentation)
-
-        return xnms, segmentation
+            return self.backbone(x)
 
     def computeiou(self, x, y):
         if len(y.shape) == 2:
@@ -84,9 +88,24 @@ class DetectionHead(torch.nn.Module):
         cm01 = torch.sum((s <= 0).float() * (y == 1).float())
         cm10 = torch.sum((s > 0).float() * (y == 0).float())
 
-        accu = (cm00 + cm11) / (cm00 + cm11 + cm01 + cm10 + 1)
-        iou = cm00 / (cm00 + cm01 + cm10 + 1) + cm11 / (cm11 + cm01 + cm10 + 1)
+        accu = (cm00 + cm11) / (cm00 + cm11 + cm01 + cm10)
+        iou = cm00 / (cm00 + cm01 + cm10) + cm11 / (cm11 + cm01 + cm10)
         return iou / 2, accu
+
+    def computepairing(self, x, y):
+        if torch.sum(x) == 0 or torch.sum(y) == 0:
+            return [], None, None
+        else:
+            x, y = torch.nonzero(x), torch.nonzero(y)
+
+            X2 = torch.stack([torch.sum(x * x, dim=1)] * y.shape[0], dim=1)
+            Y2 = torch.stack([torch.sum(y * y, dim=1)] * x.shape[0], dim=0)
+            XY = X2 + Y2 - 2 * torch.matmul(x, y.t())
+
+            _, Dx = torch.min(D, dim=1)
+            _, Dy = torch.min(D, dim=0)
+            pair = [i for i in range(x.shape[0]) if Dy[Dx[i]] == i]
+            return pair, x, y
 
     def computegscore(self, x, y):
         if len(y.shape) == 2:
@@ -94,75 +113,82 @@ class DetectionHead(torch.nn.Module):
 
         x, y = (x > 0).float(), y.float()
         x10, y10 = etendre(x, 10), etendre(y, 10)
-        hardfa = torch.sum((x > 0).float() * (y10 == 0).float())
-        hardmiss = torch.sum((x10 <= 0).float() * (y == 1).float())
+        hardfa = torch.sum((x == 1).float() * (y10 == 0).float())
+        hardmiss = torch.sum((x10 == 0).float() * (y == 1).float())
 
-        x, y = x * (y10 == 1).float(), y * (x10 > 0).float()
-        if torch.sum(x) == 0 or torch.sum(y) == 0:
-            good, fa, miss = 0, 0, 0
-        else:
-            D = torch.zeros((x.shape[0], y.shape[0]))
-            for i in range(x.shape[0]):
-                for j in range(y.shape[0]):
-                    D[i][j] = (x[i] - y[j]).norm()
+        x, y = x * (y10 == 1).float(), y * (x10 == 1).float()
 
-            _, Dx = torch.min(D, dim=1)
-            _, Dy = torch.min(D, dim=0)
-            pair = [i for i in range(x.shape[0]) if Dy[Dx[i]] == i]
+        pair, x, y = self.computepairing(x, y)
 
-            good = len(pair)
-            fa = len(x) - len(pair)
-            miss = len(y) - len(pair)
+        good = len(pair)
+        fa = torch.sum(x) - len(pair)
+        miss = torch.sum(y) - len(pair)
 
-        if good == 0:
-            precision = 0
-            recall = 0
-        else:
-            precision = good / (good + fa + hardfa)
-            recall = good / (good + miss + hardmiss)
+        return good, fa + hardfa, miss + hardmiss
 
-        gscrore = precision * recall
-        tmp = (good, fa, miss, hardfa, hardmiss)
-        return gscrore, precision, recall, tmp
+    def lossSegmentation(self, s, y):
+        y10 = etendre(y.float(), 10)
+        D = distancetransform(y10)
 
-        def lossSegmentation(self, x, y, auxcriterions=[]):
-            y10 = etendre(y.float(), 10)
-            D = distancetransform(y10)
+        nb0, nb1 = torch.sum((y10 == 0).float()), torch.sum((y10 == 1).float())
+        weights = torch.Tensor([1, nb0 / (nb1 + 1)]).cuda()
+        criterion = torch.nn.CrossEntropyLoss(weight=weights, reduction="none")
 
-            nb0, nb1 = torch.sum((y10 == 0).float()), torch.sum((y10 == 1).float())
-            weights = torch.Tensor([1, nb0 / (nb1 + 1) * 2]).cuda()
-            criterion = torch.nn.CrossEntropyLoss(weight=weights, reduction="none")
-            CE = criterion(x, y10.long())
-            CE = torch.mean(CE * D)
+        CE = criterion(s, y10.long())
+        CE = torch.mean(CE * D)
+        return CE
 
-            auxlosses = []
-            for criterion in auxcriterions:
-                auxlosses.append(criterion(x, y10))
+    def lossDetection(self, s, y):
+        x = s[:, 1, :, :] - s[:, 0, :, :]
+        xNMS = self.headforward(x)
 
-            if auxlosses == []:
-                return CE
-            else:
-                return CE, auxlosses
+        ### improve recall
+        Y = torch.zeros(y.shape)
 
-        def lossDetection(self, xNMS, segmentation, y):
-            # si y=1 et qu'il y a pas de x autour -> faut favoriser le max autour - pas forcément y
-            # si un couple x,y est bon, faut mettre le point blanc sur le x et non sur le y
+        ## enforce correct pair
+        pair, ouX, ouY = self.computepairing(xNMS > 0, y)
+        for (i, j) in pair:
+            Y[ouX[i][0]][ouX[i][1]][ouX[i][2]] = 1
 
-            # miss =
-            fa = (x > 0).float() * (y == 1).float()
-            # D = D*
+        ## recall in area with positif
+        J = set([j for _, j in pair])
+        J = [j for j in range(ouY.shape[0]) if j not in J]
+        for j in J:
+            Y[ouY[i][0]][ouY[i][1]][ouY[i][2]] = 0.5
 
-            nb0, nb1 = torch.sum((y10 == 0).float()), torch.sum((y10 == 1).float())
-            weights = torch.Tensor([1, nb0 / (nb1 + 1) * 2]).cuda()
-            criterion = torch.nn.CrossEntropyLoss(weight=weights, reduction="none")
-            CE = criterion(x, y10.long())
-            CE = torch.mean(CE * D)
+        ## recall in area without positif
+        x10 = etendre((x > 0).float(), 10)
+        y1 = torch.nonzero(y * (x10 == 0).float())
+        for i in range(y1.shape[0]):
+            im, row, col = y1[i][0], y1[i][1], y1[i][2]
+            rm = max(row - 10, 0)
+            rM = min(row + 10, y.shape[1])
+            cm = max(col - 10, 0)
+            cM = min(col + 10, y.shape[2])
 
-            auxlosses = []
-            for criterion in auxcriterions:
-                auxlosses.append(criterion(x, y10))
+            best = torch.amax(x[y1[i][0], rm:rM, cm:cM])
+            ou = torch.nonzero(x[y1[i][0], rm:rM, cm:cM] == best)
 
-            if auxlosses == []:
-                return CE
-            else:
-                return CE, auxlosses
+            Y[im][rm + ou[0][0]][cm + ou[0][1]] = 1.5
+
+        criterion = torch.nn.CrossEntropyLoss(reduction="none")
+        recallloss = criterion(s, torch.ones(y.shape).long())
+        recallloss = torch.sum(recallloss * Y) / (torch.sum(Y) + 1)
+
+        ### improve precision
+        Y = torch.zeros(y.shape)
+
+        ## precision in area without y
+        y10 = etendre(y, 10)
+        Y += 2 * (xNMS > 0).float() * (y10 == 0).float()
+
+        ## precision in area with y
+        I = set([i for i, _ in pair])
+        I = [i for i in range(ouX.shape[0]) if i not in I]
+        for i in Y:
+            Y[ouY[i][0]][ouY[i][1]][ouY[i][2]] = 0.5
+
+        faloss = criterion(xNMS, torch.zeros(y.shape).long())
+        faloss = torch.sum(faloss * Y) / (torch.sum(Y) + 1)
+
+        return faloss + recallloss

@@ -34,6 +34,23 @@ def getindexeddata():
     return root, availabledata
 
 
+def computegscore(cm):
+    if len(cm.shape) == 1:
+        good, fa, miss = cm[0],cm[1],cm[2]
+        if good == 0:
+            precision = 0
+            recall = 0
+        else:
+            precision = good / (good + fa + hardfa)
+            recall = good / (good + miss + hardmiss)
+        return precision * recall, precision, recall
+    else:
+        out = torch.zeros(cm.shape[0], 3)
+        for k in range(cm.shape[0]):
+            out[k] = perf(cm[k])
+        return out
+
+
 import PIL
 from PIL import Image
 import torch
@@ -59,14 +76,19 @@ class SegSemDataset:
     def getImageAndLabel(self, i):
         assert i < self.nbImages
 
-        image = (
-            PIL.Image.open(self.pathTOdata + str(i) + "_x.png").convert("RGB").copy()
-        )
-        image = np.uint8(np.asarray(image))  # warning wh swapping
+        image = PIL.Image.open(self.pathTOdata + str(i) + "_x.png").convert("RGB")
+        image = np.uint8(np.asarray(image).copy())  # warning wh swapping
 
-        label = PIL.Image.open(self.pathTOdata + str(i) + "_y.png").convert("L").copy()
-        label = np.uint8(np.asarray(label))  # warning wh swapping
-        label = np.uint8(label != 0)
+        label = PIL.Image.open(self.pathTOdata + str(i) + "_y.png").convert("L")
+        label = np.asarray(label).copy()  # warning wh swapping
+
+        ###HACK degeu parce que dans le dataset c'est du 3x3
+        label = torch.Tensor(label)
+        label = -torch.nn.functional.max_pool2d(
+            -label, kernel_size=3, stride=1, padding=1
+        )
+
+        label = np.uint8(label.cpu().numpy() != 0)
 
         return image, label
 
@@ -194,65 +216,3 @@ class CIA:
         )
 
         return dataloader
-
-
-def largeforward(net, image, device="cuda", tilesize=128, stride=64):
-    net.eval()
-    with torch.no_grad():
-        pred = torch.zeros(1, 2, image.shape[2], image.shape[3]).to(device)
-        image = image.float().to(device)
-        for row in range(0, image.shape[2] - tilesize + 1, stride):
-            for col in range(0, image.shape[3] - tilesize + 1, stride):
-                tmp = net(image[:, :, row : row + tilesize, col : col + tilesize])
-                pred[0, :, row : row + tilesize, col : col + tilesize] += tmp[0]
-
-    return pred
-
-
-def distancetransform(y, size=4):
-    yy = 2.0 * y.unsqueeze(0) - 1
-    yyy = torch.nn.functional.avg_pool2d(
-        yy, kernel_size=2 * size + 1, stride=1, padding=size
-    )
-    D = 1.0 - 0.5 * (yy - yyy).abs()
-    return D[0]
-
-
-def etendre(x, size):
-    return torch.nn.functional.max_pool2d(
-        x, kernel_size=2 * size + 1, stride=1, padding=size
-    )
-
-
-class PoolWithHole(torch.nn.Module):
-    def __init__(self):
-        super(PoolWithHole, self).__init__()
-
-    def forward(self, x):
-        B, H, W = x.shape[0], x.shape[1], x.shape[2]
-        Xm = torch.zeros(B, H + 2, W + 2).cuda()
-        X = [Xm.clone() for i in range(9)]
-        for i in range(3):
-            for j in range(3):
-                if i != 1 or j != 1:
-                    X[i * 3 + j][:, i : i + H, j : j + W] = x[:, :, :]
-
-        for i in range(9):
-            Xm = torch.max(Xm, X[i])
-        return Xm[:, 1 : 1 + H, 1 : 1 + W]
-
-
-class HardNMS(torch.nn.Module):
-    def __init__(self):
-        super(HardNMS, self).__init__()
-        self.pool = PoolWithHole()
-
-    def forward(self, x, eps=0.1):
-        xp = x[:, 1, :, :] - x[:, 0, :, :] - eps
-        xp = torch.nn.functional.relu(xp)
-
-        xother = self.pool(xp)
-        xNMS = torch.nn.functional.relu(xp - xother)  # only the max survives
-
-        xNMS3 = etendre(xNMS, 1)
-        return xp * xNMS3 * 10
