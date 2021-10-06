@@ -83,12 +83,11 @@ class SegSemDataset:
         label = np.asarray(label).copy()  # warning wh swapping
 
         ###HACK degeu parce que dans le dataset c'est du 3x3
-        label = torch.Tensor(label)
         label = -torch.nn.functional.max_pool2d(
-            -label, kernel_size=3, stride=1, padding=1
+            -torch.Tensor(label).unsqueeze(0), kernel_size=3, stride=1, padding=1
         )
 
-        label = np.uint8(label.cpu().numpy() != 0)
+        label = np.uint8(label[0].cpu().numpy() != 0)
 
         return image, label
 
