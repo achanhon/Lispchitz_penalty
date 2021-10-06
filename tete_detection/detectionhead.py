@@ -96,7 +96,7 @@ class DetectionHead(torch.nn.Module):
         if torch.sum(x) == 0 or torch.sum(y) == 0:
             return [], None, None
         else:
-            x, y = torch.nonzero(x), torch.nonzero(y)
+            x, y = torch.nonzero(x).float(), torch.nonzero(y).float()
 
             X2 = torch.stack([torch.sum(x * x, dim=1)] * y.shape[0], dim=1)
             Y2 = torch.stack([torch.sum(y * y, dim=1)] * x.shape[0], dim=0)
