@@ -118,7 +118,7 @@ class DetectionHead(torch.nn.Module):
 
         x, y = x * (y10 == 1).float(), y * (x10 == 1).float()
 
-        pair, x, y = self.computepairing(x, y)
+        pair, _, _ = self.computepairing(x, y)
 
         good = len(pair)
         fa = torch.sum(x) - len(pair)

@@ -40,7 +40,7 @@ def computeperf(cm):
     else:
         out = torch.zeros(cm.shape[0], 3)
         for k in range(cm.shape[0]):
-            out[k] = perf(cm[k])
+            out[k] = computeperf(cm[k])
         return out
 
 
