@@ -79,12 +79,12 @@ with torch.no_grad():
                 debug = PIL.Image.fromarray(numpy.uint8(debug))
                 debug.save("build/" + str(nextI) + "_z.png")
 
-        print("perf=", dataloader.computegscore(cm[k]))
-        numpy.savetxt("build/logtest.txt", perf(cm).cpu().numpy())
+        print("perf=", dataloader.computeperf(cm[k]))
+        numpy.savetxt("build/logtest.txt", dataloader.computeperf(cm).cpu().numpy())
 
 print("-------- results ----------")
 for k, town in enumerate(cia.towns):
-    print(town, perf(cm[k]))
+    print(town, dataloader.computeperf(cm[k]))
 
 cm = torch.sum(cm, dim=0)
-print("cia", perf(cm))
+print("cia", dataloader.computeperf(cm))

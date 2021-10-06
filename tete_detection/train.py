@@ -49,32 +49,10 @@ print("train")
 import collections
 import random
 
-
-class DistanceVT(torch.nn.Module):
-    def __init__(self):
-        super(DistanceVT, self).__init__()
-
-        self.hackconv = torch.nn.Conv2d(1, 1, kernel_size=13, padding=6, bias=False)
-        w = torch.zeros(1, 1, 13, 13)
-        for i in range(13):
-            for j in range(13):
-                w[0][0][i][j] = (i - 6) * (i - 6) + (j - 6) * (j - 6)
-        w = torch.sqrt(w)
-        w = 1.0 / (1 + w)
-        self.hackconv.weight.data = w
-        self.hackconv = self.hackconv.cuda()
-
-    def forward(self, y):
-        yy = self.hackconv(y.unsqueeze(1)).detach()
-        return torch.clamp(yy[:, 0, :, :], 0, 1)
-
-
-criteriondice = smp.losses.dice.DiceLoss(mode="multiclass")
 optimizer = torch.optim.Adam(net.parameters(), lr=0.0001)
 meanloss = collections.deque(maxlen=200)
 nbepoch = 800
 batchsize = 32
-distanceVT = DistanceVT()
 for epoch in range(nbepoch):
     print("epoch=", epoch, "/", nbepoch)
 
@@ -83,33 +61,15 @@ for epoch in range(nbepoch):
 
     for x, y in XY:
         x, y = x.cuda(), y.cuda().float()
-        z = net(x)
-        zNMS = headNMS(z)
+        s = net(x)
 
-        # coarse loss
-        ycoarse = dataloader.etendre(y, 3)
-        DT = dataloader.distancetransform(ycoarse)
-        nb0, nb1 = torch.sum((ycoarse == 0).float()), torch.sum((ycoarse == 1).float())
-        weights = torch.Tensor([1, nb0 / (nb1 + 1) * 2]).cuda()
-        criterion = torch.nn.CrossEntropyLoss(weight=weights, reduction="none")
-        CE = criterion(z, ycoarse.long())
-        CE = torch.mean(CE * DT)
-        dice = criteriondice(z, ycoarse.long())
+        coarseloss = net.lossSegmentation(s, y)
+        fineloss = net.lossDetection(s, y)
 
         if epoch < 10:
-            loss = CE + dice * 0.1 + 1
+            loss = coarseloss * 0.9 + fineloss * 0.1
         else:
-            # fine loss
-            DVT = distanceVT(y)
-            softgood = torch.mean(zNMS * DVT)
-            softfa = torch.mean(zNMS * (DVT == 0).float())
-            zm = torch.nn.functional.relu(z[:, 0, :, :] - z[:, 1, :, :])
-            softmiss = torch.sum(zm * y)
-            softprecision = softgood / (softgood + fa + 0.00001)
-            softrecall = softgood / (softgood + softmiss + 0.00001)
-            softG = softprecision * softrecall
-
-            loss = CE + dice * 0.1 + 1.0 - softG
+            loss = coarseloss * 0.1 + fineloss * 0.9
 
         meanloss.append(loss.cpu().data.numpy())
         if epoch > 30:
@@ -129,19 +89,18 @@ for epoch in range(nbepoch):
         if random.randint(0, 30) == 0:
             print("loss=", (sum(meanloss) / len(meanloss)))
 
-        y5 = dataloader.etendre(y, 1)
-        zNMS5 = dataloader.etendre(zNMS.unsqueeze(0), 1)
-        good += torch.sum((zNMS > 0).float() * (y == 1).float())
-        fa += torch.sum((zNMS > 0).float() * (y5 == 0).float())
-        miss += torch.sum((zNMS5 == 0).float() * (y == 1).float())
+        with torch.no_grad():
+            z = net.headNMS(z[:, 1, :, :] - z[:, 0, :, :])
+            good_, fa_, miss_ = net.computegscore(z, y)
+            good += good_
+            fa += fa_
+            miss += miss_
 
     torch.save(net, "build/model.pth")
-    precision = good / (good + fa + 1)
-    rappel = good / (good + miss + 1)
-    gs = precision * rappel
-    print("perf", gs * 100, precision * 100, rappel * 100)
+    cm = dataloader.computeperf(torch.Tensor([good, fa, miss]))
+    print("perf", cm)
 
-    if gs * 100 > 92:
+    if cm[0] * 100 > 92:
         print("training stops after reaching high training accuracy")
         quit()
 print("training stops after reaching time limit")

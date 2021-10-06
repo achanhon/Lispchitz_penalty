@@ -34,16 +34,16 @@ def getindexeddata():
     return root, availabledata
 
 
-def computegscore(cm):
+def computeperf(cm):
     if len(cm.shape) == 1:
-        good, fa, miss = cm[0],cm[1],cm[2]
+        good, fa, miss = cm[0], cm[1], cm[2]
         if good == 0:
             precision = 0
             recall = 0
         else:
             precision = good / (good + fa + hardfa)
             recall = good / (good + miss + hardmiss)
-        return precision * recall, precision, recall
+        return torch.Tensor([precision * recall, precision, recall])
     else:
         out = torch.zeros(cm.shape[0], 3)
         for k in range(cm.shape[0]):
