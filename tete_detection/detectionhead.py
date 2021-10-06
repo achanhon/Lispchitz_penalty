@@ -64,7 +64,7 @@ class DetectionHead(torch.nn.Module):
             pred = torch.zeros(1, 2, x.shape[2], x.shape[3]).cuda()
             for row in range(0, x.shape[2] - tile + 1, stride):
                 for col in range(0, x.shape[3] - tile + 1, stride):
-                    tmp = self.backbone(x[0, :, row : row + tile, col : col + tile])
+                    tmp = self.backbone(x[:, :, row : row + tile, col : col + tile])
                     pred[0, :, row : row + tile, col : col + tile] += tmp[0]
 
         return globalresize(pred)
