@@ -186,7 +186,7 @@ class DetectionHead(torch.nn.Module):
         I = set([i for i, _ in pair])
         I = [i for i in range(ouX.shape[0]) if i not in I]
         for i in Y:
-            Y[ouY[i][0]][ouY[i][1]][ouY[i][2]] = 0.5
+            Y[ouX[i][0]][ouX[i][1]][ouX[i][2]] = 0.5
 
         faloss = criterion(xNMS, torch.zeros(y.shape).long().cuda())
         faloss = torch.sum(faloss * Y) / (torch.sum(Y) + 1)
