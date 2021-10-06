@@ -155,7 +155,7 @@ class DetectionHead(torch.nn.Module):
             J = set([j for _, j in pair])
             J = [j for j in range(ouY.shape[0]) if j not in J]
             for j in J:
-                Y[ouY[j][0]][ouY[j][1]][ouY[j][2]] = 0.5
+                Y[ouY[j][0]][ouY[j][1]][ouY[j][2]] = 0.1
 
         ## recall in area without positif
         x10 = etendre((x > 0).float(), 10)
@@ -181,14 +181,14 @@ class DetectionHead(torch.nn.Module):
 
         ## precision in area without y
         y10 = etendre(y, 10)
-        Y += 2 * (xNMS > 0).float() * (y10 == 0).float()
+        Y = 1.5 * (xNMS > 0).float() * (y10 == 0).float()
 
         ## precision in area with y
         if ouX is not None:
             I = set([i for i, _ in pair])
             I = [i for i in range(ouX.shape[0]) if i not in I]
             for i in I:
-                Y[ouX[i][0]][ouX[i][1]][ouX[i][2]] = 0.5
+                Y[ouX[i][0]][ouX[i][1]][ouX[i][2]] = 0.1
 
         faloss = criterion(s, torch.zeros(y.shape).long().cuda())
         faloss = torch.sum(faloss * Y) / (torch.sum(Y) + 1)
