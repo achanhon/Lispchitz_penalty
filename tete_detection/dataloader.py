@@ -34,8 +34,8 @@ def computeperf(cm):
             precision = 0
             recall = 0
         else:
-            precision = good / (good + fa + hardfa)
-            recall = good / (good + miss + hardmiss)
+            precision = good / (good + fa)
+            recall = good / (good + miss)
         return torch.Tensor([precision * recall, precision, recall])
     else:
         out = torch.zeros(cm.shape[0], 3)

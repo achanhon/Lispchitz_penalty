@@ -29,11 +29,11 @@ if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
 
 import segmentation_models_pytorch as smp
 import dataloader
+import detectionhead
 
 print("load model")
 with torch.no_grad():
     net = torch.load("build/model.pth")
-    headNMS = dataloader.HardNMS()
     net = net.cuda()
     net.eval()
 
