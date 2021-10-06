@@ -61,7 +61,7 @@ class DetectionHead(torch.nn.Module):
         x = power2resize(x)
 
         with torch.no_grad():
-            pred = torch.zeros(1, 2, x.shape[2], x.shape[3]).to(device)
+            pred = torch.zeros(1, 2, x.shape[2], x.shape[3]).cuda()
             for row in range(0, image.shape[2] - tile + 1, stride):
                 for col in range(0, image.shape[3] - tile + 1, stride):
                     tmp = self.backbone(x[0, :, row : row + tile, col : col + tile])
@@ -143,7 +143,7 @@ class DetectionHead(torch.nn.Module):
         xNMS = self.headforward(x)
 
         ### improve recall
-        Y = torch.zeros(y.shape)
+        Y = torch.zeros(y.shape).cuda()
 
         ## enforce correct pair
         pair, ouX, ouY = self.computepairing(xNMS > 0, y)
@@ -176,7 +176,7 @@ class DetectionHead(torch.nn.Module):
         recallloss = torch.sum(recallloss * Y) / (torch.sum(Y) + 1)
 
         ### improve precision
-        Y = torch.zeros(y.shape)
+        Y = torch.zeros(y.shape).cuda()
 
         ## precision in area without y
         y10 = etendre(y, 10)
