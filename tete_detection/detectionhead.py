@@ -102,8 +102,8 @@ class DetectionHead(torch.nn.Module):
             Y2 = torch.stack([torch.sum(y * y, dim=1)] * x.shape[0], dim=0)
             XY = X2 + Y2 - 2 * torch.matmul(x, y.t())
 
-            _, Dx = torch.min(D, dim=1)
-            _, Dy = torch.min(D, dim=0)
+            _, Dx = torch.min(XY, dim=1)
+            _, Dy = torch.min(XY, dim=0)
             pair = [i for i in range(x.shape[0]) if Dy[Dx[i]] == i]
             return pair, x, y
 
