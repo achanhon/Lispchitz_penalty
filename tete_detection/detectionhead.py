@@ -51,7 +51,7 @@ class DetectionHead(torch.nn.Module):
 
     def largeforward(self, x):
         tile, stride = 128, 32
-        h, w = x.shape[1], y.shape[2]
+        h, w = x.shape[1], x.shape[2]
         x = x.unsqueeze(0)
 
         globalresize = torch.nn.AdaptiveAvgPool2d((h, w))
@@ -151,10 +151,11 @@ class DetectionHead(torch.nn.Module):
             Y[ouX[i][0]][ouX[i][1]][ouX[i][2]] = 1
 
         ## recall in area with positif
-        J = set([j for _, j in pair])
-        J = [j for j in range(ouY.shape[0]) if j not in J]
-        for j in J:
-            Y[ouY[j][0]][ouY[j][1]][ouY[j][2]] = 0.5
+        if ouY is not None:
+            J = set([j for _, j in pair])
+            J = [j for j in range(ouY.shape[0]) if j not in J]
+            for j in J:
+                Y[ouY[j][0]][ouY[j][1]][ouY[j][2]] = 0.5
 
         ## recall in area without positif
         x10 = etendre((x > 0).float(), 10)
@@ -183,10 +184,11 @@ class DetectionHead(torch.nn.Module):
         Y += 2 * (xNMS > 0).float() * (y10 == 0).float()
 
         ## precision in area with y
-        I = set([i for i, _ in pair])
-        I = [i for i in range(ouX.shape[0]) if i not in I]
-        for i in I:
-            Y[ouX[i][0]][ouX[i][1]][ouX[i][2]] = 0.5
+        if ouX is not None:
+            I = set([i for i, _ in pair])
+            I = [i for i in range(ouX.shape[0]) if i not in I]
+            for i in I:
+                Y[ouX[i][0]][ouX[i][1]][ouX[i][2]] = 0.5
 
         faloss = criterion(s, torch.zeros(y.shape).long().cuda())
         faloss = torch.sum(faloss * Y) / (torch.sum(Y) + 1)
