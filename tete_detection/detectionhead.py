@@ -141,12 +141,17 @@ class DetectionHead(torch.nn.Module):
     def lossDetection(self, s, y):
         x = s[:, 1, :, :] - s[:, 0, :, :]
         xNMS = self.headforward(x)
+        y10 = etendre(y, 10)
+        x10 = etendre((xNMS > 0).float(), 10)
+
+        candidateX = (xNMS > 0).float() * (y10 == 1).float()
+        candidateY = y * (x10 > 0).float()
 
         ### improve recall
         Y = torch.zeros(y.shape).cuda()
 
         ## enforce correct pair
-        pair, ouX, ouY = self.computepairing(xNMS > 0, y)
+        pair, ouX, ouY = self.computepairing(candidateX, candidateY)
         for (i, j) in pair:
             Y[ouX[i][0]][ouX[i][1]][ouX[i][2]] = 1
 
@@ -158,7 +163,6 @@ class DetectionHead(torch.nn.Module):
                 Y[ouY[j][0]][ouY[j][1]][ouY[j][2]] = 0.1
 
         ## recall in area without positif
-        x10 = etendre((x > 0).float(), 10)
         y1 = torch.nonzero(y * (x10 == 0).float())
         for i in range(y1.shape[0]):
             im, row, col = y1[i][0], y1[i][1], y1[i][2]
