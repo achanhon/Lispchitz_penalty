@@ -72,8 +72,8 @@ class DetectionHead(torch.nn.Module):
     def forward(self, x):
         if len(x.shape) == 3:
             segmentation = self.largeforward(x)
-            x = segmentation[:, 1, :, :] - segmentation[:, 0, :, :]
-            return self.headforward(x), x
+            x = segmentation[0, 1, :, :] - segmentation[0, 0, :, :]
+            return self.headforward(x.unsqueeze(0)), x
         else:
             return self.backbone(x)
 
