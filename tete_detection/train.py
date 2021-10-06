@@ -92,7 +92,7 @@ for epoch in range(nbepoch):
             print("loss=", (sum(meanloss) / len(meanloss)))
 
         with torch.no_grad():
-            z = net.headNMS(z[:, 1, :, :] - z[:, 0, :, :])
+            z = net.headforward(z[:, 1, :, :] - z[:, 0, :, :])
             good_, fa_, miss_ = net.computegscore(z, y)
             good += good_
             fa += fa_
