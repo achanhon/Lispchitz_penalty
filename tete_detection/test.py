@@ -70,7 +70,7 @@ with torch.no_grad():
                 debug = y.cpu().numpy() * 255
                 debug = PIL.Image.fromarray(numpy.uint8(debug))
                 debug.save("build/" + str(nextI) + "_y.png")
-                debug = (s[0, 1, :, :] > s[0, 0, :, :]).float()
+                debug = (s > 0).float()
                 debug = debug.cpu().numpy() * 255
                 debug = PIL.Image.fromarray(numpy.uint8(debug))
                 debug.save("build/" + str(nextI) + "_Z.png")
