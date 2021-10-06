@@ -31,13 +31,14 @@ import segmentation_models_pytorch as smp
 import dataloader
 
 print("define model")
-net = smp.Unet(
-    encoder_name="efficientnet-b7",
-    encoder_weights="imagenet",
-    in_channels=3,
-    classes=2,
+net = DetectionHead(
+    smp.Unet(
+        encoder_name="efficientnet-b7",
+        encoder_weights="imagenet",
+        in_channels=3,
+        classes=2,
+    )
 )
-headNMS = dataloader.HardNMS()
 net = net.cuda()
 net.train()
 
