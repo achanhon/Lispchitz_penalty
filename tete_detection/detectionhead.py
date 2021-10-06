@@ -188,7 +188,7 @@ class DetectionHead(torch.nn.Module):
         for i in I:
             Y[ouX[i][0]][ouX[i][1]][ouX[i][2]] = 0.5
 
-        faloss = criterion(xNMS, torch.zeros(y.shape).long().cuda())
+        faloss = criterion(s, torch.zeros(y.shape).long().cuda())
         faloss = torch.sum(faloss * Y) / (torch.sum(Y) + 1)
 
         return faloss + recallloss
