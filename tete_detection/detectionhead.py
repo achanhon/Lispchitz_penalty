@@ -185,7 +185,7 @@ class DetectionHead(torch.nn.Module):
         ## precision in area with y
         I = set([i for i, _ in pair])
         I = [i for i in range(ouX.shape[0]) if i not in I]
-        for i in Y:
+        for i in I:
             Y[ouX[i][0]][ouX[i][1]][ouX[i][2]] = 0.5
 
         faloss = criterion(xNMS, torch.zeros(y.shape).long().cuda())
