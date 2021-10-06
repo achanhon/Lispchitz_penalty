@@ -172,7 +172,7 @@ class DetectionHead(torch.nn.Module):
             Y[im][rm + ou[0][0]][cm + ou[0][1]] = 1.5
 
         criterion = torch.nn.CrossEntropyLoss(reduction="none")
-        recallloss = criterion(s, torch.ones(y.shape).long())
+        recallloss = criterion(s, torch.ones(y.shape).long().cuda())
         recallloss = torch.sum(recallloss * Y) / (torch.sum(Y) + 1)
 
         ### improve precision
@@ -188,7 +188,7 @@ class DetectionHead(torch.nn.Module):
         for i in Y:
             Y[ouY[i][0]][ouY[i][1]][ouY[i][2]] = 0.5
 
-        faloss = criterion(xNMS, torch.zeros(y.shape).long())
+        faloss = criterion(xNMS, torch.zeros(y.shape).long().cuda())
         faloss = torch.sum(faloss * Y) / (torch.sum(Y) + 1)
 
         return faloss + recallloss
