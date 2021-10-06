@@ -154,7 +154,7 @@ class DetectionHead(torch.nn.Module):
         J = set([j for _, j in pair])
         J = [j for j in range(ouY.shape[0]) if j not in J]
         for j in J:
-            Y[ouY[i][0]][ouY[i][1]][ouY[i][2]] = 0.5
+            Y[ouY[j][0]][ouY[j][1]][ouY[j][2]] = 0.5
 
         ## recall in area without positif
         x10 = etendre((x > 0).float(), 10)
