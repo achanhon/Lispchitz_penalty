@@ -28,10 +28,11 @@ if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
     sys.path.append("/d/achanhon/github/segmentation_models.pytorch")
 
 import segmentation_models_pytorch as smp
+import detectionhead
 import dataloader
 
 print("define model")
-net = DetectionHead(
+net = detectionhead.DetectionHead(
     smp.Unet(
         encoder_name="efficientnet-b7",
         encoder_weights="imagenet",
