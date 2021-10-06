@@ -105,7 +105,7 @@ class DetectionHead(torch.nn.Module):
             _, Dx = torch.min(XY, dim=1)
             _, Dy = torch.min(XY, dim=0)
             pair = [(i, Dx[i]) for i in range(x.shape[0]) if Dy[Dx[i]] == i]
-            return pair, x, y
+            return pair, x.long(), y.long()
 
     def computegscore(self, x, y):
         if len(y.shape) == 2:
