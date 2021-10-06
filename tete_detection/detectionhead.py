@@ -139,59 +139,61 @@ class DetectionHead(torch.nn.Module):
         return CE
 
     def lossDetection(self, s, y):
-        x = s[:, 1, :, :] - s[:, 0, :, :]
-        xNMS = self.headforward(x)
-        y10 = etendre(y, 10)
-        x10 = etendre((xNMS > 0).float(), 10)
-
-        candidateX = (xNMS > 0).float() * (y10 == 1).float()
-        candidateY = y * (x10 > 0).float()
-
-        ### improve recall
-        Y = torch.zeros(y.shape).cuda()
-
-        ## enforce correct pair
-        pair, ouX, ouY = self.computepairing(candidateX, candidateY)
-        for (i, j) in pair:
-            Y[ouX[i][0]][ouX[i][1]][ouX[i][2]] = 1
-
-        ## recall in area with positif
-        if ouY is not None:
-            J = set([j for _, j in pair])
-            J = [j for j in range(ouY.shape[0]) if j not in J]
-            for j in J:
-                Y[ouY[j][0]][ouY[j][1]][ouY[j][2]] = 0.1
-
-        ## recall in area without positif
-        y1 = torch.nonzero(y * (x10 == 0).float())
-        for i in range(y1.shape[0]):
-            im, row, col = y1[i][0], y1[i][1], y1[i][2]
-            rm = max(row - 10, 0)
-            rM = min(row + 10, y.shape[1])
-            cm = max(col - 10, 0)
-            cM = min(col + 10, y.shape[2])
-
-            best = torch.amax(x[y1[i][0], rm:rM, cm:cM])
-            ou = torch.nonzero(x[y1[i][0], rm:rM, cm:cM] == best)
-
-            Y[im][rm + ou[0][0]][cm + ou[0][1]] = 1.5
-
         criterion = torch.nn.CrossEntropyLoss(reduction="none")
+        with torch.no_grad():
+            x = (s[:, 1, :, :] - s[:, 0, :, :]).clone()
+            xNMS = self.headforward(x)
+            y10 = etendre(y, 10)
+            x10 = etendre((xNMS > 0).float(), 10)
+
+            candidateX = (xNMS > 0).float() * (y10 == 1).float()
+            candidateY = y * (x10 > 0).float()
+
+            ### improve recall
+            Y = torch.zeros(y.shape).cuda()
+
+            ## enforce correct pair
+            pair, ouX, ouY = self.computepairing(candidateX, candidateY)
+            for (i, j) in pair:
+                Y[ouX[i][0]][ouX[i][1]][ouX[i][2]] = 1
+
+            ## recall in area with positif
+            if ouY is not None:
+                J = set([j for _, j in pair])
+                J = [j for j in range(ouY.shape[0]) if j not in J]
+                for j in J:
+                    Y[ouY[j][0]][ouY[j][1]][ouY[j][2]] = 0.1
+
+            ## recall in area without positif
+            y1 = torch.nonzero(y * (x10 == 0).float())
+            for i in range(y1.shape[0]):
+                im, row, col = y1[i][0], y1[i][1], y1[i][2]
+                rm = max(row - 10, 0)
+                rM = min(row + 10, y.shape[1])
+                cm = max(col - 10, 0)
+                cM = min(col + 10, y.shape[2])
+
+                best = torch.amax(x[y1[i][0], rm:rM, cm:cM])
+                ou = torch.nonzero(x[y1[i][0], rm:rM, cm:cM] == best)
+
+                Y[im][rm + ou[0][0]][cm + ou[0][1]] = 1.5
+
         recallloss = criterion(s, torch.ones(y.shape).long().cuda())
         recallloss = torch.sum(recallloss * Y) / (torch.sum(Y) + 1)
 
-        ### improve precision
-        Y = torch.zeros(y.shape).cuda()
+        with torch.no_grad():
+            ### improve precision
+            Y = torch.zeros(y.shape).cuda()
 
-        ## precision in area without y
-        Y = 1.5 * (xNMS > 0).float() * (y10 == 0).float()
+            ## precision in area without y
+            Y = 1.5 * (xNMS > 0).float() * (y10 == 0).float()
 
-        ## precision in area with y
-        if ouX is not None:
-            I = set([i for i, _ in pair])
-            I = [i for i in range(ouX.shape[0]) if i not in I]
-            for i in I:
-                Y[ouX[i][0]][ouX[i][1]][ouX[i][2]] = 0.1
+            ## precision in area with y
+            if ouX is not None:
+                I = set([i for i, _ in pair])
+                I = [i for i in range(ouX.shape[0]) if i not in I]
+                for i in I:
+                    Y[ouX[i][0]][ouX[i][1]][ouX[i][2]] = 0.1
 
         faloss = criterion(s, torch.zeros(y.shape).long().cuda())
         faloss = torch.sum(faloss * Y) / (torch.sum(Y) + 1)
