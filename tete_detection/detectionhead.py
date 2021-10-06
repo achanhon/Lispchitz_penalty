@@ -184,7 +184,6 @@ class DetectionHead(torch.nn.Module):
         Y = torch.zeros(y.shape).cuda()
 
         ## precision in area without y
-        y10 = etendre(y, 10)
         Y = 1.5 * (xNMS > 0).float() * (y10 == 0).float()
 
         ## precision in area with y
