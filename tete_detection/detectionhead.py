@@ -120,7 +120,7 @@ class DetectionHead(torch.nn.Module):
         fa = torch.sum(z) - len(pair)
         miss = torch.sum(y) - len(pair)
 
-        return good, fa + hardfa, miss + hardmiss
+        return tensor.Tensor([good, fa + hardfa, miss + hardmiss])
 
     def lossSegmentation(self, s, y):
         y10 = etendre(y.float(), 10)
