@@ -41,29 +41,25 @@ class DetectionHead(torch.nn.Module):
         self.pool = PoolWithHole()
 
     def headforward(self, x):
-        eps = 0.01
-        xp = torch.nn.functional.relu(x - eps)
+        xp = torch.nn.functional.relu(x)
         xm = self.pool(xp)
 
         localmax = (x > xm).float()
-        # localmaxwithgrad = torch.nn.functional.relu(x - xm)
-        return xp * localmax  # , xp * localmaxwithgrad
+        return xp * localmax
 
     def largeforward(self, x):
         tile, stride = 128, 32
         h, w = x.shape[1], x.shape[2]
-        x = x.unsqueeze(0)
+        h32, w32 = ((h // stride) * stride, (w // stride) * stride)
 
         globalresize = torch.nn.AdaptiveAvgPool2d((h, w))
-        power2resize = torch.nn.AdaptiveAvgPool2d(
-            ((h // stride) * stride, (w // stride) * stride)
-        )
-        x = power2resize(x)
+        power2resize = torch.nn.AdaptiveAvgPool2d((h32, w32))
+        x = power2resize(x.unsqueeze(0))
 
         with torch.no_grad():
-            pred = torch.zeros(1, 2, x.shape[2], x.shape[3]).cuda()
-            for row in range(0, x.shape[2] - tile + 1, stride):
-                for col in range(0, x.shape[3] - tile + 1, stride):
+            pred = torch.zeros(1, 2, h32, w32).cuda()
+            for row in range(0, h32 - tile + 1, stride):
+                for col in range(0, w32 - tile + 1, stride):
                     tmp = self.backbone(x[:, :, row : row + tile, col : col + tile])
                     pred[0, :, row : row + tile, col : col + tile] += tmp[0]
 
