@@ -73,12 +73,12 @@ class DetectionHead(torch.nn.Module):
         else:
             return self.backbone(x)
 
-    def computeiou(self, x, y):
+    def computeiou(self, s, y):
         if len(y.shape) == 2:
             y = y.unsqueeze(0)
 
         y = etendre(y.float(), 10)
-        s = x[:, 1, :, :] - x[:, 0, :, :]
+        s = s[:, 1, :, :] - s[:, 0, :, :]
         cm00 = torch.sum((s <= 0).float() * (y == 0).float())
         cm11 = torch.sum((s > 0).float() * (y == 1).float())
         cm01 = torch.sum((s <= 0).float() * (y == 1).float())
@@ -88,36 +88,36 @@ class DetectionHead(torch.nn.Module):
         iou = cm00 / (cm00 + cm01 + cm10) + cm11 / (cm11 + cm01 + cm10)
         return iou / 2, accu
 
-    def computepairing(self, x, y):
-        if torch.sum(x) == 0 or torch.sum(y) == 0:
+    def computepairing(self, z, y):
+        if torch.sum(z) == 0 or torch.sum(y) == 0:
             return [], None, None
         else:
-            x, y = torch.nonzero(x).float(), torch.nonzero(y).float()
+            z, y = torch.nonzero(z).float(), torch.nonzero(y).float()
 
-            X2 = torch.stack([torch.sum(x * x, dim=1)] * y.shape[0], dim=1)
-            Y2 = torch.stack([torch.sum(y * y, dim=1)] * x.shape[0], dim=0)
-            XY = X2 + Y2 - 2 * torch.matmul(x, y.t())
+            Z2 = torch.stack([torch.sum(z * z, dim=1)] * y.shape[0], dim=1)
+            Y2 = torch.stack([torch.sum(y * y, dim=1)] * z.shape[0], dim=0)
+            D = Z2 + Y2 - 2 * torch.matmul(z, y.t())
 
-            _, Dx = torch.min(XY, dim=1)
-            _, Dy = torch.min(XY, dim=0)
+            _, Dx = torch.min(D, dim=1)
+            _, Dy = torch.min(D, dim=0)
             pair = [(i, Dx[i]) for i in range(x.shape[0]) if Dy[Dx[i]] == i]
-            return pair, x.long(), y.long()
+            return pair, z.long(), y.long()
 
-    def computegscore(self, x, y):
+    def computegscore(self, z, y):
         if len(y.shape) == 2:
             y = y.unsqueeze(0)
 
-        x, y = (x > 0).float(), y.float()
-        x10, y10 = etendre(x, 10), etendre(y, 10)
-        hardfa = torch.sum((x == 1).float() * (y10 == 0).float())
-        hardmiss = torch.sum((x10 == 0).float() * (y == 1).float())
+        z, y = (z > 0).float(), y.float()
+        z10, y10 = etendre(z, 10), etendre(y, 10)
+        hardfa = torch.sum((z == 1).float() * (y10 == 0).float())
+        hardmiss = torch.sum((y == 1).float() * (z10 == 0).float())
 
-        x, y = x * (y10 == 1).float(), y * (x10 == 1).float()
+        z, y = z * (y10 == 1).float(), y * (z10 == 1).float()
 
-        pair, _, _ = self.computepairing(x, y)
+        pair, _, _ = self.computepairing(z, y)
 
         good = len(pair)
-        fa = torch.sum(x) - len(pair)
+        fa = torch.sum(z) - len(pair)
         miss = torch.sum(y) - len(pair)
 
         return good, fa + hardfa, miss + hardmiss
@@ -136,62 +136,46 @@ class DetectionHead(torch.nn.Module):
 
     def lossDetection(self, s, y):
         criterion = torch.nn.CrossEntropyLoss(reduction="none")
+
+        Y = torch.zeros(y.shape).cuda()
         with torch.no_grad():
-            x = (s[:, 1, :, :] - s[:, 0, :, :]).clone()
-            xNMS = self.headforward(x)
+            z = (s[:, 1, :, :] - s[:, 0, :, :]).clone()
+            zNMS = self.headforward(z)
             y10 = etendre(y, 10)
-            x10 = etendre((xNMS > 0).float(), 10)
+            z10 = etendre((zNMS > 0).float(), 10)
 
-            candidateX = (xNMS > 0).float() * (y10 == 1).float()
-            candidateY = y * (x10 > 0).float()
+            candidateZ = (zNMS > 0).float() * (y10 == 1).float()
+            candidateY = y * (z10 > 0).float()
 
-            ### improve recall
-            Y = torch.zeros(y.shape).cuda()
-
-            ## enforce correct pair
-            pair, ouX, ouY = self.computepairing(candidateX, candidateY)
+            ## good
+            pair, ouX, ouY = self.computepairing(candidateZ, candidateY)
             for (i, j) in pair:
                 Y[ouX[i][0]][ouX[i][1]][ouX[i][2]] = 1
 
-            ## recall in area with positif
+            ## miss: multiple vt for 1 detection
             if ouY is not None:
                 J = set([j for _, j in pair])
                 J = [j for j in range(ouY.shape[0]) if j not in J]
                 for j in J:
                     Y[ouY[j][0]][ouY[j][1]][ouY[j][2]] = 0.1
 
-            ## recall in area without positif
-            y1 = torch.nonzero(y * (x10 == 0).float())
-            for i in range(y1.shape[0]):
-                im, row, col = y1[i][0], y1[i][1], y1[i][2]
-                rm = max(row - 10, 0)
-                rM = min(row + 10, y.shape[1])
-                cm = max(col - 10, 0)
-                cM = min(col + 10, y.shape[2])
+            ## hard miss detection
+            hardmiss = y * (z10 == 0).float()
+            Y += 1.1 * hardmiss
 
-                best = torch.amax(x[y1[i][0], rm:rM, cm:cM])
-                ou = torch.nonzero(x[y1[i][0], rm:rM, cm:cM] == best)
+            ## hard false alarm
+            hardfa = (xNMS > 0).float() * (y10 == 0).float()
+            Y -= 1.1 * hardfa
 
-                Y[im][rm + ou[0][0]][cm + ou[0][1]] = 1.5
-
-        recallloss = criterion(s, torch.ones(y.shape).long().cuda())
-        recallloss = torch.sum(recallloss * Y) / (torch.sum(Y) + 1)
-
-        with torch.no_grad():
-            ### improve precision
-            Y = torch.zeros(y.shape).cuda()
-
-            ## precision in area without y
-            Y = 1.5 * (xNMS > 0).float() * (y10 == 0).float()
-
-            ## precision in area with y
+            ## double detection
             if ouX is not None:
                 I = set([i for i, _ in pair])
                 I = [i for i in range(ouX.shape[0]) if i not in I]
                 for i in I:
-                    Y[ouX[i][0]][ouX[i][1]][ouX[i][2]] = 0.1
+                    Y[ouX[i][0]][ouX[i][1]][ouX[i][2]] = -0.1
 
-        faloss = criterion(s, torch.zeros(y.shape).long().cuda())
-        faloss = torch.sum(faloss * Y) / (torch.sum(Y) + 1)
+        # entropy on hard pixel only
+        CE = criterion(s, (Y > 0).long())
+        loss = torch.sum(CE * Y.abs()) / (torch.sum(Y.abs()) + 1)
 
         return faloss + recallloss
