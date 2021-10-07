@@ -157,7 +157,7 @@ class DetectionHead(torch.nn.Module):
                 J = set([j for _, j in pair])
                 J = [j for j in range(ouY.shape[0]) if j not in J]
                 for j in J:
-                    Y[ouY[j][0]][ouY[j][1]][ouY[j][2]] = 0.1
+                    Y[ouY[j][0]][ouY[j][1]][ouY[j][2]] = 0.3
 
             ## hard miss detection
             hardmiss = y * (z10 == 0).float()
@@ -172,7 +172,7 @@ class DetectionHead(torch.nn.Module):
                 I = set([i for i, _ in pair])
                 I = [i for i in range(ouZ.shape[0]) if i not in I]
                 for i in I:
-                    Y[ouZ[i][0]][ouZ[i][1]][ouZ[i][2]] = -0.1
+                    Y[ouZ[i][0]][ouZ[i][1]][ouZ[i][2]] = -0.3
 
         # entropy on hard pixel only
         CE = criterion(s, (Y > 0).long())

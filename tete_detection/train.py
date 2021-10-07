@@ -59,7 +59,7 @@ for epoch in range(nbepoch):
     print("epoch=", epoch, "/", nbepoch)
 
     XY = cia.getrandomtiles(128, batchsize)
-    miss, fa, good = torch.zeros(1).cuda(), torch.zeros(1).cuda(), torch.zeros(1).cuda()
+    stats = torch.zeros(3).cuda()
 
     for x, y in XY:
         x, y = x.cuda(), y.cuda().float()
@@ -93,14 +93,11 @@ for epoch in range(nbepoch):
 
         with torch.no_grad():
             z = net.headforward(s[:, 1, :, :] - s[:, 0, :, :])
-            good_, fa_, miss_ = net.computegscore(z, y)
-            good += good_
-            fa += fa_
-            miss += miss_
+            stats += net.computegscore(z, y)
 
     torch.save(net, "build/model.pth")
-    cm = dataloader.computeperf(torch.Tensor([good, fa, miss]))
-    print("perf", cm)
+    perfs = dataloader.computeperf(stats)
+    print("perf", perfs)
 
     if cm[0] * 100 > 92:
         print("training stops after reaching high training accuracy")

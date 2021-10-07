@@ -45,7 +45,7 @@ import numpy
 import PIL
 from PIL import Image
 
-cm = torch.zeros((len(cia.towns), 3)).cuda()
+stats = torch.zeros((len(cia.towns), 3)).cuda()
 with torch.no_grad():
     for k, town in enumerate(cia.towns):
         print(k, town)
@@ -56,11 +56,7 @@ with torch.no_grad():
             y = torch.Tensor(label).cuda()
 
             z, s = net(x)
-            good, fa, miss = net.computegscore(z, y)
-
-            cm[k][0] += good
-            cm[k][1] += fa
-            cm[k][2] += miss
+            stats[k] += net.computegscore(z, y)
 
             if town in ["isprs/test", "saclay/test"]:
                 nextI = len(os.listdir("build"))
@@ -79,12 +75,12 @@ with torch.no_grad():
                 debug = PIL.Image.fromarray(numpy.uint8(debug))
                 debug.save("build/" + str(nextI) + "_z.png")
 
-        print("perf=", dataloader.computeperf(cm[k]))
-        numpy.savetxt("build/logtest.txt", dataloader.computeperf(cm).cpu().numpy())
+        print("perf=", dataloader.computeperf(stats[k]))
+        numpy.savetxt("build/logtest.txt", dataloader.computeperf(stats).cpu().numpy())
 
 print("-------- results ----------")
 for k, town in enumerate(cia.towns):
-    print(town, dataloader.computeperf(cm[k]))
+    print(town, dataloader.computeperf(stats[k]))
 
-cm = torch.sum(cm, dim=0)
-print("cia", dataloader.computeperf(cm))
+stats = torch.sum(stats, dim=0)
+print("cia", dataloader.computeperf(stats))
