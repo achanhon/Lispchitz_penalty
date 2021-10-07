@@ -99,7 +99,7 @@ for epoch in range(nbepoch):
     perfs = dataloader.computeperf(stats)
     print("perf", perfs)
 
-    if cm[0] * 100 > 92:
+    if perfs[0] * 100 > 92:
         print("training stops after reaching high training accuracy")
         quit()
 print("training stops after reaching time limit")
