@@ -177,5 +177,4 @@ class DetectionHead(torch.nn.Module):
         # entropy on hard pixel only
         CE = criterion(s, (Y > 0).long())
         loss = torch.sum(CE * Y.abs()) / (torch.sum(Y.abs()) + 1)
-
-        return faloss + recallloss
+        return loss
