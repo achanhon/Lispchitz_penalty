@@ -98,9 +98,9 @@ class DetectionHead(torch.nn.Module):
             Y2 = torch.stack([torch.sum(y * y, dim=1)] * z.shape[0], dim=0)
             D = Z2 + Y2 - 2 * torch.matmul(z, y.t())
 
-            _, Dx = torch.min(D, dim=1)
+            _, Dz = torch.min(D, dim=1)
             _, Dy = torch.min(D, dim=0)
-            pair = [(i, Dx[i]) for i in range(x.shape[0]) if Dy[Dx[i]] == i]
+            pair = [(i, Dz[i]) for i in range(z.shape[0]) if Dy[Dz[i]] == i]
             return pair, z.long(), y.long()
 
     def computegscore(self, z, y):
@@ -148,9 +148,9 @@ class DetectionHead(torch.nn.Module):
             candidateY = y * (z10 > 0).float()
 
             ## good
-            pair, ouX, ouY = self.computepairing(candidateZ, candidateY)
+            pair, ouZ, ouY = self.computepairing(candidateZ, candidateY)
             for (i, j) in pair:
-                Y[ouX[i][0]][ouX[i][1]][ouX[i][2]] = 1
+                Y[ouZ[i][0]][ouZ[i][1]][ouZ[i][2]] = 1
 
             ## miss: multiple vt for 1 detection
             if ouY is not None:
@@ -164,15 +164,15 @@ class DetectionHead(torch.nn.Module):
             Y += 1.1 * hardmiss
 
             ## hard false alarm
-            hardfa = (xNMS > 0).float() * (y10 == 0).float()
+            hardfa = (zNMS > 0).float() * (y10 == 0).float()
             Y -= 1.1 * hardfa
 
             ## double detection
-            if ouX is not None:
+            if ouZ is not None:
                 I = set([i for i, _ in pair])
-                I = [i for i in range(ouX.shape[0]) if i not in I]
+                I = [i for i in range(ouZ.shape[0]) if i not in I]
                 for i in I:
-                    Y[ouX[i][0]][ouX[i][1]][ouX[i][2]] = -0.1
+                    Y[ouZ[i][0]][ouZ[i][1]][ouZ[i][2]] = -0.1
 
         # entropy on hard pixel only
         CE = criterion(s, (Y > 0).long())
