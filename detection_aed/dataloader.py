@@ -1,5 +1,11 @@
 import numpy as np
 import os
+import sys
+import PIL
+from PIL import Image
+import torch
+import random
+import csv
 
 
 def symetrie(x, y, i, j, k):
@@ -12,108 +18,74 @@ def symetrie(x, y, i, j, k):
     return x.copy(), y.copy()
 
 
-def getindexeddata():
-    whereIam = os.uname()[1]
-
-    availabledata = ["dfc", "vedai", "saclay", "isprs", "little_xview", "dota"]
-
-    if whereIam in ["super", "wdtim719z"]:
-        root = "/data/CIA/"
-    if whereIam in ["ldtis706z"]:
-        root = "/media/achanhon/bigdata/data/CIA/"
-    if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
-        root = "/scratchf/CIA/"
-
-    return root, availabledata
-
-
 def computeperf(cm):
-    if len(cm.shape) == 1:
-        good, fa, miss = cm[0], cm[1], cm[2]
-        if good == 0:
-            precision = 0
-            recall = 0
-        else:
-            precision = good / (good + fa)
-            recall = good / (good + miss)
-        return torch.Tensor([precision * recall, precision, recall])
+    good, fa, miss = cm[0], cm[1], cm[2]
+    if good == 0:
+        precision = 0
+        recall = 0
     else:
-        out = torch.zeros(cm.shape[0], 3)
-        for k in range(cm.shape[0]):
-            out[k] = computeperf(cm[k])
-        return out
+        precision = good / (good + fa)
+        recall = good / (good + miss)
+    return torch.Tensor([precision * recall, precision, recall])
 
 
-import PIL
-from PIL import Image
-import torch
-import random
+class AED:
+    def __init__(self, flag):
+        assert flag in ["train", "test"]
+        if flag == "train":
+            self.root = "/data/AED/training_images/"
+            pathtovt = "/data/AED/training_elephants.csv"
+        else:
+            self.root = "/data/AED/test_images/"
+            pathtovt = "/data/AED/test_elephants.csv"
 
+        print("reading csv file", pathtovt)
+        self.labels = {}
+        with open(pathtovt, "r") as csvfile:
+            text = csv.reader(csvfile, delimiter=",")
+            for line in text:
+                if line[0] not in self.labels:
+                    self.labels[line[0]] = []
+                self.labels[line[0]].append((line[1], line[2]))
 
-class SegSemDataset:
-    def __init__(self, pathTOdata):
-        self.pathTOdata = pathTOdata
+        self.names = list(self.labels.keys())
+        print("data successfully loaded")
 
-        self.nbImages = 0
-        while os.path.exists(
-            self.pathTOdata + str(self.nbImages) + "_x.png"
-        ) and os.path.exists(self.pathTOdata + str(self.nbImages) + "_y.png"):
-            self.nbImages += 1
-        if self.nbImages == 0:
-            print("wrong path", self.pathTOdata)
-            quit()
+    def getImageAndLabel(self, name, torchformat=False):
+        assert name in self.labels
 
-    ###
-    ### get the hole image
-    ### for test usage -- or in internal call for extracting crops
-    def getImageAndLabel(self, i):
-        assert i < self.nbImages
+        image = PIL.Image.open(self.root + name + ".jpg").convert("RGB")
+        image = np.uint8(np.asarray(image).copy())
 
-        image = PIL.Image.open(self.pathTOdata + str(i) + "_x.png").convert("RGB")
-        image = np.uint8(np.asarray(image).copy())  # warning wh swapping
+        mask = np.zeros((image.shape[0], image.shape[1]))
+        points = self.labels[name]
+        for c, r in points:
+            mask[int(r)][int(c)] = 1
 
-        label = PIL.Image.open(self.pathTOdata + str(i) + "_y.png").convert("L")
-        label = np.asarray(label).copy()  # warning wh swapping
+        if torchformat:
+            x = torch.Tensor(np.transpose(image, axes=(2, 0, 1)))
+            return x.unsqueeze(0), torch.Tensor(mask)
+        else:
+            return image, mask
 
-        ###HACK degeu parce que dans le dataset c'est du 3x3
-        label = -torch.nn.functional.max_pool2d(
-            -torch.Tensor(label).unsqueeze(0), kernel_size=3, stride=1, padding=1
-        )
-
-        label = np.uint8(label[0].cpu().numpy() != 0)
-
-        return image, label
-
-    ###
-    ### get randomcrops + symetrie
-    ### get train usage
-    def getrawrandomtiles(self, nbtiles, tilesize, nbpos=0):
-        XY = []
-        nbtilesperimage = int(nbtiles / self.nbImages + 1)
+    def getbatchloader(self, nbtiles=10000, tilesize=128, batchsize=32, nbpos=1):
+        NB = nbtiles // len(self.names) + 1
 
         # crop
-        for name in range(self.nbImages):
-            # nbtilesperimage*probaOnImage==nbtiles
-            if (
-                nbtiles < self.nbImages
-                and random.randint(0, int(nbtiles + 1)) > nbtilesperimage
-            ):
-                continue
+        XY = []
+        for name in self.names:
+            image, label = self.getImageAndLabel(name, torchformat=False)
 
-            image, label = self.getImageAndLabel(name)
+            # random crop
+            row = np.random.randint(0, image.shape[0] - tilesize - 2, size=NB)
+            col = np.random.randint(0, image.shape[1] - tilesize - 2, size=NB)
 
-            row = np.random.randint(
-                0, image.shape[0] - tilesize - 2, size=nbtilesperimage
-            )
-            col = np.random.randint(
-                0, image.shape[1] - tilesize - 2, size=nbtilesperimage
-            )
-
-            for i in range(nbtilesperimage):
+            for i in range(NB):
                 im = image[row[i] : row[i] + tilesize, col[i] : col[i] + tilesize, :]
                 mask = label[row[i] : row[i] + tilesize, col[i] : col[i] + tilesize]
                 XY.append((im.copy(), mask.copy()))
 
+            # positive crop
             if nbpos != 0 and np.sum(label) > 1:
                 row, col = np.nonzero(label)
                 l = [(row[i], col[i]) for i in range(row.shape[0])]
@@ -137,65 +109,6 @@ class SegSemDataset:
             (symetrie(x, y, symetrieflag[i][0], symetrieflag[i][1], symetrieflag[i][2]))
             for i, (x, y) in enumerate(XY)
         ]
-        return XY
-
-
-class CIA:
-    def __init__(self, flag, custom=None):
-        assert flag in ["train", "test", "custom"]
-
-        self.root, self.towns = getindexeddata()
-        if flag == "custom":
-            self.towns = custom
-        else:
-            if flag == "train":
-                self.towns = [town + "/train" for town in self.towns if town != "isprs"]
-            else:
-                self.towns = [town + "/test" for town in self.towns] + ["isprs/train"]
-
-        self.data = {}
-        self.nbImages = 0
-        for town in self.towns:
-            self.data[town] = SegSemDataset(self.root + town + "/")
-            self.nbImages += self.data[town].nbImages
-
-        print(
-            "indexing cia (mode",
-            flag,
-            "):",
-            len(self.towns),
-            "towns found (",
-            self.towns,
-            ") with a total of",
-            self.nbImages,
-            "images",
-        )
-
-    def getrandomtiles(self, tilesize, batchsize):
-        nbtiles = {}
-        nbtiles["vedai"] = (1, 5)  # very small image
-
-        nbtiles["isprs"] = (20, 100)  # small image
-        nbtiles["dfc"] = (20, 100)
-
-        nbtiles["dota"] = (5, 25)  # small image but large dataset
-
-        nbtiles["saclay"] = (100, 500)  # medium image
-
-        nbtiles["little_xview"] = (100, 100)  # medium image with many image with no car
-
-        tmp = {}
-        for key in nbtiles:
-            tmp[key + "/train"] = nbtiles[key]
-            tmp[key + "/test"] = nbtiles[key]
-        nbtiles = tmp.copy()
-        del tmp
-
-        XY = []
-        for town in self.towns:
-            XY += self.data[town].getrawrandomtiles(
-                nbtiles[town][1], tilesize, nbpos=nbtiles[town][0]
-            )
 
         # pytorch
         X = torch.stack(
@@ -206,5 +119,29 @@ class CIA:
         dataloader = torch.utils.data.DataLoader(
             dataset, batch_size=batchsize, shuffle=True, num_workers=2
         )
-
         return dataloader
+
+
+import torchvision
+
+if __name__ == "__main__":
+    aed = AED(flag="test")
+
+    i = 0
+    while aed.labels[aed.names[i]] == []:
+        i += 1
+
+    image, mask = aed.getImageAndLabel(aed.names[i], torchformat=True)
+    debug = image[0].cpu().numpy()
+    debug = np.transpose(debug, axes=(1, 2, 0))
+    debug = PIL.Image.fromarray(np.uint8(debug))
+    debug.save("build/image.png")
+    debug = mask.cpu().numpy()
+    debug = PIL.Image.fromarray(np.uint8(debug) * 255)
+    debug.save("build/label.png")
+
+    batchloader = aed.getbatchloader(nbtiles=0, batchsize=8)
+    x, y = next(iter(batchloader))
+
+    torchvision.utils.save_image(x, "build/cropimage.png")
+    torchvision.utils.save_image(y, "build/croplabel.png")
