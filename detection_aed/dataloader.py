@@ -46,7 +46,7 @@ class AED:
             for line in text:
                 if line[0] not in self.labels:
                     self.labels[line[0]] = []
-                self.labels[line[0]].append((line[1], line[2]))
+                self.labels[line[0]].append((int(line[1]), int(line[2])))
 
         self.names = list(self.labels.keys())
         print("data successfully loaded")
@@ -60,7 +60,7 @@ class AED:
         mask = np.zeros((image.shape[0], image.shape[1]))
         points = self.labels[name]
         for c, r in points:
-            mask[int(r)][int(c)] = 1
+            mask[r][c] = 1
 
         if torchformat:
             x = torch.Tensor(np.transpose(image, axes=(2, 0, 1)))
@@ -123,9 +123,28 @@ class AED:
 
 
 import torchvision
+import math
 
 if __name__ == "__main__":
     aed = AED(flag="test")
+
+    distance = np.zeros(129)
+    for name in aed.names:
+        points = aed.labels[name]
+        if points == []:
+            continue
+        I = len(points)
+        for i in range(I):
+            for j in range(I):
+                if i < j:
+                    dr = abs(points[i][0] - points[j][0])
+                    dc = abs(points[i][1] - points[j][1])
+                    d = int(max(dr, dc))
+                    if d < 128:
+                        distance[int(d)] += 1
+    for i in range(120):
+        if distance[i] != 0:
+            print(i, distance[i])
 
     i = 0
     while aed.labels[aed.names[i]] == []:
@@ -139,6 +158,17 @@ if __name__ == "__main__":
     debug = mask.cpu().numpy()
     debug = PIL.Image.fromarray(np.uint8(debug) * 255)
     debug.save("build/label.png")
+
+    beforeafter = torch.zeros(2).cuda()
+    for name in aed.names:
+        _, mask = aed.getImageAndLabel(name, torchformat=True)
+        mask = mask.cuda()
+        beforeafter[0] += torch.sum(mask)
+        mask = torch.nn.functional.max_pool2d(
+            mask.unsqueeze(0), kernel_size=16, stride=16, padding=0
+        )
+        beforeafter[1] += torch.sum(mask)
+    print(beforeafter)
 
     batchloader = aed.getbatchloader(nbtiles=0, batchsize=8)
     x, y = next(iter(batchloader))
