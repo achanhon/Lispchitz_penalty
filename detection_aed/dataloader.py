@@ -68,7 +68,7 @@ class AED:
         else:
             return image, mask
 
-    def getbatchloader(self, nbtiles=10000, tilesize=128, batchsize=32, nbpos=1):
+    def getbatchloader(self, nbtiles=10000, tilesize=256, batchsize=32, nbpos=1):
         NB = nbtiles // len(self.names) + 1
 
         # crop
