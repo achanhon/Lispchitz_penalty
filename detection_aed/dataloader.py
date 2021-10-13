@@ -143,5 +143,6 @@ if __name__ == "__main__":
     batchloader = aed.getbatchloader(nbtiles=0, batchsize=8)
     x, y = next(iter(batchloader))
 
-    torchvision.utils.save_image(x / 255, "build/cropimage.png")
-    torchvision.utils.save_image(y, "build/croplabel.png")
+    for i in range(8):
+        torchvision.utils.save_image(x[i] / 255, "build/cropimage" + str(i) + ".png")
+        torchvision.utils.save_image(y[i], "build/croplabel" + str(i) + "s.png")
