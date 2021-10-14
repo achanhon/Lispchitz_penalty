@@ -7,6 +7,7 @@ import torch
 import random
 import csv
 import scipy
+import scipy.io
 
 
 def symetrie(x, y, i, j, k):
@@ -124,23 +125,24 @@ import math
 if __name__ == "__main__":
     visdrone = VISDRONE(flag="test")
 
-    # distance = np.zeros(129)
-    # for name in visdrone.names:
-    # points = visdrone.labels[name]
-    # if points == []:
-    # continue
-    # I = len(points)
-    # for i in range(I):
-    # for j in range(I):
-    # if i < j:
-    # dr = abs(points[i][0] - points[j][0])
-    # dc = abs(points[i][1] - points[j][1])
-    # d = int(max(dr, dc))
-    # if d < 128:
-    # distance[int(d)] += 1
-    # for i in range(120):
-    # if distance[i] != 0:
-    # print(i, distance[i])
+    distance = np.zeros(129)
+    for name in visdrone.names:
+        points = scipy.io.loadmat(visdrone.root + "ground_truth/GT_" + name + ".mat")
+        points = points["image_info"][0][0][0][0][0]
+        if len(points.shape) != 2 or point.shape[1] != 3:
+            continue
+        I = points.shape[0]
+        for i in range(I):
+            for j in range(I):
+                if i < j:
+                    dr = abs(points[i][0] - points[j][0])
+                    dc = abs(points[i][1] - points[j][1])
+                    d = int(max(dr, dc))
+                    if d < 128:
+                        distance[int(d)] += 1
+    for i in range(120):
+        if distance[i] != 0:
+            print(i, distance[i])
 
     image, mask = visdrone.getImageAndLabel(visdrone.names[0], torchformat=True)
     debug = image[0].cpu().numpy()
