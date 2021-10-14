@@ -52,7 +52,7 @@ class VISDRONE:
         mask = np.zeros((image.shape[0], image.shape[1]))
         points = scipy.io.loadmat(self.root + "ground_truth/GT_" + name + ".mat")
         points = points["image_info"][0][0][0][0][0]
-        if len(points.shape) != 2 or point.shape[1] != 3:
+        if len(points.shape) != 2 or points.shape[1] != 3:
             points = []
         else:
             points = [(points[i][0], points[i][1]) for i in range(points.shape[0])]
@@ -129,7 +129,7 @@ if __name__ == "__main__":
     for name in visdrone.names:
         points = scipy.io.loadmat(visdrone.root + "ground_truth/GT_" + name + ".mat")
         points = points["image_info"][0][0][0][0][0]
-        if len(points.shape) != 2 or point.shape[1] != 3:
+        if len(points.shape) != 2 or points.shape[1] != 3:
             continue
         I = points.shape[0]
         for i in range(I):
