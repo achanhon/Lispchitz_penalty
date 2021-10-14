@@ -39,9 +39,9 @@ with torch.no_grad():
             z = net(x.unsqueeze(0))
             z = z[0, 1, :, :] - z[0, 0, :, :]
 
-            stats[k][0] += (z > 0).float() * (y == 1).float()
-            stats[k][1] += (z > 0).float() * (y == 0).float()
-            stats[k][1] += (z <= 0).float() * (y == 1).float()
+            stats[k][0] += torch.sum((z > 0).float() * (y == 1).float())
+            stats[k][1] += torch.sum((z > 0).float() * (y == 0).float())
+            stats[k][2] += torch.sum((z <= 0).float() * (y == 1).float())
 
             if town in ["isprs/test", "saclay/test"]:
                 nextI = len(os.listdir("build"))

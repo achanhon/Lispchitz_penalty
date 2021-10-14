@@ -74,20 +74,21 @@ class SegSemDataset:
 
         h, w = image.shape[0], image.shape[1]
         h2, w2 = (h // 64) * 64, (w // 64) * 64
-        tmp = np.transpose(x, axes=(2, 0, 1))
-        tmp = torch.Tensor(tmp)
         globalresize = torch.nn.AdaptiveAvgPool2d((h2, w2))
+
+        tmp = np.transpose(image, axes=(2, 0, 1))
+        tmp = torch.Tensor(tmp)
         tmp = globalresize(tmp)
         image = np.transpose(tmp.cpu().numpy(), axes=(1, 2, 0))
 
         label = PIL.Image.open(self.pathTOdata + str(i) + "_y.png").convert("L")
         label = np.asarray(label).copy()  # warning wh swapping
-        tmp = torch.Tensor(label).unsqueeze(0)
 
+        tmp = torch.Tensor(label).unsqueeze(0)
         tmp = globalresize(tmp)
         tmp = (tmp > 0).float()
-        tmp = torch.nn.functional.max_pool2d(kernel_size=16, stride=16, padding=0)
-        label = label[0].cpu().numpy()
+        tmp = torch.nn.functional.max_pool2d(tmp, kernel_size=16, stride=16, padding=0)
+        label = tmp[0].cpu().numpy()
 
         return image, label
 
@@ -117,13 +118,20 @@ class SegSemDataset:
             )
 
             for i in range(nbtilesperimage):
-                im = image[row[i] : row[i] + tilesize, col[i] : col[i] + tilesize, :]
-                mask = label[row[i] : row[i] + tilesize, col[i] : col[i] + tilesize]
+                im = image[
+                    (row[i] // 16) * 16 : (row[i] // 16) * 16 + tilesize,
+                    (col[i] // 16) * 16 : (col[i] // 16) * 16 + tilesize,
+                    :,
+                ]
+                mask = label[
+                    row[i] // 16 : row[i] // 16 + tilesize // 16,
+                    col[i] // 16 : col[i] // 16 + tilesize // 16,
+                ]
                 XY.append((im.copy(), mask.copy()))
 
             if nbpos != 0 and np.sum(label) > 1:
                 row, col = np.nonzero(label)
-                l = [(row[i], col[i]) for i in range(row.shape[0])]
+                l = [(row[i] * 16, col[i] * 16) for i in range(row.shape[0])]
                 random.shuffle(l)
                 l = l[0 : min(len(l), nbpos)]
                 noise = np.random.randint(-tilesize, tilesize, size=(len(l), 2))
@@ -134,8 +142,15 @@ class SegSemDataset:
                     R = max(0, min(R, image.shape[0] - tilesize - 2))
                     C = max(0, min(C, image.shape[1] - tilesize - 2))
 
-                    im = image[R : R + tilesize, C : C + tilesize, :]
-                    mask = label[R : R + tilesize, C : C + tilesize]
+                    im = image[
+                        (R // 16) * 16 : (R // 16) * 16 + tilesize,
+                        (C // 16) * 16 : (C // 16) * 16 + tilesize,
+                        :,
+                    ]
+                    mask = label[
+                        R // 16 : R // 16 + tilesize // 16,
+                        C // 16 : C // 16 + tilesize // 16,
+                    ]
                     XY.append((im.copy(), mask.copy()))
 
         # symetrie

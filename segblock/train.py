@@ -14,13 +14,15 @@ else:
 print("define model")
 import dataloader
 
-net = torchvision.models.vgg16(pretrained=True)
+net = torchvision.models.vgg16()
 net = net.features
-net._model["30"] = torch.nn.Identity()
+net._modules["30"] = torch.nn.Identity()
 dummy = torch.zeros(1, 3, 16 * 5, 16 * 5)
 dummy = net(dummy)
 assert dummy.shape == (1, 512, 5, 5)
-net._model["30"] = torch.nn.Linear(512, 2)
+net.add_module("31", torch.nn.Conv2d(512, 1024, kernel_size=1, padding=0, stride=1))
+net.add_module("32", torch.nn.LeakyReLU())
+net.add_module("33", torch.nn.Conv2d(1024, 2, kernel_size=1, padding=0, stride=1))
 net = net.cuda()
 net.train()
 
@@ -70,10 +72,10 @@ for epoch in range(nbepoch):
             print("loss=", (sum(meanloss) / len(meanloss)))
 
         with torch.no_grad():
-            z = net.headforward(z[:, 1, :, :] - z[:, 0, :, :])
-            stats[k][0] += (z > 0).float() * (y == 1).float()
-            stats[k][1] += (z > 0).float() * (y == 0).float()
-            stats[k][1] += (z <= 0).float() * (y == 1).float()
+            z = z[:, 1, :, :] - z[:, 0, :, :]
+            stats[0] += torch.sum((z > 0).float() * (y == 1).float())
+            stats[1] += torch.sum((z > 0).float() * (y == 0).float())
+            stats[2] += torch.sum((z <= 0).float() * (y == 1).float())
 
     torch.save(net, "build/model.pth")
     perfs = dataloader.computeperf(stats)
