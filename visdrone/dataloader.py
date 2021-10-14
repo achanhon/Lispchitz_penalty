@@ -55,7 +55,7 @@ class VISDRONE:
         if len(points.shape) == 2 and points.shape[1] == 3:
             I = points.shape[0]
             for i in range(I):
-                mask[int(points[i][0])][int(points[i][1])] = 1
+                mask[int(points[i][1])][int(points[i][0])] = 1
 
         if torchformat:
             x = torch.Tensor(numpy.transpose(image, axes=(2, 0, 1)))
