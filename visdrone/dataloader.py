@@ -159,7 +159,7 @@ if __name__ == "__main__":
         mask = mask.cuda()
         beforeafter[0] += torch.sum(mask)
         mask = torch.nn.functional.max_pool2d(
-            mask.unsqueeze(0), kernel_size=16, stride=16, padding=0
+            mask.unsqueeze(0), kernel_size=8, stride=8, padding=0
         )
         beforeafter[1] += torch.sum(mask)
     print(beforeafter)
