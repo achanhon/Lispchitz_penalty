@@ -123,6 +123,14 @@ import math
 if __name__ == "__main__":
     visdrone = VISDRONE(flag="test")
 
+    tot = 0
+    for name in visdrone.names:
+        tmp = scipy.io.loadmat(visdrone.root + "ground_truth/GT_" + name + ".mat")
+        tmp = tmp["image_info"][0][0][0][0][0]
+        if len(tmp.shape) != 2 or tmp.shape[1] != 3:
+            continue
+        tot += tmp.shape[0]
+
     distance = numpy.zeros(129)
     for name in visdrone.names:
         tmp = scipy.io.loadmat(visdrone.root + "ground_truth/GT_" + name + ".mat")
