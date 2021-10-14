@@ -43,7 +43,7 @@ with torch.no_grad():
             stats[k][1] += torch.sum((z > 0).float() * (y == 0).float())
             stats[k][2] += torch.sum((z <= 0).float() * (y == 1).float())
 
-            if town in ["isprs/test", "saclay/test"]:
+            if town in ["isprs/test", "vedai/test"]:
                 nextI = len(os.listdir("build"))
                 debug = numpy.transpose(x.cpu().numpy(), axes=(1, 2, 0))
                 debug = PIL.Image.fromarray(numpy.uint8(debug))
