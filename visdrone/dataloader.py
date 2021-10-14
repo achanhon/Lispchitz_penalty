@@ -130,6 +130,7 @@ if __name__ == "__main__":
         if len(tmp.shape) != 2 or tmp.shape[1] != 3:
             continue
         tot += tmp.shape[0]
+    print(tot)
 
     distance = numpy.zeros(129)
     for name in visdrone.names:
