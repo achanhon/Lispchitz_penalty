@@ -45,10 +45,10 @@ with torch.no_grad():
 
             if town in ["isprs/test", "saclay/test"]:
                 nextI = len(os.listdir("build"))
-                debug = numpy.transpose(x[0].cpu().numpy(), axes=(1, 2, 0))
+                debug = numpy.transpose(x.cpu().numpy(), axes=(1, 2, 0))
                 debug = PIL.Image.fromarray(numpy.uint8(debug))
                 debug.save("build/" + str(nextI) + "_x.png")
-                globalresize = torch.nn.AdaptiveAvgPool2d((x.shape[2], x.shape[3]))
+                globalresize = torch.nn.AdaptiveAvgPool2d((x.shape[1], x.shape[2]))
                 debug = globalresize(y.unsqueeze(0).float())
                 debug = debug[0].cpu().numpy() * 255
                 debug = PIL.Image.fromarray(numpy.uint8(debug))
