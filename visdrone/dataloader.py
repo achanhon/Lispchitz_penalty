@@ -6,6 +6,7 @@ from PIL import Image
 import torch
 import random
 import csv
+import scipy
 
 
 def symetrie(x, y, i, j, k):
@@ -29,36 +30,31 @@ def computeperf(cm):
     return torch.Tensor([precision * recall, precision, recall])
 
 
-class AED:
+class VISDRONE:
     def __init__(self, flag):
         assert flag in ["train", "test"]
         if flag == "train":
-            self.root = "/data/AED/training_images/"
-            pathtovt = "/data/AED/training_elephants.csv"
+            self.root = "/scratchf/VisDrone/train_data/"
         else:
-            self.root = "/data/AED/test_images/"
-            pathtovt = "/data/AED/test_elephants.csv"
+            self.root = "/scratchf/VisDrone/test_data/"
 
-        print("reading csv file", pathtovt)
-        self.labels = {}
-        with open(pathtovt, "r") as csvfile:
-            text = csv.reader(csvfile, delimiter=",")
-            for line in text:
-                if line[0] not in self.labels:
-                    self.labels[line[0]] = []
-                self.labels[line[0]].append((int(line[1]), int(line[2])))
-
-        self.names = list(self.labels.keys())
-        print("data successfully loaded")
+        tmp = os.listdir(self.root + "/ground_truth/")
+        tmp = [s for s in tmp if "GT_" in s and ".mat" in s]
+        self.names = [s[3:-4] for s in tmp]
 
     def getImageAndLabel(self, name, torchformat=False):
         assert name in self.labels
 
-        image = PIL.Image.open(self.root + name + ".jpg").convert("RGB")
+        image = PIL.Image.open(self.root + "images/" + name + ".jpg").convert("RGB")
         image = np.uint8(np.asarray(image).copy())
 
         mask = np.zeros((image.shape[0], image.shape[1]))
-        points = self.labels[name]
+        points = scipy.io.loadmat(self.root + "ground_truth/GT_" + name + ".mat")
+        points = points["image_info"][0][0][0][0][0]
+        if len(points.shape) != 2 or point.shape[1] != 3:
+            points = []
+        else:
+            points = [(points[i][0], points[i][1]) for i in range(points.shape[0])]
         for c, r in points:
             mask[r][c] = 1
 
@@ -126,31 +122,31 @@ import torchvision
 import math
 
 if __name__ == "__main__":
-    aed = AED(flag="test")
+    visdrone = VISDRONE(flag="test")
 
-    distance = np.zeros(129)
-    for name in aed.names:
-        points = aed.labels[name]
-        if points == []:
-            continue
-        I = len(points)
-        for i in range(I):
-            for j in range(I):
-                if i < j:
-                    dr = abs(points[i][0] - points[j][0])
-                    dc = abs(points[i][1] - points[j][1])
-                    d = int(max(dr, dc))
-                    if d < 128:
-                        distance[int(d)] += 1
-    for i in range(120):
-        if distance[i] != 0:
-            print(i, distance[i])
+    # distance = np.zeros(129)
+    # for name in visdrone.names:
+    # points = visdrone.labels[name]
+    # if points == []:
+    # continue
+    # I = len(points)
+    # for i in range(I):
+    # for j in range(I):
+    # if i < j:
+    # dr = abs(points[i][0] - points[j][0])
+    # dc = abs(points[i][1] - points[j][1])
+    # d = int(max(dr, dc))
+    # if d < 128:
+    # distance[int(d)] += 1
+    # for i in range(120):
+    # if distance[i] != 0:
+    # print(i, distance[i])
 
     i = 0
-    while aed.labels[aed.names[i]] == []:
+    while visdrone.labels[visdrone.names[i]] == []:
         i += 1
 
-    image, mask = aed.getImageAndLabel(aed.names[i], torchformat=True)
+    image, mask = visdrone.getImageAndLabel(visdrone.names[i], torchformat=True)
     debug = image[0].cpu().numpy()
     debug = np.transpose(debug, axes=(1, 2, 0))
     debug = PIL.Image.fromarray(np.uint8(debug))
@@ -160,8 +156,8 @@ if __name__ == "__main__":
     debug.save("build/label.png")
 
     beforeafter = torch.zeros(2).cuda()
-    for name in aed.names:
-        _, mask = aed.getImageAndLabel(name, torchformat=True)
+    for name in visdrone.names:
+        _, mask = visdrone.getImageAndLabel(name, torchformat=True)
         mask = mask.cuda()
         beforeafter[0] += torch.sum(mask)
         mask = torch.nn.functional.max_pool2d(
@@ -170,7 +166,7 @@ if __name__ == "__main__":
         beforeafter[1] += torch.sum(mask)
     print(beforeafter)
 
-    batchloader = aed.getbatchloader(nbtiles=0, batchsize=8)
+    batchloader = visdrone.getbatchloader(nbtiles=0, batchsize=8)
     x, y = next(iter(batchloader))
 
     torchvision.utils.save_image(x / 255, "build/cropimage.png")
