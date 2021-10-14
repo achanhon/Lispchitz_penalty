@@ -43,7 +43,7 @@ class VISDRONE:
         self.names = [s[3:-4] for s in tmp]
 
     def getImageAndLabel(self, name, torchformat=False):
-        assert name in self.labels
+        assert name in self.names
 
         image = PIL.Image.open(self.root + "images/" + name + ".jpg").convert("RGB")
         image = np.uint8(np.asarray(image).copy())
