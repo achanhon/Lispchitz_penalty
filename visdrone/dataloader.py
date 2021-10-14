@@ -52,13 +52,12 @@ class VISDRONE:
         mask = numpy.zeros((image.shape[0], image.shape[1]))
         tmp = scipy.io.loadmat(visdrone.root + "ground_truth/GT_" + name + ".mat")
         tmp = points["image_info"][0][0][0][0][0]
-        if len(tmp.shape) != 2 or tmp.shape[1] != 3:
-            continue
-        I = tmp.shape[0]
-        points = numpy.zeros((I, 2))
-        points[:, :] = tmp[:, 0:2]
-        for i in range(I):
-            mask[int(points[i][0])][int(points[i][1])] = 1
+        if len(tmp.shape) == 2 and tmp.shape[1] == 3:
+            I = tmp.shape[0]
+            points = numpy.zeros((I, 2))
+            points[:, :] = tmp[:, 0:2]
+            for i in range(I):
+                mask[int(points[i][0])][int(points[i][1])] = 1
 
         if torchformat:
             x = torch.Tensor(numpy.transpose(image, axes=(2, 0, 1)))
