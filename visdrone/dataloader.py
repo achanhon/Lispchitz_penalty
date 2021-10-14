@@ -142,11 +142,7 @@ if __name__ == "__main__":
     # if distance[i] != 0:
     # print(i, distance[i])
 
-    i = 0
-    while visdrone.labels[visdrone.names[i]] == []:
-        i += 1
-
-    image, mask = visdrone.getImageAndLabel(visdrone.names[i], torchformat=True)
+    image, mask = visdrone.getImageAndLabel(visdrone.names[0], torchformat=True)
     debug = image[0].cpu().numpy()
     debug = np.transpose(debug, axes=(1, 2, 0))
     debug = PIL.Image.fromarray(np.uint8(debug))
