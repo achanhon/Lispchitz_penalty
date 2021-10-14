@@ -28,7 +28,7 @@ net.train()
 
 
 print("load data")
-cia = dataloader.CIA(flag="custom", custom=["isprs/train"])
+cia = dataloader.CIA(flag="custom", custom=["isprs/train", "vedai/train", "dfc/train"])
 
 print("train")
 import collections
