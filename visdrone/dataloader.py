@@ -1,4 +1,4 @@
-import numpy as np
+import numpy
 import os
 import sys
 import PIL
@@ -12,11 +12,11 @@ import scipy.io
 
 def symetrie(x, y, i, j, k):
     if i == 1:
-        x, y = np.transpose(x, axes=(1, 0, 2)), np.transpose(y, axes=(1, 0))
+        x, y = numpy.transpose(x, axes=(1, 0, 2)), numpy.transpose(y, axes=(1, 0))
     if j == 1:
-        x, y = np.flip(x, axis=1), np.flip(y, axis=1)
+        x, y = numpy.flip(x, axis=1), numpy.flip(y, axis=1)
     if k == 1:
-        x, y = np.flip(x, axis=1), np.flip(y, axis=1)
+        x, y = numpy.flip(x, axis=1), numpy.flip(y, axis=1)
     return x.copy(), y.copy()
 
 
@@ -47,20 +47,21 @@ class VISDRONE:
         assert name in self.names
 
         image = PIL.Image.open(self.root + "images/" + name + ".jpg").convert("RGB")
-        image = np.uint8(np.asarray(image).copy())
+        image = numpy.uint8(numpy.asarray(image).copy())
 
-        mask = np.zeros((image.shape[0], image.shape[1]))
-        points = scipy.io.loadmat(self.root + "ground_truth/GT_" + name + ".mat")
-        points = points["image_info"][0][0][0][0][0]
-        if len(points.shape) != 2 or points.shape[1] != 3:
-            points = []
-        else:
-            points = [(points[i][0], points[i][1]) for i in range(points.shape[0])]
-        for c, r in points:
-            mask[r][c] = 1
+        mask = numpy.zeros((image.shape[0], image.shape[1]))
+        tmp = scipy.io.loadmat(visdrone.root + "ground_truth/GT_" + name + ".mat")
+        tmp = points["image_info"][0][0][0][0][0]
+        if len(tmp.shape) != 2 or tmp.shape[1] != 3:
+            continue
+        I = tmp.shape[0]
+        points = numpy.zeros((I, 2))
+        points[:, :] = tmp[:, 0:2]
+        for i in range(I):
+            mask[int(points[i][0])][int(points[i][1])] = 1
 
         if torchformat:
-            x = torch.Tensor(np.transpose(image, axes=(2, 0, 1)))
+            x = torch.Tensor(numpy.transpose(image, axes=(2, 0, 1)))
             return x.unsqueeze(0), torch.Tensor(mask)
         else:
             return image, mask
@@ -74,8 +75,8 @@ class VISDRONE:
             image, label = self.getImageAndLabel(name, torchformat=False)
 
             # random crop
-            row = np.random.randint(0, image.shape[0] - tilesize - 2, size=NB)
-            col = np.random.randint(0, image.shape[1] - tilesize - 2, size=NB)
+            row = numpy.random.randint(0, image.shape[0] - tilesize - 2, size=NB)
+            col = numpy.random.randint(0, image.shape[1] - tilesize - 2, size=NB)
 
             for i in range(NB):
                 im = image[row[i] : row[i] + tilesize, col[i] : col[i] + tilesize, :]
@@ -83,12 +84,12 @@ class VISDRONE:
                 XY.append((im.copy(), mask.copy()))
 
             # positive crop
-            if nbpos != 0 and np.sum(label) > 1:
-                row, col = np.nonzero(label)
+            if nbpos != 0 and numpy.sum(label) > 1:
+                row, col = numpy.nonzero(label)
                 l = [(row[i], col[i]) for i in range(row.shape[0])]
                 random.shuffle(l)
                 l = l[0 : min(len(l), nbpos)]
-                noise = np.random.randint(-tilesize, tilesize, size=(len(l), 2))
+                noise = numpy.random.randint(-tilesize, tilesize, size=(len(l), 2))
 
                 for i, (r, c) in enumerate(l):
                     R, C = r + noise[i][0], c + noise[i][1]
@@ -101,7 +102,7 @@ class VISDRONE:
                     XY.append((im.copy(), mask.copy()))
 
         # symetrie
-        symetrieflag = np.random.randint(0, 2, size=(len(XY), 3))
+        symetrieflag = numpy.random.randint(0, 2, size=(len(XY), 3))
         XY = [
             (symetrie(x, y, symetrieflag[i][0], symetrieflag[i][1], symetrieflag[i][2]))
             for i, (x, y) in enumerate(XY)
@@ -109,7 +110,7 @@ class VISDRONE:
 
         # pytorch
         X = torch.stack(
-            [torch.Tensor(np.transpose(x, axes=(2, 0, 1))).cpu() for x, y in XY]
+            [torch.Tensor(numpy.transpose(x, axes=(2, 0, 1))).cpu() for x, y in XY]
         )
         Y = torch.stack([torch.from_numpy(y).long().cpu() for x, y in XY])
         dataset = torch.utils.data.TensorDataset(X, Y)
@@ -125,13 +126,15 @@ import math
 if __name__ == "__main__":
     visdrone = VISDRONE(flag="test")
 
-    distance = np.zeros(129)
+    distance = numpy.zeros(129)
     for name in visdrone.names:
-        points = scipy.io.loadmat(visdrone.root + "ground_truth/GT_" + name + ".mat")
-        points = points["image_info"][0][0][0][0][0]
-        if len(points.shape) != 2 or points.shape[1] != 3:
+        tmp = scipy.io.loadmat(visdrone.root + "ground_truth/GT_" + name + ".mat")
+        tmp = points["image_info"][0][0][0][0][0]
+        if len(tmp.shape) != 2 or tmp.shape[1] != 3:
             continue
-        I = points.shape[0]
+        I = tmp.shape[0]
+        points = numpy.zeros((I, 2))
+        points[:, :] = tmp[:, 0:2]
         for i in range(I):
             for j in range(I):
                 if i < j:
@@ -146,11 +149,11 @@ if __name__ == "__main__":
 
     image, mask = visdrone.getImageAndLabel(visdrone.names[0], torchformat=True)
     debug = image[0].cpu().numpy()
-    debug = np.transpose(debug, axes=(1, 2, 0))
-    debug = PIL.Image.fromarray(np.uint8(debug))
+    debug = numpy.transpose(debug, axes=(1, 2, 0))
+    debug = PIL.Image.fromarray(numpy.uint8(debug))
     debug.save("build/image.png")
     debug = mask.cpu().numpy()
-    debug = PIL.Image.fromarray(np.uint8(debug) * 255)
+    debug = PIL.Image.fromarray(numpy.uint8(debug) * 255)
     debug.save("build/label.png")
 
     beforeafter = torch.zeros(2).cuda()
