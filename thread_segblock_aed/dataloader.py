@@ -8,8 +8,9 @@ import torch
 import random
 import csv
 
+
 def symetrie(x, y, ijk):
-    i,j,k = ijk[0], ijk[1], ijk[2]
+    i, j, k = ijk[0], ijk[1], ijk[2]
     if i == 1:
         x, y = numpy.transpose(x, axes=(1, 0, 2)), numpy.transpose(y, axes=(1, 0))
     if j == 1:
@@ -20,9 +21,9 @@ def symetrie(x, y, ijk):
 
 
 def computeperf(yz=None, stats=None):
-    assert yz is not None or stat is not None
-    if stat is not None:
-        good, fa, miss = stat[0], stat[1], stat[2]
+    assert yz is not None or stats is not None
+    if stats is not None:
+        good, fa, miss = stats[0], stats[1], stats[2]
         if good == 0:
             precision = 0
             recall = 0
@@ -35,13 +36,13 @@ def computeperf(yz=None, stats=None):
             real = good + miss
         return torch.Tensor(
             [precision * recall, precision, recall, (count - real).abs(), count, real]
-        )
+        ).cuda()
     else:
         y, z = yz
         good = torch.sum((y == 1).float() * (z > 0).float())
         fa = torch.sum((y == 0).float() * (z > 0).float())
         miss = torch.sum((y == 1).float() * (z <= 0).float())
-        return torch.Tensor([good, fa, miss])
+        return torch.Tensor([good, fa, miss]).cuda()
 
 
 class AED(threading.Thread):
@@ -109,9 +110,8 @@ class AED(threading.Thread):
 
     def getbatch(self, batchsize=32):
         X = torch.zeros(batchsize, 3, self.tilesize, self.tilesize)
-        Y = torch.zeros(batchsize, self.tilesize//16, self.tilesize//16)
+        Y = torch.zeros(batchsize, self.tilesize // 16, self.tilesize // 16)
         for i in range(batchsize):
-            print("lol",i)
             x, y = self.q.get(block=True)
             X[i] = x
             Y[i] = y
@@ -170,8 +170,6 @@ class AED(threading.Thread):
                     x = torch.Tensor(numpy.transpose(x, axes=(2, 0, 1)))
                     y = torch.Tensor(y)
                     self.q.put((x, y), block=True)
-                
-                print(self.q.qsize())
 
 
 import torchvision
