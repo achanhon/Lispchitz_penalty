@@ -36,7 +36,7 @@ optimizer = torch.optim.Adam(net.parameters(), lr=0.0001)
 meanloss = torch.zeros(1).cuda()
 stats = torch.zeros(3).cuda()
 nbbatch = 10000
-batchsize = 16
+batchsize = 32
 for batch in range(nbbatch):
     if batch % 25 == 24:
         print("batch=", batch, "/", nbbatch)

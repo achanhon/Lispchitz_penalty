@@ -29,7 +29,14 @@ stats = torch.zeros(3).cuda()
 with torch.no_grad():
     for name in aed.names:
         x, y = aed.getImageAndLabel(name, torchformat=True)
-        z = net(x.cuda())
+
+        x = x.cuda()
+        z = torch.zeros(1, 2, y.shape[0], y.shape[1]).cuda()
+        for row in range(0, y.shape[0] - 15, 8):
+            for col in range(0, y.shape[1] - 15, 8):
+                tmp = net(x[:, :, row * 16 : row * 16 + 256, col * 16 : col * 16 + 256])
+                z[0, :, row : row + 16, col : col + 16] += tmp[0]
+
         z = z[0, 1, :, :] - z[0, 0, :, :]
 
         stats += dataloader.computeperf(yz=(y.cuda(), z))
