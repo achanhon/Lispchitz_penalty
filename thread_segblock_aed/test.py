@@ -51,3 +51,5 @@ with torch.no_grad():
             debug.save("build/" + str(nextI) + "_z.png")
 
     print("perf=", dataloader.computeperf(stats=stats))
+
+os._exit(0)

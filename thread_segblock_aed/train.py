@@ -29,17 +29,18 @@ net.train()
 
 print("load data")
 aed = dataloader.AED(flag="train")
+aed.start()
 
 print("train")
 import collections
-import random
 
 optimizer = torch.optim.Adam(net.parameters(), lr=0.0001)
-meanloss = collections.deque(maxlen=200)
-nbepoch = 1
+meanloss = torch.zeros(1).cuda()
+nbbatch = 10000
 batchsize = 8
-for epoch in range(nbepoch):
-    print("epoch=", epoch, "/", nbepoch)
+for batch in range(nbbatch):
+    if batch%100==99:
+        print("batch=", batch, "/", nbbatch)
 
     XY = aed.getbatchloader(batchsize=batchsize)
     stats = torch.zeros(3).cuda()
@@ -53,7 +54,8 @@ for epoch in range(nbepoch):
         criterion = torch.nn.CrossEntropyLoss(weight=weights)
 
         loss = criterion(z, y)
-        meanloss.append(loss.cpu().data.numpy())
+        meanloss+=loss.clone().detach()
+        
         if epoch > 30:
             loss = loss * 0.5
         if epoch > 90:
@@ -68,18 +70,21 @@ for epoch in range(nbepoch):
         torch.nn.utils.clip_grad_norm_(net.parameters(), 3)
         optimizer.step()
 
-        if random.randint(0, 30) == 0:
-            print("loss=", (sum(meanloss) / len(meanloss)))
+        if batch%100==99:
+            print("loss=", 0.001*meanloss)
 
         with torch.no_grad():
             z = z[:, 1, :, :] - z[:, 0, :, :]
             stats += dataloader.computeperf(yz=(y, z))
 
-    torch.save(net, "build/model.pth")
-    perfs = dataloader.computeperf(stats=stats)
-    print("perf", perfs)
+    if batch%1000==999:
+        torch.save(net, "build/model.pth")
+        perfs = dataloader.computeperf(stats=stats)
+        print("perf", perfs)
 
-    if perfs[0] * 100 > 92:
-        print("training stops after reaching high training accuracy")
-        quit()
+        if perfs[0] * 100 > 92:
+            print("training stops after reaching high training accuracy")
+            os._exit(0)
+        
 print("training stops after reaching time limit")
+os._exit(0)

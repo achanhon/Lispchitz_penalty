@@ -6,10 +6,10 @@ from PIL import Image
 import numpy
 import torch
 import random
-
+import csv
 
 def symetrie(x, y, ijk):
-    ijk = ijk[0], ijk[1], ijk[2]
+    i,j,k = ijk[0], ijk[1], ijk[2]
     if i == 1:
         x, y = numpy.transpose(x, axes=(1, 0, 2)), numpy.transpose(y, axes=(1, 0))
     if j == 1:
@@ -109,8 +109,9 @@ class AED(threading.Thread):
 
     def getbatch(self, batchsize=32):
         X = torch.zeros(batchsize, 3, self.tilesize, self.tilesize)
-        Y = torch.zeros(batchsize, self.tilesize, self.tilesize)
+        Y = torch.zeros(batchsize, self.tilesize//16, self.tilesize//16)
         for i in range(batchsize):
+            print("lol",i)
             x, y = self.q.get(block=True)
             X[i] = x
             Y[i] = y
@@ -121,52 +122,56 @@ class AED(threading.Thread):
         tilesize = self.tilesize
         tile16 = tilesize // 16
 
-        for name in self.names:
-            XY = []
-            image, label = self.getImageAndLabel(name, torchformat=False)
+        print("start collecting tiles")
+        while True:
+            for name in self.names:
+                XY = []
+                image, label = self.getImageAndLabel(name, torchformat=False)
 
-            # random crop
-            row = numpy.random.randint(0, label.shape[0] - tile16 - 2, size=NB)
-            col = numpy.random.randint(0, label.shape[1] - tile16 - 2, size=NB)
+                # random crop
+                row = numpy.random.randint(0, label.shape[0] - tile16 - 2, size=NB)
+                col = numpy.random.randint(0, label.shape[1] - tile16 - 2, size=NB)
 
-            for i in range(NB):
-                im = image[
-                    row[i] * 16 : row[i] * 16 + tilesize,
-                    col[i] * 16 : col[i] * 16 + tilesize,
-                    :,
-                ]
-                mask = label[row[i] : row[i] + tile16, col[i] : col[i] + tile16]
-                XY.append((im.copy(), mask.copy()))
-
-            # positive crop
-            if nbpos != 0 and numpy.sum(label) > 1:
-                row, col = numpy.nonzero(label)
-                l = [(row[i], col[i]) for i in range(row.shape[0])]
-                random.shuffle(l)
-                l = l[0 : min(len(l), nbpos)]
-                noise = numpy.random.randint(-tile16, tile16, size=(len(l), 2))
-
-                for i, (r, c) in enumerate(l):
-                    R, C = r + noise[i][0], c + noise[i][1]
-
-                    R = max(0, min(R, label.shape[0] - tile16 - 2))
-                    C = max(0, min(C, label.shape[1] - tile16 - 2))
-
+                for i in range(NB):
                     im = image[
-                        R * 16 : R * 16 + tilesize, C * 16 : C * 16 + tilesize, :
+                        row[i] * 16 : row[i] * 16 + tilesize,
+                        col[i] * 16 : col[i] * 16 + tilesize,
+                        :,
                     ]
-                    mask = label[R : R + tile16, C : C + tile16]
+                    mask = label[row[i] : row[i] + tile16, col[i] : col[i] + tile16]
                     XY.append((im.copy(), mask.copy()))
 
-            # symetrie
-            symetrieflag = numpy.random.randint(0, 2, size=(len(XY), 3))
-            XY = [(symetrie(x, y, symetrieflag[i])) for i, (x, y) in enumerate(XY)]
+                # positive crop
+                if nbpos != 0 and numpy.sum(label) > 1:
+                    row, col = numpy.nonzero(label)
+                    l = [(row[i], col[i]) for i in range(row.shape[0])]
+                    random.shuffle(l)
+                    l = l[0 : min(len(l), nbpos)]
+                    noise = numpy.random.randint(-tile16, tile16, size=(len(l), 2))
 
-            # pytorch
-            for x, y in XY:
-                x = torch.Tensor(numpy.transpose(x, axes=(2, 0, 1)))
-                y = torch.Tensor(y)
-                self.q.put((x, y), block=True)
+                    for i, (r, c) in enumerate(l):
+                        R, C = r + noise[i][0], c + noise[i][1]
+
+                        R = max(0, min(R, label.shape[0] - tile16 - 2))
+                        C = max(0, min(C, label.shape[1] - tile16 - 2))
+
+                        im = image[
+                            R * 16 : R * 16 + tilesize, C * 16 : C * 16 + tilesize, :
+                        ]
+                        mask = label[R : R + tile16, C : C + tile16]
+                        XY.append((im.copy(), mask.copy()))
+
+                # symetrie
+                symetrieflag = numpy.random.randint(0, 2, size=(len(XY), 3))
+                XY = [(symetrie(x, y, symetrieflag[i])) for i, (x, y) in enumerate(XY)]
+
+                # pytorch
+                for x, y in XY:
+                    x = torch.Tensor(numpy.transpose(x, axes=(2, 0, 1)))
+                    y = torch.Tensor(y)
+                    self.q.put((x, y), block=True)
+                
+                print(self.q.qsize())
 
 
 import torchvision
@@ -198,4 +203,4 @@ if __name__ == "__main__":
     y = globalresize(y.float())
     torchvision.utils.save_image(y.unsqueeze(1), "build/croplabel.png")
 
-    quit()
+    os._exit(0)
