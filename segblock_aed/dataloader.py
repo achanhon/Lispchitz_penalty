@@ -20,24 +20,44 @@ def symetrie(x, y, i, j, k):
 
 
 def computeperf(yz=None,stat=None):
-	assert yz is not None or stat is not None
-	if stat is not None:
-		good, fa, miss = stat[0], stat[1], stat[2]
-		if good == 0:
-			precision = 0
-			recall = 0
-		else:
-			precision = good / (good + fa)
-			recall = good / (good + miss)
-		return torch.Tensor([precision * recall, precision, recall])
-	else:
-		y,z = yz
-		good = torch.sum((y==1).float()*(z>0).float())
-		fa = torch.sum((y==0).float()*(z>0).float())
-		miss = torch.sum((y==1).float()*(z<=0).float())
-		return torch.Tensor([good, fa, miss])
-		
+    assert yz is not None or stat is not None
+    if stat is not None:
+        good, fa, miss = stat[0], stat[1], stat[2]
+        if good == 0:
+            precision = 0
+            recall = 0
+        else:
+            precision = good / (good + fa)
+            recall = good / (good + miss)
+        return torch.Tensor([precision * recall, precision, recall])
+    else:
+        y,z = yz
+        good = torch.sum((y==1).float()*(z>0).float())
+        fa = torch.sum((y==0).float()*(z>0).float())
+        miss = torch.sum((y==1).float()*(z<=0).float())
+        return torch.Tensor([good, fa, miss])
+        
 
+def resize(x,h,w):
+	globalresize = torch.nn.AdaptiveAvgPool2d((h, w))
+	
+	np = ("numpy" in str(type(x)))
+	if np:
+		x = torch.Tensor(x)
+		
+	remove = (len(x.shape)==2)
+	if remove:
+		x = x.unsqueeze(0)
+		
+	x = globalresize(x)
+	
+	if remove:
+		x = x[0]
+	
+	if np:
+		x = x.cpu().numpy()
+	return x
+	
 
 class AED:
     def __init__(self, flag):
@@ -68,27 +88,18 @@ class AED:
         image = np.uint8(np.asarray(image).copy())
         
         h, w = image.shape[0], image.shape[1]
-		h2, w2 = (h // 64) * 64, (w // 64) * 64
-		globalresize = torch.nn.AdaptiveAvgPool2d((h2, w2))
+        h2, w2 = (h // 64) * 64, (w // 64) * 64
+        globalresize = torch.nn.AdaptiveAvgPool2d((h2, w2))
+        
+        tmp = np.transpose(image, axes=(2, 0, 1))
+        tmp = torch.Tensor(tmp)
+        tmp = globalresize(tmp)
+        image = np.transpose(tmp.cpu().numpy(), axes=(1, 2, 0))
 
         mask = np.zeros((image.shape[0], image.shape[1]))
         points = self.labels[name]
         for c, r in points:
-            mask[r][c] = 1
-
-		if downscaled:
-			
-			
-			tmp = np.transpose(image, axes=(2, 0, 1))
-			tmp = torch.Tensor(tmp)
-			tmp = globalresize(tmp)
-			image = np.transpose(tmp.cpu().numpy(), axes=(1, 2, 0))
-			
-			tmp = torch.Tensor(mask).unsqueeze(0)
-			tmp = globalresize(tmp)
-			tmp = (tmp > 0).float()
-			tmp = torch.nn.functional.max_pool2d(tmp, kernel_size=16, stride=16, padding=0)
-			mask = tmp[0].cpu().numpy()
+            mask[int(r*h2/h)][int(c*w2/w)] = 1
  
         if torchformat:
             x = torch.Tensor(np.transpose(image, axes=(2, 0, 1)))
@@ -105,12 +116,12 @@ class AED:
             image, label = self.getImageAndLabel(name, torchformat=False)
 
             # random crop
-            row = np.random.randint(0, image.shape[0] - tilesize - 2, size=NB)
-            col = np.random.randint(0, image.shape[1] - tilesize - 2, size=NB)
+            row = np.random.randint(0, label.shape[0] - tilesize//16 - 2, size=NB)
+            col = np.random.randint(0, label.shape[1] - tilesize//16 - 2, size=NB)
 
             for i in range(NB):
-                im = image[row[i] : row[i] + tilesize, col[i] : col[i] + tilesize, :]
-                mask = label[row[i] : row[i] + tilesize, col[i] : col[i] + tilesize]
+                im = image[row[i]*16 : row[i]*16 + tilesize, col[i]*16 : col[i]*16 + tilesize, :]
+                mask = label[row[i] : row[i] + tilesize//16, col[i] : col[i] + tilesize//16]
                 XY.append((im.copy(), mask.copy()))
 
             # positive crop
@@ -119,16 +130,16 @@ class AED:
                 l = [(row[i], col[i]) for i in range(row.shape[0])]
                 random.shuffle(l)
                 l = l[0 : min(len(l), nbpos)]
-                noise = np.random.randint(-tilesize, tilesize, size=(len(l), 2))
+                noise = np.random.randint(-tilesize//16, tilesize//16, size=(len(l), 2))
 
                 for i, (r, c) in enumerate(l):
                     R, C = r + noise[i][0], c + noise[i][1]
 
-                    R = max(0, min(R, image.shape[0] - tilesize - 2))
-                    C = max(0, min(C, image.shape[1] - tilesize - 2))
+                    R = max(0, min(R, label.shape[0] - tilesize//16 - 2))
+                    C = max(0, min(C, label.shape[1] - tilesize//16 - 2))
 
-                    im = image[R : R + tilesize, C : C + tilesize, :]
-                    mask = label[R : R + tilesize, C : C + tilesize]
+                    im = image[R*16 : R*16 + tilesize, C*16 : C*16 + tilesize, :]
+                    mask = label[R : R + tilesize//16, C : C + tilesize//16]
                     XY.append((im.copy(), mask.copy()))
 
         # symetrie
@@ -156,24 +167,6 @@ import math
 if __name__ == "__main__":
     aed = AED(flag="test")
 
-    distance = np.zeros(129)
-    for name in aed.names:
-        points = aed.labels[name]
-        if points == []:
-            continue
-        I = len(points)
-        for i in range(I):
-            for j in range(I):
-                if i < j:
-                    dr = abs(points[i][0] - points[j][0])
-                    dc = abs(points[i][1] - points[j][1])
-                    d = int(max(dr, dc))
-                    if d < 128:
-                        distance[int(d)] += 1
-    for i in range(120):
-        if distance[i] != 0:
-            print(i, distance[i])
-
     i = 0
     while aed.labels[aed.names[i]] == []:
         i += 1
@@ -186,20 +179,6 @@ if __name__ == "__main__":
     debug = mask.cpu().numpy()
     debug = PIL.Image.fromarray(np.uint8(debug) * 255)
     debug.save("build/label.png")
-
-    beforeafter = torch.zeros(2).cuda()
-    for name in aed.names:
-        _, mask = aed.getImageAndLabel(name, torchformat=True)
-        mask = mask.cuda()
-        beforeafter[0] += torch.sum(mask)
-        mask = torch.nn.functional.max_pool2d(
-            mask.unsqueeze(0), kernel_size=16, stride=16, padding=0
-        )
-        beforeafter[1] += torch.sum(mask)
-    print(beforeafter)
-
-    batchloader = aed.getbatchloader(nbtiles=0, batchsize=8)
-    x, y = next(iter(batchloader))
 
     torchvision.utils.save_image(x / 255, "build/cropimage.png")
     torchvision.utils.save_image(y.unsqueeze(1).float(), "build/croplabel.png")
