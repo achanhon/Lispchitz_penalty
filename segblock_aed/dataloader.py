@@ -18,7 +18,7 @@ def symetrie(x, y, i, j, k):
     return x.copy(), y.copy()
 
 
-def computeperf(yz=None, stat=None):
+def computeperf(yz=None, stats=None):
     assert yz is not None or stat is not None
     if stat is not None:
         good, fa, miss = stat[0], stat[1], stat[2]
@@ -78,6 +78,10 @@ class AED:
         points = self.labels[name]
         for c, r in points:
             mask[int(r * h2 / h)][int(c * w2 / w)] = 1
+
+        tmp = torch.Tensor(mask).float().unsqueeze(0)
+        tmp = torch.nn.functional.max_pool2d(tmp, kernel_size=16, stride=16, padding=0)
+        mask = tmp[0].cpu().numpy()
 
         if torchformat:
             x = torch.Tensor(numpy.transpose(image, axes=(2, 0, 1)))

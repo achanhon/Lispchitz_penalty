@@ -28,7 +28,7 @@ net.train()
 
 
 print("load data")
-cia = dataloader.CIA(flag="custom", custom=["isprs/train", "vedai/train", "dfc/train"])
+aed = dataloader.AED(flag="train")
 
 print("train")
 import collections
@@ -36,12 +36,12 @@ import random
 
 optimizer = torch.optim.Adam(net.parameters(), lr=0.0001)
 meanloss = collections.deque(maxlen=200)
-nbepoch = 800
-batchsize = 32
+nbepoch = 1
+batchsize = 8
 for epoch in range(nbepoch):
     print("epoch=", epoch, "/", nbepoch)
 
-    XY = cia.getrandomtiles(192, batchsize)
+    XY = aed.getrandomtiles(batchsize=batchsize)
     stats = torch.zeros(3).cuda()
 
     for x, y in XY:
@@ -73,12 +73,10 @@ for epoch in range(nbepoch):
 
         with torch.no_grad():
             z = z[:, 1, :, :] - z[:, 0, :, :]
-            stats[0] += torch.sum((z > 0).float() * (y == 1).float())
-            stats[1] += torch.sum((z > 0).float() * (y == 0).float())
-            stats[2] += torch.sum((z <= 0).float() * (y == 1).float())
+            stats += dataloader.computeperf(yz=(y, z))
 
     torch.save(net, "build/model.pth")
-    perfs = dataloader.computeperf(stats)
+    perfs = dataloader.computeperf(stats=stats)
     print("perf", perfs)
 
     if perfs[0] * 100 > 92:
