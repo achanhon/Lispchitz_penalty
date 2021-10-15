@@ -41,7 +41,7 @@ batchsize = 8
 for epoch in range(nbepoch):
     print("epoch=", epoch, "/", nbepoch)
 
-    XY = aed.getrandomtiles(batchsize=batchsize)
+    XY = aed.getbatchloader(batchsize=batchsize)
     stats = torch.zeros(3).cuda()
 
     for x, y in XY:

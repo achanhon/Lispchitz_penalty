@@ -25,10 +25,16 @@ def computeperf(yz=None, stats=None):
         if good == 0:
             precision = 0
             recall = 0
+            count = 0
+            real = miss
         else:
             precision = good / (good + fa)
             recall = good / (good + miss)
-        return torch.Tensor([precision * recall, precision, recall])
+            count = good + fa
+            real = good + miss
+        return torch.Tensor(
+            [precision * recall, precision, recall, (count - real).abs(), count, real]
+        )
     else:
         y, z = yz
         good = torch.sum((y == 1).float() * (z > 0).float())
