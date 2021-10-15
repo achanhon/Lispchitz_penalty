@@ -2,6 +2,7 @@ import os
 import sys
 import torch
 import torch.backends.cudnn as cudnn
+import torchvision
 
 if torch.cuda.is_available():
     torch.cuda.empty_cache()
@@ -10,42 +11,24 @@ else:
     print("no cuda")
     quit()
 
-whereIam = os.uname()[1]
-if whereIam == "ldtis706z":
-    sys.path.append("/home/achanhon/github/EfficientNet-PyTorch")
-    sys.path.append("/home/achanhon/github/pytorch-image-models")
-    sys.path.append("/home/achanhon/github/pretrained-models.pytorch")
-    sys.path.append("/home/achanhon/github/segmentation_models.pytorch")
-if whereIam == "wdtim719z":
-    sys.path.append("/home/optimom/github/EfficientNet-PyTorch")
-    sys.path.append("/home/optimom/github/pytorch-image-models")
-    sys.path.append("/home/optimom/github/pretrained-models.pytorch")
-    sys.path.append("/home/optimom/github/segmentation_models.pytorch")
-if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
-    sys.path.append("/d/achanhon/github/EfficientNet-PyTorch")
-    sys.path.append("/d/achanhon/github/pytorch-image-models")
-    sys.path.append("/d/achanhon/github/pretrained-models.pytorch")
-    sys.path.append("/d/achanhon/github/segmentation_models.pytorch")
-
-import segmentation_models_pytorch as smp
-import detectionhead
+print("define model")
 import dataloader
 
-print("define model")
-net = detectionhead.DetectionHead(
-    smp.Unet(
-        encoder_name="efficientnet-b7",
-        encoder_weights="imagenet",
-        in_channels=3,
-        classes=2,
-    )
-)
+net = torchvision.models.vgg16()
+net = net.features
+net._modules["30"] = torch.nn.Identity()
+dummy = torch.zeros(1, 3, 16 * 5, 16 * 5)
+dummy = net(dummy)
+assert dummy.shape == (1, 512, 5, 5)
+net.add_module("31", torch.nn.Conv2d(512, 1024, kernel_size=1, padding=0, stride=1))
+net.add_module("32", torch.nn.LeakyReLU())
+net.add_module("33", torch.nn.Conv2d(1024, 2, kernel_size=1, padding=0, stride=1))
 net = net.cuda()
 net.train()
 
 
 print("load data")
-cia = dataloader.CIA(flag="custom", custom=["isprs/train", "saclay/train"])
+cia = dataloader.CIA(flag="custom", custom=["isprs/train", "vedai/train", "dfc/train"])
 
 print("train")
 import collections
@@ -58,21 +41,18 @@ batchsize = 32
 for epoch in range(nbepoch):
     print("epoch=", epoch, "/", nbepoch)
 
-    XY = cia.getrandomtiles(128, batchsize)
+    XY = cia.getrandomtiles(192, batchsize)
     stats = torch.zeros(3).cuda()
 
     for x, y in XY:
-        x, y = x.cuda(), y.cuda().float()
-        s = net(x)
+        x, y = x.cuda(), y.cuda()
+        z = net(x)
 
-        coarseloss = net.lossSegmentation(s, y)
-        fineloss = net.lossDetection(s, y)
+        nb0, nb1 = torch.sum((y == 0).float()), torch.sum((y == 1).float())
+        weights = torch.Tensor([1, nb0 / (nb1 + 1)]).cuda()
+        criterion = torch.nn.CrossEntropyLoss(weight=weights)
 
-        if epoch < 10:
-            loss = coarseloss * 0.9 + fineloss * 0.1
-        else:
-            loss = coarseloss * 0.1 + fineloss * 0.9
-
+        loss = criterion(z, y)
         meanloss.append(loss.cpu().data.numpy())
         if epoch > 30:
             loss = loss * 0.5
@@ -92,8 +72,10 @@ for epoch in range(nbepoch):
             print("loss=", (sum(meanloss) / len(meanloss)))
 
         with torch.no_grad():
-            z = net.headforward(s[:, 1, :, :] - s[:, 0, :, :])
-            stats += net.computegscore(z, y)
+            z = z[:, 1, :, :] - z[:, 0, :, :]
+            stats[0] += torch.sum((z > 0).float() * (y == 1).float())
+            stats[1] += torch.sum((z > 0).float() * (y == 0).float())
+            stats[2] += torch.sum((z <= 0).float() * (y == 1).float())
 
     torch.save(net, "build/model.pth")
     perfs = dataloader.computeperf(stats)

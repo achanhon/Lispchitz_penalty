@@ -10,35 +10,16 @@ else:
     print("no cuda")
     quit()
 
-whereIam = os.uname()[1]
-if whereIam == "ldtis706z":
-    sys.path.append("/home/achanhon/github/EfficientNet-PyTorch")
-    sys.path.append("/home/achanhon/github/pytorch-image-models")
-    sys.path.append("/home/achanhon/github/pretrained-models.pytorch")
-    sys.path.append("/home/achanhon/github/segmentation_models.pytorch")
-if whereIam == "wdtim719z":
-    sys.path.append("/home/optimom/github/EfficientNet-PyTorch")
-    sys.path.append("/home/optimom/github/pytorch-image-models")
-    sys.path.append("/home/optimom/github/pretrained-models.pytorch")
-    sys.path.append("/home/optimom/github/segmentation_models.pytorch")
-if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
-    sys.path.append("/d/achanhon/github/EfficientNet-PyTorch")
-    sys.path.append("/d/achanhon/github/pytorch-image-models")
-    sys.path.append("/d/achanhon/github/pretrained-models.pytorch")
-    sys.path.append("/d/achanhon/github/segmentation_models.pytorch")
-
-import segmentation_models_pytorch as smp
-import dataloader
-import detectionhead
-
 print("load model")
+import dataloader
+
 with torch.no_grad():
     net = torch.load("build/model.pth")
     net = net.cuda()
     net.eval()
 
 print("load data")
-cia = dataloader.CIA(flag="custom", custom=["isprs/test", "saclay/test"])
+cia = dataloader.CIA(flag="custom", custom=["isprs/test", "vedai/test", "dfc/test"])
 
 print("test")
 import numpy
@@ -55,23 +36,25 @@ with torch.no_grad():
             x = torch.Tensor(numpy.transpose(imageraw, axes=(2, 0, 1))).cuda()
             y = torch.Tensor(label).cuda()
 
-            z, s = net(x)
-            stats[k] += net.computegscore(z, y)
+            z = net(x.unsqueeze(0))
+            z = z[0, 1, :, :] - z[0, 0, :, :]
 
-            if town in ["isprs/test", "saclay/test"]:
+            stats[k][0] += torch.sum((z > 0).float() * (y == 1).float())
+            stats[k][1] += torch.sum((z > 0).float() * (y == 0).float())
+            stats[k][2] += torch.sum((z <= 0).float() * (y == 1).float())
+
+            if town in ["isprs/test", "vedai/test"]:
                 nextI = len(os.listdir("build"))
                 debug = numpy.transpose(x.cpu().numpy(), axes=(1, 2, 0))
                 debug = PIL.Image.fromarray(numpy.uint8(debug))
                 debug.save("build/" + str(nextI) + "_x.png")
-                debug = y.cpu().numpy() * 255
+                globalresize = torch.nn.AdaptiveAvgPool2d((x.shape[1], x.shape[2]))
+                debug = globalresize(y.unsqueeze(0).float())
+                debug = debug[0].cpu().numpy() * 255
                 debug = PIL.Image.fromarray(numpy.uint8(debug))
                 debug.save("build/" + str(nextI) + "_y.png")
-                debug = (s > 0).float()
-                debug = debug.cpu().numpy() * 255
-                debug = PIL.Image.fromarray(numpy.uint8(debug))
-                debug.save("build/" + str(nextI) + "_Z.png")
-                debug = (z[0] > 0).float()
-                debug = debug.cpu().numpy() * 255
+                debug = globalresize((z > 0).float().unsqueeze(0))
+                debug = debug[0].cpu().numpy() * 255
                 debug = PIL.Image.fromarray(numpy.uint8(debug))
                 debug.save("build/" + str(nextI) + "_z.png")
 
