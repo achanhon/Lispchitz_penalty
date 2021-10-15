@@ -3,7 +3,6 @@ import sys
 
 whereIam = os.uname()[1]
 assert whereIam in [
-    #    "wdtim719z",
     "calculon",
     "astroboy",
     "flexo",
@@ -11,8 +10,6 @@ assert whereIam in [
     "ldtis706z",
 ]
 
-# if whereIam == "wdtim719z":
-#    root = "/data/"
 if whereIam == "ldtis706z":
     root = "/media/achanhon/bigdata/data/"
 if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
@@ -25,9 +22,6 @@ if not os.path.exists(root + "AED"):
 os.system("rm -rf build")
 os.makedirs("build")
 
-# if whereIam == "wdtim719z":
-#    os.system("/data/anaconda3/envs/pytorch/bin/python train.py")
-#    os.system("/data/anaconda3/envs/pytorch/bin/python test.py")
 if whereIam == "ldtis706z":
     os.system("python3 train.py")
     os.system("python3 test.py")

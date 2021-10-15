@@ -48,12 +48,18 @@ def computeperf(yz=None, stats=None):
 class AED(threading.Thread):
     def __init__(self, flag, maxsize=10000, tilesize=256):
         assert flag in ["train", "test"]
-        if flag == "train":
-            self.root = "/media/achanhon/bigdata/data/AED/training_images/"
-            pathtovt = "/media/achanhon/bigdata/data/AED/training_elephants.csv"
+
+        whereIam = os.uname()[1]
+        if whereIam == "ldtis706z":
+            self.root = "/media/achanhon/bigdata/data"
         else:
-            self.root = "/media/achanhon/bigdata/data/AED/test_images/"
-            pathtovt = "/media/achanhon/bigdata/data/AED/test_elephants.csv"
+            self.root = "/scratchf"
+        if flag == "train":
+            self.root = self.root + "/AED/training_images/"
+            pathtovt = self.root + "/AED/training_elephants.csv"
+        else:
+            self.root = self.root + "/AED/test_images/"
+            pathtovt = self.root + "/AED/test_elephants.csv"
 
         print("reading csv file", pathtovt)
         self.labels = {}
