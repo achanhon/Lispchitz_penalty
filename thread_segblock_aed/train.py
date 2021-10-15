@@ -14,7 +14,7 @@ else:
 print("define model")
 import dataloader
 
-net = torchvision.models.vgg16()
+net = torchvision.models.vgg16(pretrained=True)
 net = net.features
 net._modules["30"] = torch.nn.Identity()
 dummy = torch.zeros(1, 3, 16 * 5, 16 * 5)
@@ -36,9 +36,9 @@ optimizer = torch.optim.Adam(net.parameters(), lr=0.0001)
 meanloss = torch.zeros(1).cuda()
 stats = torch.zeros(3).cuda()
 nbbatch = 10000
-batchsize = 8
+batchsize = 16
 for batch in range(nbbatch):
-    if batch % 30 == 29:
+    if batch % 25 == 24:
         print("batch=", batch, "/", nbbatch)
 
     x, y = aed.getbatch(batchsize=batchsize)
@@ -66,15 +66,15 @@ for batch in range(nbbatch):
     torch.nn.utils.clip_grad_norm_(net.parameters(), 3)
     optimizer.step()
 
-    if batch % 100 == 99:
-        print("loss=", 0.001 * meanloss)
+    if batch % 50 == 49:
+        print("loss=", meanloss / 50)
         meanloss = torch.zeros(1).cuda()
 
     with torch.no_grad():
         z = z[:, 1, :, :] - z[:, 0, :, :]
         stats += dataloader.computeperf(yz=(y, z))
 
-    if batch % 1000 == 999:
+    if batch % 200 == 199:
         torch.save(net, "build/model.pth")
         perfs = dataloader.computeperf(stats=stats)
         stats = torch.zeros(3).cuda()

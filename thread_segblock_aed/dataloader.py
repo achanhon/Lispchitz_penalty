@@ -62,7 +62,7 @@ class AED(threading.Thread):
             for line in text:
                 if line[0] not in self.labels:
                     self.labels[line[0]] = []
-                self.labels[line[0]].append((int(line[1]), int(line[2])))
+                self.labels[line[0]].append((float(line[1]), float(line[2])))
 
         self.names = list(self.labels.keys())
 
@@ -93,7 +93,10 @@ class AED(threading.Thread):
         mask = numpy.zeros((image.shape[0], image.shape[1]))
         points = self.labels[name]
         for c, r in points:
-            mask[int(r * h2 / h)][int(c * w2 / w)] = 1
+            r, c = int(r * h2 / h), int(c * w2 / w)
+            r, c = max(0, r), max(0, c)
+            r, c = min(r, mask.shape[0]), min(c, mask.shape[1])
+            mask[r][c] = 1
 
         tmp = torch.Tensor(mask).float().unsqueeze(0)
         tmp = torch.nn.functional.max_pool2d(tmp, kernel_size=16, stride=16, padding=0)
@@ -118,7 +121,7 @@ class AED(threading.Thread):
         return X, Y.long()
 
     def run(self):
-        NB, nbpos = 7, 1
+        NB, nbpos = 10, 2
         tilesize = self.tilesize
         tile16 = tilesize // 16
 

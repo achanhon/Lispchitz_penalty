@@ -30,17 +30,23 @@ with torch.no_grad():
     for name in aed.names:
         x, y = aed.getImageAndLabel(name, torchformat=True)
 
-        z = net(x.cuda().unsqueeze(0))
+        print(x.shape, y.shape, torch.sum(y))
+
+        x, y = x[:, :, 0:2048, 0:2048], y[0 : 2048 // 16, 0 : 2048 // 16]
+
+        print(x.shape, y.shape, torch.sum(y))
+
+        z = net(x.cuda())
         z = z[0, 1, :, :] - z[0, 0, :, :]
 
         stats += dataloader.computeperf(yz=(y.cuda(), z))
 
         if True:
             nextI = len(os.listdir("build"))
-            debug = numpy.transpose(x.cpu().numpy(), axes=(1, 2, 0))
+            debug = numpy.transpose(x[0].cpu().numpy(), axes=(1, 2, 0))
             debug = PIL.Image.fromarray(numpy.uint8(debug))
             debug.save("build/" + str(nextI) + "_x.png")
-            globalresize = torch.nn.AdaptiveAvgPool2d((x.shape[1], x.shape[2]))
+            globalresize = torch.nn.AdaptiveAvgPool2d((x.shape[2], x.shape[3]))
             debug = globalresize(y.unsqueeze(0).float())
             debug = debug[0].cpu().numpy() * 255
             debug = PIL.Image.fromarray(numpy.uint8(debug))
