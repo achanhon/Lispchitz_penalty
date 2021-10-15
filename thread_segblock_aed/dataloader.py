@@ -95,7 +95,7 @@ class AED(threading.Thread):
         for c, r in points:
             r, c = int(r * h2 / h), int(c * w2 / w)
             r, c = max(0, r), max(0, c)
-            r, c = min(r, mask.shape[0]), min(c, mask.shape[1])
+            r, c = min(r, mask.shape[0] - 1), min(c, mask.shape[1] - 1)
             mask[r][c] = 1
 
         tmp = torch.Tensor(mask).float().unsqueeze(0)

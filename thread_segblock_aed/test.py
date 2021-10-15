@@ -29,13 +29,6 @@ stats = torch.zeros(3).cuda()
 with torch.no_grad():
     for name in aed.names:
         x, y = aed.getImageAndLabel(name, torchformat=True)
-
-        print(x.shape, y.shape, torch.sum(y))
-
-        x, y = x[:, :, 0:2048, 0:2048], y[0 : 2048 // 16, 0 : 2048 // 16]
-
-        print(x.shape, y.shape, torch.sum(y))
-
         z = net(x.cuda())
         z = z[0, 1, :, :] - z[0, 0, :, :]
 

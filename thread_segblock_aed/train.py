@@ -54,11 +54,11 @@ for batch in range(nbbatch):
 
     if batch > 1000:
         loss = loss * 0.5
-    if batch > 30000:
+    if batch > 3000:
         loss = loss * 0.5
-    if batch > 60000:
+    if batch > 6000:
         loss = loss * 0.5
-    if batch > 90000:
+    if batch > 9000:
         loss = loss * 0.5
 
     optimizer.zero_grad()
