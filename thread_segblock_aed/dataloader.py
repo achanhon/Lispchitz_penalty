@@ -55,11 +55,11 @@ class AED(threading.Thread):
         else:
             self.root = "/scratchf"
         if flag == "train":
-            self.root = self.root + "/AED/training_images/"
             pathtovt = self.root + "/AED/training_elephants.csv"
+            self.root = self.root + "/AED/training_images/"
         else:
-            self.root = self.root + "/AED/test_images/"
             pathtovt = self.root + "/AED/test_elephants.csv"
+            self.root = self.root + "/AED/test_images/"
 
         print("reading csv file", pathtovt)
         self.labels = {}
