@@ -37,6 +37,16 @@ meanloss = torch.zeros(1).cuda()
 stats = torch.zeros(3).cuda()
 nbbatch = 10000
 batchsize = 32
+
+
+def dice_loss(preds, targets):
+    preds = preds[:, 1, :, :] - preds[:, 0, :, :]
+    targets = targets.float()
+    I = (preds * targets).sum()
+    U = preds.sum() + targets.sum()
+    return 1.0 - I / (U + 1)
+
+
 for batch in range(nbbatch):
     if batch % 25 == 24:
         print("batch=", batch, "/", nbbatch)
@@ -49,7 +59,7 @@ for batch in range(nbbatch):
     weights = torch.Tensor([1, nb0 / (nb1 + 1)]).cuda()
     criterion = torch.nn.CrossEntropyLoss(weight=weights)
 
-    loss = criterion(z, y)
+    loss = criterion(z, y) + 0.5 * dice_loss(z, y)
     meanloss += loss.clone().detach()
 
     if batch > 1000:
