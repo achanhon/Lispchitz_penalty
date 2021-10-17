@@ -38,7 +38,7 @@ visdrone.start()
 print("train")
 optimizer = torch.optim.Adam(net.parameters(), lr=0.0001)
 nbbatch = 10000
-batchsize = 32
+batchsize = 8
 stats = torch.zeros(3).cuda()
 meanloss = torch.zeros(1).cuda()
 for batch in range(nbbatch):
