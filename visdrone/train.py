@@ -33,6 +33,7 @@ net.train()
 
 print("load data")
 visdrone = dataloader.VISDRONE(flag="train")
+visdrone.start()
 
 print("train")
 optimizer = torch.optim.Adam(net.parameters(), lr=0.0001)
