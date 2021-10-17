@@ -43,7 +43,7 @@ with torch.no_grad():
 
         if True:
             nextI = len(os.listdir("build"))
-            debug = numpy.transpose(x[0].cpu().numpy(), axes=(1, 2, 0))
+            debug = numpy.transpose(x.cpu().numpy(), axes=(1, 2, 0))
             debug = PIL.Image.fromarray(numpy.uint8(debug))
             debug.save("build/" + str(nextI) + "_x.png")
             debug = y.cpu().numpy() * 255
