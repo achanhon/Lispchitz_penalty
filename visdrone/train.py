@@ -37,7 +37,7 @@ visdrone.start()
 
 print("train")
 optimizer = torch.optim.Adam(net.parameters(), lr=0.0001)
-nbbatch = 10000
+nbbatch = 100000
 batchsize = 8
 stats = torch.zeros(3).cuda()
 meanloss = torch.zeros(1).cuda()
@@ -52,19 +52,19 @@ for batch in range(nbbatch):
     coarseloss = net.lossSegmentation(s, y)
     fineloss = net.lossDetection(s, y)
 
-    if nbbatch < 400:
+    if nbbatch < 601:
         loss = 0.1 * fineloss + 0.9 * coarseloss
     else:
         loss = 0.9 * fineloss + 0.1 * coarseloss
 
     meanloss += loss.clone().detach()
-    if batch > 1000:
+    if batch > 10000:
         loss = loss * 0.5
-    if batch > 3000:
+    if batch > 30000:
         loss = loss * 0.5
-    if batch > 6000:
+    if batch > 60000:
         loss = loss * 0.5
-    if batch > 9000:
+    if batch > 90000:
         loss = loss * 0.5
 
     optimizer.zero_grad()
