@@ -66,7 +66,7 @@ class VISDRONE(threading.Thread):
         image = numpy.uint8(numpy.asarray(image).copy())
 
         mask = numpy.zeros((image.shape[0], image.shape[1]))
-        points = scipy.io.loadmat(visdrone.root + "ground_truth/GT_" + name + ".mat")
+        points = scipy.io.loadmat(self.root + "ground_truth/GT_" + name + ".mat")
         points = points["image_info"][0][0][0][0][0]
         if len(points.shape) == 2 and points.shape[1] == 3:
             I = points.shape[0]
