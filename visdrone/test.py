@@ -38,7 +38,7 @@ with torch.no_grad():
     for name in visdrone.names:
         x, y = visdrone.getImageAndLabel(name, torchformat=True)
 
-        z, s = net(x)
+        z, s = net(x.cuda())
         stats += net.computegscore(z, y.cuda())
 
         if True:
