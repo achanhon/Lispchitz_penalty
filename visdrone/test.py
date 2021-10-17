@@ -36,7 +36,7 @@ from PIL import Image
 stats = torch.zeros(3).cuda()
 with torch.no_grad():
     for name in visdrone.names:
-        imageraw, label = visdrone.getImageAndLabel(name, torchformat=True)
+        x, y = visdrone.getImageAndLabel(name, torchformat=True)
 
         z, s = net(x)
         stats += net.computegscore(z, y.cuda())
