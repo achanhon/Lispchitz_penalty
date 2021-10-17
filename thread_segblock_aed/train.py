@@ -35,7 +35,7 @@ print("train")
 optimizer = torch.optim.Adam(net.parameters(), lr=0.0001)
 meanloss = torch.zeros(1).cuda()
 stats = torch.zeros(3).cuda()
-nbbatch = 10000
+nbbatch = 100000
 batchsize = 32
 
 
@@ -62,13 +62,13 @@ for batch in range(nbbatch):
     loss = criterion(z, y) + 0.5 * dice_loss(z, y)
     meanloss += loss.clone().detach()
 
-    if batch > 1000:
+    if batch > 10000:
         loss = loss * 0.5
-    if batch > 3000:
+    if batch > 30000:
         loss = loss * 0.5
-    if batch > 6000:
+    if batch > 60000:
         loss = loss * 0.5
-    if batch > 9000:
+    if batch > 90000:
         loss = loss * 0.5
 
     optimizer.zero_grad()

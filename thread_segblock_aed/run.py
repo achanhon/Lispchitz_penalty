@@ -22,13 +22,9 @@ if not os.path.exists(root + "AED"):
 os.system("rm -rf build")
 os.makedirs("build")
 
-os.system("cat train.py") # force nohup to flush
-
 if whereIam == "ldtis706z":
-    os.system("python3 train.py")
-    os.system("python3 test.py")
+    os.system("python3 -u train.py")
+    os.system("python3 -u test.py")
 if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
-    os.system("/d/jcastillo/anaconda3/bin/python train.py")
-    os.system("/d/jcastillo/anaconda3/bin/python test.py")
-
-os.system("cat train.py") # force nohup to flush
+    os.system("/d/jcastillo/anaconda3/bin/python -u train.py")
+    os.system("/d/jcastillo/anaconda3/bin/python -u test.py")
