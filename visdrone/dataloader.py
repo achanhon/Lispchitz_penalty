@@ -75,7 +75,7 @@ class VISDRONE(threading.Thread):
 
         if torchformat:
             x = torch.Tensor(numpy.transpose(image, axes=(2, 0, 1)))
-            return x.unsqueeze(0), torch.Tensor(mask)
+            return x, torch.Tensor(mask)
         else:
             return image, mask
 
