@@ -14,7 +14,7 @@ print("define model")
 import dataloader
 
 if True:
-    tmp = torchvision.models.resnet50(pretrained=False)
+    tmp = torchvision.models.resnet50(pretrained=True)
     net = torch.nn.Sequential()
     net.add_module("0", tmp.conv1(x))
     net.add_module("1", tmp.bn1(x))
@@ -23,6 +23,7 @@ if True:
     net.add_module("4", tmp.layer1(x))
     net.add_module("5", tmp.layer2(x))
     net.add_module("6", tmp.layer3(x))
+    net.add_module("7", torch.nn.Conv2d(2048, 2, kernel_size=1, padding=0, stride=1))
 else:
     net = torchvision.models.vgg16(pretrained=True)
     net = net.features
@@ -48,16 +49,6 @@ meanloss = torch.zeros(1).cuda()
 stats = torch.zeros(3).cuda()
 nbbatch = 100000
 batchsize = 32
-
-
-def dice_loss(preds, targets):
-    preds = preds[:, 1, :, :] - preds[:, 0, :, :]
-    targets = targets.float()
-    I = (preds * targets).sum()
-    U = preds.sum() + targets.sum()
-    return 1.0 - I / (U + 1)
-
-
 for batch in range(nbbatch):
     if batch % 25 == 24:
         print("batch=", batch, "/", nbbatch)
@@ -70,7 +61,7 @@ for batch in range(nbbatch):
     weights = torch.Tensor([1, nb0 / (nb1 + 1)]).cuda()
     criterion = torch.nn.CrossEntropyLoss(weight=weights)
 
-    loss = criterion(z, y) + 0.5 * dice_loss(z, y)
+    loss = criterion(z, y)
     meanloss += loss.clone().detach()
 
     if batch > 10000:
