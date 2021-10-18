@@ -1,5 +1,4 @@
 import os
-import sys
 import torch
 import torch.backends.cudnn as cudnn
 import torchvision
@@ -14,15 +13,28 @@ else:
 print("define model")
 import dataloader
 
-net = torchvision.models.vgg16(pretrained=True)
-net = net.features
-net._modules["30"] = torch.nn.Identity()
+if True:
+    tmp = torchvision.models.resnet50(pretrained=True)
+    net = torch.nn.Sequential()
+    net.add_module("0", tmp.conv1)
+    net.add_module("1", tmp.bn1)
+    net.add_module("2", tmp.relu)
+    net.add_module("3", tmp.maxpool)
+    net.add_module("4", tmp.layer1)
+    net.add_module("5", tmp.layer2)
+    net.add_module("6", tmp.layer3)
+    net.add_module("7", torch.nn.Conv2d(1024, 2, kernel_size=1, padding=0, stride=1))
+else:
+    net = torchvision.models.vgg16(pretrained=True)
+    net = net.features
+    net._modules["30"] = torch.nn.Identity()
+    net.add_module("31", torch.nn.Conv2d(512, 1024, kernel_size=1, padding=0, stride=1))
+    net.add_module("32", torch.nn.LeakyReLU())
+    net.add_module("33", torch.nn.Conv2d(1024, 2, kernel_size=1, padding=0, stride=1))
 dummy = torch.zeros(1, 3, 16 * 5, 16 * 5)
 dummy = net(dummy)
-assert dummy.shape == (1, 512, 5, 5)
-net.add_module("31", torch.nn.Conv2d(512, 1024, kernel_size=1, padding=0, stride=1))
-net.add_module("32", torch.nn.LeakyReLU())
-net.add_module("33", torch.nn.Conv2d(1024, 2, kernel_size=1, padding=0, stride=1))
+assert dummy.shape == (1, 2, 5, 5)
+
 net = net.cuda()
 net.train()
 
