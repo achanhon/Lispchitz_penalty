@@ -23,7 +23,7 @@ if True:
     net.add_module("4", tmp.layer1)
     net.add_module("5", tmp.layer2)
     net.add_module("6", tmp.layer3)
-    net.add_module("7", torch.nn.Conv2d(2048, 2, kernel_size=1, padding=0, stride=1))
+    net.add_module("7", torch.nn.Conv2d(1024, 2, kernel_size=1, padding=0, stride=1))
 else:
     net = torchvision.models.vgg16(pretrained=True)
     net = net.features
