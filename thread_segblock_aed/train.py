@@ -1,5 +1,4 @@
 import os
-import sys
 import torch
 import torch.backends.cudnn as cudnn
 import torchvision
