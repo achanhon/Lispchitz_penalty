@@ -14,7 +14,7 @@ print("define model")
 import dataloader
 
 if True:
-    tmp = torchvision.models.resnet50(pretrained=True)
+    tmp = torchvision.models.resnet101(pretrained=True)
     net = torch.nn.Sequential()
     net.add_module("0", tmp.conv1)
     net.add_module("1", tmp.bn1)
