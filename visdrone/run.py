@@ -18,5 +18,5 @@ os.system("rm -rf build")
 os.makedirs("build")
 
 if whereIam in ["calculon", "astroboy", "flexo", "bender"]:
-    os.system("/d/jcastillo/anaconda3/bin/python train.py")
-    os.system("/d/jcastillo/anaconda3/bin/python test.py")
+    os.system("/d/jcastillo/anaconda3/bin/python -u train.py")
+    os.system("/d/jcastillo/anaconda3/bin/python -u test.py")
