@@ -58,7 +58,7 @@ for batch in range(nbbatch):
     z = net(x)
 
     nb0, nb1 = torch.sum((y == 0).float()), torch.sum((y == 1).float())
-    weights = torch.Tensor([1, nb0 / (nb1 + 1)]).cuda()
+    weights = torch.Tensor([1, nb0 / (nb1 + 1) * 0.1]).cuda()
     criterion = torch.nn.CrossEntropyLoss(weight=weights)
 
     loss = criterion(z, y)

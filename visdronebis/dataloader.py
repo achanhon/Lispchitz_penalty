@@ -71,7 +71,10 @@ class VISDRONE(threading.Thread):
         if len(points.shape) == 2 and points.shape[1] == 3:
             I = points.shape[0]
             for i in range(I):
-                mask[int(points[i][1])][int(points[i][0])] = 1
+                r, c = int(points[i][1]), int(points[i][0])
+                r, c = max(0, r), max(0, c)
+                r, c = min(r, mask.shape[0] - 1), min(c, mask.shape[1] - 1)
+                mask[r][c] = 1
 
         if torchformat:
             x = torch.Tensor(numpy.transpose(image, axes=(2, 0, 1)))
