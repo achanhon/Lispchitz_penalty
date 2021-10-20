@@ -49,6 +49,7 @@ meanloss = torch.zeros(1).cuda()
 stats = torch.zeros(3).cuda()
 nbbatch = 100000
 batchsize = 32
+criterion = torch.nn.CrossEntropyLoss()
 for batch in range(nbbatch):
     if batch % 25 == 24:
         print("batch=", batch, "/", nbbatch)
@@ -56,10 +57,6 @@ for batch in range(nbbatch):
     x, y = aed.getbatch(batchsize=batchsize)
     x, y = x.cuda(), y.cuda()
     z = net(x)
-
-    nb0, nb1 = torch.sum((y == 0).float()), torch.sum((y == 1).float())
-    weights = torch.Tensor([1, min(10, nb0 / (nb1 + 1))]).cuda()
-    criterion = torch.nn.CrossEntropyLoss(weight=weights)
 
     loss = criterion(z, y)
     meanloss += loss.clone().detach()
