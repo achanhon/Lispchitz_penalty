@@ -46,13 +46,13 @@ class Detector(torch.nn.Module):
 
         with torch.no_grad():
             if torch.cuda.is_available():
-                pred = torch.zeros(1, 2, h64, w64).cuda()
+                pred = torch.zeros(x.shape[0], 2, h64, w64).cuda()
             else:
-                pred = torch.zeros(1, 2, h64, w64)
+                pred = torch.zeros(x.shape[0], 2, h64, w64)
             for row in range(0, h64 - tile + 1, stride):
                 for col in range(0, w64 - tile + 1, stride):
                     tmp = self.backbone(x[:, :, row : row + tile, col : col + tile])
-                    pred[0, :, row : row + tile, col : col + tile] += tmp[0]
+                    pred[:, :, row : row + tile, col : col + tile] += tmp[0]
         return globalresize(pred)
 
     def forward(self, x):
@@ -83,7 +83,7 @@ net.eval()
 
 if torch.cuda.is_available():
     net = net.cuda()
-    tmp = torch.zeros(1, 3, 512, 512).cuda()
+    tmp = torch.zeros(5, 3, 512, 512).cuda()
 else:
-    tmp = torch.zeros(1, 3, 512, 512)
+    tmp = torch.zeros(5, 3, 512, 512)
 print(net(tmp).shape)
