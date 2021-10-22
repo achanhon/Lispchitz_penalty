@@ -83,9 +83,9 @@ net.eval()
 
 if torch.cuda.is_available():
     net = net.cuda()
-    tmp = torch.zeros(5, 3, 512, 512).cuda()
+    tmp = torch.zeros(2, 3, 320, 320).cuda()
 else:
-    tmp = torch.zeros(5, 3, 512, 512)
+    tmp = torch.zeros(2, 3, 320, 320)
 print(net(tmp).shape)
 
 import PIL
