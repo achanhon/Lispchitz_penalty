@@ -87,3 +87,31 @@ if torch.cuda.is_available():
 else:
     tmp = torch.zeros(5, 3, 512, 512)
 print(net(tmp).shape)
+
+import PIL
+from PIL import Image
+import numpy
+
+label = PIL.Image.open("build/1_y.png").convert("L")
+label = numpy.uint8(numpy.asarray(image).copy())
+label = torch.Tensor(label)
+label = (label > 0).float()
+print("label", label.sum())
+
+oldpred = PIL.Image.open("build/1_z.png").convert("L")
+oldpred = numpy.uint8(numpy.asarray(image).copy())
+oldpred = torch.Tensor(oldpred)
+oldpred = (oldpred > 0).float()
+print("label", oldpred.sum())
+
+image = PIL.Image.open("build/1_x.png").convert("RGB")
+image = numpy.uint8(numpy.asarray(image).copy())
+
+x = torch.Tensor(numpy.transpose(image, axes=(2, 0, 1)))
+if torch.cuda.is_available():
+    x = x.unsqueeze(0).cuda()
+else:
+    x = x.unsqueeze(0)
+pred = net(image)
+pred = (pred > 0).float()
+print(torch.sum(pred))
