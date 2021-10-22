@@ -49,7 +49,10 @@ tmp = smp.Unet(
     in_channels=3,
     classes=2,
 )
-weights = torch.load("build/state_dict.pth")
+if True:
+    weights = torch.load("build/state_dict.pth", map_location=torch.device("cpu"))
+else:
+    weights = torch.load("build/state_dict.pth")
 tmp.load_state_dict(weights)
 
 net = Detector(tmp)
