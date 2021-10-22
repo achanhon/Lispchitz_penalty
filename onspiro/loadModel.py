@@ -45,7 +45,7 @@ import segmentation_models_pytorch as smp
 
 tmp = smp.Unet(
     encoder_name="efficientnet-b7",
-    encoder_weights="None",
+    encoder_weights=None,
     in_channels=3,
     classes=2,
     activation=torch.nn.ReLU(),
