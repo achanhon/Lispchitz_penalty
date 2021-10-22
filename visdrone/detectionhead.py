@@ -48,7 +48,7 @@ class DetectionHead(torch.nn.Module):
         return xp * localmax
 
     def largeforward(self, x):
-        tile, stride = 128, 32
+        tile, stride = 256, 64
         h, w = x.shape[1], x.shape[2]
         h32, w32 = ((h // stride) * stride, (w // stride) * stride)
 
