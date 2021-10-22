@@ -8,7 +8,6 @@ sys.path.append("/d/achanhon/github/pretrained-models.pytorch")
 sys.path.append("/d/achanhon/github/segmentation_models.pytorch")
 
 import segmentation_models_pytorch as smp
-import dataloader
 import detectionhead
 
 print("load model")
