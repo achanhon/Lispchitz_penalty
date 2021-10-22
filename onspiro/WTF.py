@@ -112,6 +112,6 @@ if torch.cuda.is_available():
     x = x.unsqueeze(0).cuda()
 else:
     x = x.unsqueeze(0)
-pred = net(image)
+pred = net(x)
 pred = (pred > 0).float()
 print(torch.sum(pred))
