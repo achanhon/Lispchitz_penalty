@@ -48,6 +48,7 @@ tmp = smp.Unet(
     encoder_weights="None",
     in_channels=3,
     classes=2,
+    act_layer=torch.nn.ReLU(),
 )
 weights = torch.load("state_dict.pth")
 tmp.load_state_dict(weights)
