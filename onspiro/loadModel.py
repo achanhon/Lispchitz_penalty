@@ -14,7 +14,10 @@ class PoolWithHole(torch.nn.Module):
 
     def forward(self, x):
         B, H, W = x.shape[0], x.shape[1], x.shape[2]
-        Xm = torch.zeros(B, H + 2, W + 2).cuda()
+        if torch.cuda.is_available():
+            Xm = torch.zeros(B, H + 2, W + 2).cuda()
+        else:
+            Xm = torch.zeros(B, H + 2, W + 2)
         X = [Xm.clone() for i in range(9)]
         for i in range(3):
             for j in range(3):
@@ -49,13 +52,18 @@ tmp = smp.Unet(
     in_channels=3,
     classes=2,
 )
-if True:
-    weights = torch.load("build/state_dict.pth", map_location=torch.device("cpu"))
-else:
+if torch.cuda.is_available():
     weights = torch.load("build/state_dict.pth")
+else:
+    weights = torch.load("build/state_dict.pth", map_location=torch.device("cpu"))
 tmp.load_state_dict(weights)
 
 net = Detector(tmp)
+net.eval()
 
-tmp = torch.zeros(1, 3, 256, 256)
+if torch.cuda.is_available():
+    net = net.cuda()
+    tmp = torch.zeros(1, 3, 256, 256).cuda()
+else:
+    tmp = torch.zeros(1, 3, 256, 256)
 print(net(tmp).shape)
