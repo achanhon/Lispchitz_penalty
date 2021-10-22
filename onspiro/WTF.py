@@ -93,13 +93,13 @@ from PIL import Image
 import numpy
 
 label = PIL.Image.open("build/1_y.png").convert("L")
-label = numpy.uint8(numpy.asarray(image).copy())
+label = numpy.uint8(numpy.asarray(label).copy())
 label = torch.Tensor(label)
 label = (label > 0).float()
 print("label", label.sum())
 
 oldpred = PIL.Image.open("build/1_z.png").convert("L")
-oldpred = numpy.uint8(numpy.asarray(image).copy())
+oldpred = numpy.uint8(numpy.asarray(oldpred).copy())
 oldpred = torch.Tensor(oldpred)
 oldpred = (oldpred > 0).float()
 print("label", oldpred.sum())
