@@ -15,16 +15,17 @@ names = [s[0:-5] for s in l if "y.png" in s]
 l = set(l)
 
 names = [s for s in names if s + "z.png" in l and s + "y.png" in l]
+print(len(names))
 
 totPred, totVT, totdiff, totdiff2 = 0, 0, 0, 0
 for name in names:
     label = PIL.Image.open(path + "/" + name + "y.png").convert("L")
     label = torch.Tensor(numpy.asarray(label))
-    label = (label > 0).float().sum()
+    label = (label > 0).float().sum() / 256
 
     pred = PIL.Image.open(path + "/" + name + "z.png").convert("L")
     pred = torch.Tensor(numpy.asarray(pred))
-    pred = (pred > 0).float().sum()
+    pred = (pred > 0).float().sum() / 256
 
     diff = abs(label - pred)
     totPred += pred
