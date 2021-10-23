@@ -3,6 +3,7 @@ import sys
 import numpy
 import PIL
 from PIL import Image
+import torch
 
 if len(sys.argv) >= 1:
     path = sys.argv[1]
@@ -18,12 +19,12 @@ names = [s for s in names if s + "z.png" in l and s + "y.png" in l]
 totPred, totVT, totdiff, totdiff2 = 0, 0, 0, 0
 for name in names:
     label = PIL.Image.open(path + "/" + name + "y.png").convert("L")
-    label = numpy.uint8(numpy.asarray(label) > 0)
-    label = numpy.sum(label)
+    label = torch.Tensor(numpy.asarray(label))
+    label = (label > 0).float().sum()
 
     pred = PIL.Image.open(path + "/" + name + "z.png").convert("L")
-    pred = numpy.uint8(numpy.asarray(pred) > 0)
-    pred = numpy.sum(pred)
+    pred = torch.Tensor(numpy.asarray(pred))
+    pred = (pred > 0).float().sum()
 
     diff = abs(label - pred)
     totPred += pred
