@@ -5,10 +5,10 @@ import PIL
 from PIL import Image
 import torch
 
-if len(sys.argv) >= 1:
-    path = sys.argv[1]
+if len(sys.argv) >= 2:
+    path, denom = sys.argv[1], int(sys.argv[2])
 else:
-    path = "build"
+    path, denom = "build", 1
 
 l = os.listdir(path)
 names = [s[0:-5] for s in l if "y.png" in s]
@@ -21,11 +21,11 @@ totPred, totVT, totdiff, totdiff2 = 0, 0, 0, 0
 for name in names:
     label = PIL.Image.open(path + "/" + name + "y.png").convert("L")
     label = torch.Tensor(numpy.asarray(label))
-    label = (label > 0).float().sum() / 256
+    label = (label > 0).float().sum() / denom
 
     pred = PIL.Image.open(path + "/" + name + "z.png").convert("L")
     pred = torch.Tensor(numpy.asarray(pred))
-    pred = (pred > 0).float().sum() / 256
+    pred = (pred > 0).float().sum() / denom
 
     diff = abs(label - pred)
     totPred += pred
