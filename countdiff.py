@@ -32,8 +32,8 @@ for name in names:
     totdiff += diff
     totdiff2 += diff * diff
 
-totVT /= len(name)
-totPred /= len(name)
-totdiff /= len(name)
-totdiff2 /= len(name)
+totVT /= len(names)
+totPred /= len(names)
+totdiff /= len(names)
+totdiff2 /= len(names)
 print(totdiff, totdiff2, totVT, totPred)
