@@ -201,7 +201,7 @@ if True:
         cmattack[town] = np.zeros((3, 3), dtype=int)
 
         for i in range(X.shape[0]):
-            if town in ["christchurch/test"]:
+            if town in ["christchurch/test", "potsdam/test"]:
                 x = np.transpose(X[i].cpu().numpy(), axes=(1, 2, 0))
                 im = PIL.Image.fromarray(np.uint8(x))
                 im.save("build/" + town[0:-5] + "_" + str(i) + "_x.png")
